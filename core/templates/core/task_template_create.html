@@ -1,0 +1,66 @@
+<form method="post" enctype="multipart/form-data" class="task-card">
+    {% csrf_token %}
+
+    <div class="task-header">
+        <label class="icon-upload">
+            {{ form.icon }}
+            <div class="icon-preview" id="iconPreview">
+                <span>+</span>
+            </div>
+        </label>
+
+        <div class="task-main">
+            {{ form.title }}
+            {{ form.description }}
+        </div>
+    </div>
+
+    <div class="task-settings">
+        <div class="row">
+            <div>
+                <label>Количество по умолчанию</label>
+                {{ form.default_amount }}
+            </div>
+
+            <div>
+                <label>Приоритет</label>
+                {{ form.priority }}
+            </div>
+        </div>
+
+        <div class="row">
+            <div>
+                <label>Тип повторений</label>
+                {{ form.period_type }}
+            </div>
+
+            <div>
+                <label>Расписание</label>
+                {{ form.schedule_type }}
+            </div>
+        </div>
+
+        <div id="fixedFields" class="row hidden">
+            <div>
+                <label>День недели</label>
+                {{ form.fixed_weekday }}
+            </div>
+
+            <div>
+                <label>День месяца</label>
+                {{ form.fixed_day_of_month }}
+            </div>
+
+            <div>
+                <label>Месяц года</label>
+                {{ form.fixed_month_of_year }}
+            </div>
+        </div>
+    </div>
+
+    <div class="task-actions">
+        <a href="{% url 'home' %}" class="btn cancel">Отменить</a>
+        <button type="reset" class="btn clear">Очистить</button>
+        <button type="submit" class="btn save">Сохранить</button>
+    </div>
+</form>

@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Создать блок{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/block_builder.css' %}">
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4 mb-5">
+
+    <input type="hidden" id="block-id" value="{{ block_json.id|default:'' }}">
+
+    <!-- =========================
+    HEADER
+    ========================== -->
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+
+        <input
+            type="text"
+            id="block-title"
+            class="form-control w-50"
+            placeholder="Название блока"
+        >
+
+        <div class="d-flex gap-2">
+            <button id="clear-block-btn" class="btn btn-outline-danger">
+                Очистить
+            </button>
+
+            <button id="save-block-btn" class="btn btn-primary">
+                Сохранить
+            </button>
+        </div>
+
+    </div>
+
+    <!-- =========================
+    SELECTED TASKS
+    ========================== -->
+
+    <div class="card shadow-sm mb-3">
+        <div id="selected-tasks"
+             class="card-body d-flex flex-wrap gap-3 align-items-center">
+        </div>
+    </div>
+
+    <!-- =========================
+    TASK DETAIL CARD
+    ========================== -->
+
+    <div id="task-detail-card"
+         class="card shadow-sm p-3 mb-3"
+         style="display:none;">
+
+        <div class="d-flex gap-4 align-items-start">
+
+            <!-- ICON + EYE -->
+            <div class="text-center position-relative">
+
+                <!-- Eye Button -->
+                <button
+                    id="visibility-eye"
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0"
+                    title="Скрыть / показать"
+                >
+                    <i class="bi bi-eye"></i>
+                </button>
+
+                <img id="task-detail-icon" width="72" height="72">
+                <div id="task-detail-title"
+                     class="fw-semibold mt-2">
+                </div>
+
+            </div>
+
+            <!-- AMOUNT / TIME -->
+            <div class="d-flex flex-column gap-2">
+
+                <div>
+                    <label class="form-label">Количество</label>
+                    <input id="task-detail-amount"
+                           class="form-control form-control-sm"
+                           type="number">
+                </div>
+
+                <div>
+                    <label class="form-label">Время</label>
+                    <input id="task-detail-time"
+                           class="form-control form-control-sm"
+                           type="number">
+                </div>
+
+            </div>
+
+            <!-- DESCRIPTION -->
+            <div class="flex-grow-1">
+
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label m-0">Описание</label>
+
+                    <div class="form-check form-switch">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               id="task-password-toggle">
+                    </div>
+                </div>
+
+                <textarea id="task-detail-description"
+                          class="form-control mb-2"
+                          rows="4">
+                </textarea>
+
+                <!-- PASSWORD -->
+                <div id="task-password-container"
+                     style="display:none; position:relative;">
+
+                    <input type="password"
+                           id="task-password"
+                           class="form-control"
+                           placeholder="Пароль">
+
+                    <span id="password-eye"
+                          style="position:absolute;
+                                 right:10px;
+                                 top:50%;
+                                 transform:translateY(-50%);
+                                 cursor:pointer;
+                                 user-select:none;">
+                        👁
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- =========================
+TASK PICKER
+========================= -->
+
+<div class="task-picker shadow">
+
+    {% for t in templates %}
+    <div class="task-icon"
+         data-id="{{ t.id }}"
+         data-title="{{ t.title }}"
+         data-description="{{ t.description|escapejs }}"
+         data-amount="{{ t.default_amount }}"
+         data-time="{{ t.time|default:1 }}">
+
+        {% if t.icon %}
+        <img src="{{ t.icon.url }}" width="48" height="48">
+        {% endif %}
+
+    </div>
+    {% endfor %}
+
+</div>
+
+<!-- =========================
+TASK TOOLTIP
+========================= -->
+
+<div id="task-tooltip"
+     class="task-tooltip shadow-sm"
+     style="display:none; position:absolute; z-index:2000;">
+
+    <div class="fw-bold" id="tooltip-title"></div>
+    <div class="small text-muted" id="tooltip-description"></div>
+    <div class="small text-muted" id="tooltip-amount-time"></div>
+
+</div>
+
+<!-- =========================
+GROUP PICKER
+========================= -->
+
+<div class="group-picker shadow">
+
+    {% for g in groups %}
+    <div class="group-icon"
+         data-id="{{ g.id }}"
+         data-title="{{ g.title }}"
+         data-description="{{ g.description|escape }}"
+         data-count="{{ g.tasks.count }}">
+
+        <div class="group-grid">
+
+            {% for t in g.tasks.all|slice:":4" %}
+            <div class="group-task-mini">
+                {% if t.icon %}
+                <img src="{{ t.icon.url }}" width="20" height="20">
+                {% endif %}
+            </div>
+            {% endfor %}
+
+        </div>
+
+    </div>
+    {% endfor %}
+
+</div>
+
+<!-- =========================
+GROUP TOOLTIP
+========================= -->
+
+<div id="group-tooltip"
+     class="group-tooltip"
+     style="display:none">
+
+    <div id="group-tooltip-title"
+         class="fw-semibold"></div>
+
+    <div id="group-tooltip-description"
+         class="small text-muted"></div>
+
+    <div class="small mt-1">
+        Задач: <span id="group-tooltip-count"></span>
+    </div>
+
+    <div id="group-tooltip-icons"
+         class="tooltip-icons mt-2"></div>
+
+</div>
+
+{% endblock %}
+
+{% block page_js %}
+
+<script>
+    const block_json = {{ block_json|safe }};
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="{% static 'js/block_builder.js' %}"></script>
+
+{% endblock %}

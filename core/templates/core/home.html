@@ -1,0 +1,19 @@
+{% for block in blocks %}
+<div class="block">
+    <h3>
+        {{ block.title }}
+        <a href="#">Редактировать</a>
+        <a href="#">Удалить</a>
+        <a href="#">Скрыть</a>
+    </h3>
+
+    <div class="tasks">
+        {% for task in block.tasks.all %}
+            <div class="task">
+                <img src="{{ task.template.icon.url }}">
+                {{ task.template.title }} | {{ task.amount }}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}

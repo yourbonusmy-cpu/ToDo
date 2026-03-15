@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}
+Tasker
+{% endblock %}
+
+{% block content %}
+
+<div class="text-center mt-5">
+
+    <h1 class="display-4">Tasker</h1>
+
+    <p class="lead">
+        Простое приложение для ежедневных задач
+    </p>
+
+    <div class="mt-4">
+
+        <button
+            class="btn btn-primary btn-lg"
+            data-bs-toggle="modal"
+            data-bs-target="#authModal">
+
+            Войти
+        </button>
+
+        <a class="btn btn-outline-primary btn-lg" href="{% url 'register' %}">
+            Регистрация
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

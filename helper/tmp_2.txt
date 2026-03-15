@@ -1,0 +1,716 @@
+нужно рядом с иконкой добавить иконку глаза через bootstrap
+которое будет изменять значение is_hidden если глаз открыт то
+is_hidden = false если закрыт значит is_hidden = true
+у каждой задачи оно свое
+
+block_builder.html
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Создать блок{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/block_builder.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4 mb-5">
+
+<input type="hidden" id="block-id" value="{{ block_json.id|default:'' }}">
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+
+<input
+type="text"
+id="block-title"
+class="form-control w-50"
+placeholder="Название блока"
+>
+
+<div class="d-flex gap-2">
+
+<button id="clear-block-btn" class="btn btn-outline-danger">
+Очистить
+</button>
+
+<button id="save-block-btn" class="btn btn-primary">
+Сохранить
+</button>
+
+</div>
+
+</div>
+
+
+<div class="card shadow-sm mb-3">
+
+<div
+id="selected-tasks"
+class="card-body d-flex flex-wrap gap-3 align-items-center"
+></div>
+
+</div>
+
+
+<div
+id="task-detail-card"
+class="card shadow-sm p-3 mb-3"
+style="display:none;"
+>
+
+<div class="d-flex gap-4 align-items-start">
+
+<div class="text-center">
+
+<img id="task-detail-icon" width="72" height="72">
+
+<div id="task-detail-title" class="fw-semibold mt-2"></div>
+
+</div>
+
+<div class="d-flex flex-column gap-2">
+
+<div>
+<label class="form-label">Количество</label>
+<input id="task-detail-amount" class="form-control form-control-sm" type="number">
+</div>
+
+<div>
+<label class="form-label">Время</label>
+<input id="task-detail-time" class="form-control form-control-sm" type="number">
+</div>
+
+</div>
+
+<div class="flex-grow-1">
+
+<div class="d-flex justify-content-between align-items-center mb-1">
+    <label class="form-label m-0">Описание</label>
+
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="task-password-toggle">
+    </div>
+</div>
+
+<textarea
+id="task-detail-description"
+class="form-control mb-2"
+rows="4"
+></textarea>
+
+<div id="task-password-container" style="display:none; position:relative;">
+
+    <input
+        type="password"
+        id="task-password"
+        class="form-control"
+        placeholder="Пароль"
+    >
+
+    <span
+        id="password-eye"
+        style="
+        position:absolute;
+        right:10px;
+        top:50%;
+        transform:translateY(-50%);
+        cursor:pointer;
+        user-select:none;
+        "
+    >
+        👁
+    </span>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- =========================
+TASK PICKER (справа)
+========================= -->
+
+<div class="task-picker shadow">
+  {% for t in templates %}
+  <div
+      class="task-icon"
+      data-id="{{ t.id }}"
+      data-title="{{ t.title }}"
+      data-description="{{ t.description|escape }}"
+      data-amount="{{ t.default_amount }}"
+      data-time="{{ t.time|default:1 }}"
+  >
+      {% if t.icon %}
+      <img src="{{ t.icon.url }}" width="48" height="48">
+      {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Tooltip карточка -->
+<div id="task-tooltip" class="task-tooltip shadow-sm" style="display:none; position:absolute; z-index:2000;">
+    <div class="fw-bold" id="tooltip-title"></div>
+    <div class="small text-muted" id="tooltip-description"></div>
+    <div class="small text-muted" id="tooltip-amount-time"></div>
+</div>
+
+
+<!-- =========================
+GROUP PICKER (слева)
+========================= -->
+
+<div class="group-picker shadow">
+
+{% for g in groups %}
+
+<div
+class="group-icon"
+data-id="{{ g.id }}"
+data-title="{{ g.title }}"
+data-description="{{ g.description|escape }}"
+data-count="{{ g.tasks.count }}"
+>
+
+<div class="group-grid">
+
+{% for t in g.tasks.all|slice:":4" %}
+
+<div class="group-task-mini">
+
+{% if t.icon %}
+<img src="{{ t.icon.url }}" width="20" height="20">
+{% endif %}
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+
+<!-- =========================
+GROUP TOOLTIP
+========================= -->
+
+<div id="group-tooltip" class="group-tooltip" style="display:none">
+<div id="group-tooltip-title" class="fw-semibold"></div>
+<div id="group-tooltip-description" class="small text-muted"></div>
+<div class="small mt-1">
+Задач: <span id="group-tooltip-count"></span>
+</div>
+<div id="group-tooltip-icons" class="tooltip-icons mt-2"></div>
+
+</div>
+
+
+{% endblock %}
+
+
+
+{% block page_js %}
+
+<script>
+const block_json = {{ block_json|safe }};
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="{% static 'js/block_builder.js' %}"></script>
+
+{% endblock %}
+
+block_builder.js
+/* --------------------------------------------------
+STATE
+-------------------------------------------------- */
+const selectedContainer = document.getElementById("selected-tasks");
+const taskDetailCard = document.getElementById("task-detail-card");
+
+const detailIcon = document.getElementById("task-detail-icon");
+const detailTitle = document.getElementById("task-detail-title");
+
+const detailAmount = document.getElementById("task-detail-amount");
+const detailTime = document.getElementById("task-detail-time");
+const detailDescription = document.getElementById("task-detail-description");
+
+const blockTitleInput = document.getElementById("block-title");
+
+const passwordToggle = document.getElementById("task-password-toggle");
+const passwordContainer = document.getElementById("task-password-container");
+const passwordInput = document.getElementById("task-password");
+const passwordEye = document.getElementById("password-eye");
+
+const selected = [];
+const taskState = {};
+
+/* --------------------------------------------------
+BLOCK ID (edit mode)
+-------------------------------------------------- */
+const blockIdInput = document.getElementById("block-id");
+const blockId = blockIdInput ? blockIdInput.value : null;
+
+/* --------------------------------------------------
+CSRF
+-------------------------------------------------- */
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie) {
+        const cookies = document.cookie.split(";");
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + "=")) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie("csrftoken");
+
+/* --------------------------------------------------
+ADD TASK
+-------------------------------------------------- */
+function addTask(taskData) {
+
+    const id = taskData.id?.toString() || `new-${Math.random()}`;
+
+    if (!selected.includes(id)) {
+
+        selected.push(id);
+
+        const el = document.createElement("div");
+        el.className = "selected-task position-relative";
+        el.dataset.id = id;
+
+        el.innerHTML = `
+            <div class="border rounded bg-light d-flex align-items-center justify-content-center w-100 h-100">
+                ${taskData.icon ? `<img src="${taskData.icon}" width="48" height="48">` : ""}
+            </div>
+
+            <button
+                class="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle rounded-circle remove-task"
+            >
+                ×
+            </button>
+        `;
+
+        el.addEventListener("click", () => showTaskDetail(id));
+
+        el.querySelector(".remove-task").addEventListener("click", (e) => {
+            e.stopPropagation();
+            removeTask(id);
+        });
+
+        selectedContainer.appendChild(el);
+
+        taskState[id] = {
+            title: taskData.title,
+            description: taskData.description || "",
+            amount: parseInt(taskData.amount) || 1,
+            time: parseFloat(taskData.time) || 1,
+            iconSrc: taskData.icon || "",
+
+            is_encrypted: false,
+            password: ""
+        };
+    }
+
+    showTaskDetail(id);
+}
+
+/* --------------------------------------------------
+REMOVE TASK
+-------------------------------------------------- */
+function removeTask(id) {
+
+    delete taskState[id];
+
+    const index = selected.indexOf(id);
+    if (index > -1) selected.splice(index, 1);
+
+    const el = selectedContainer.querySelector(`[data-id="${id}"]`);
+    if (el) el.remove();
+
+    taskDetailCard.style.display = "none";
+}
+
+/* --------------------------------------------------
+SHOW DETAIL
+-------------------------------------------------- */
+function showTaskDetail(id) {
+
+    const state = taskState[id];
+    if (!state) return;
+
+    taskDetailCard.style.display = "block";
+
+    detailIcon.src = state.iconSrc;
+    detailTitle.textContent = state.title;
+
+    detailAmount.value = state.amount;
+    detailTime.value = state.time;
+    detailDescription.value = state.description;
+
+    taskDetailCard.dataset.currentTaskId = id;
+
+    /* PASSWORD STATE */
+
+    passwordToggle.checked = state.is_encrypted;
+
+    if (state.is_encrypted) {
+
+        passwordContainer.style.display = "block";
+        passwordInput.value = state.password;
+
+    } else {
+
+        passwordContainer.style.display = "none";
+        passwordInput.value = "";
+
+    }
+}
+
+/* --------------------------------------------------
+INPUT HANDLERS
+-------------------------------------------------- */
+detailAmount.addEventListener("input", () => {
+    const id = taskDetailCard.dataset.currentTaskId;
+    if (id) taskState[id].amount = parseInt(detailAmount.value);
+});
+
+detailTime.addEventListener("input", () => {
+    const id = taskDetailCard.dataset.currentTaskId;
+    if (id) taskState[id].time = parseFloat(detailTime.value);
+});
+
+detailDescription.addEventListener("input", () => {
+    const id = taskDetailCard.dataset.currentTaskId;
+    if (id) taskState[id].description = detailDescription.value;
+});
+
+/* --------------------------------------------------
+PASSWORD TOGGLE
+-------------------------------------------------- */
+passwordToggle.addEventListener("change", () => {
+
+    const id = taskDetailCard.dataset.currentTaskId;
+    if (!id) return;
+
+    const state = taskState[id];
+
+    state.is_encrypted = passwordToggle.checked;
+
+    if (state.is_encrypted) {
+
+        passwordContainer.style.display = "block";
+
+    } else {
+
+        passwordContainer.style.display = "none";
+        passwordInput.value = "";
+        state.password = "";
+
+    }
+
+});
+
+/* --------------------------------------------------
+PASSWORD INPUT
+-------------------------------------------------- */
+passwordInput.addEventListener("input", () => {
+
+    const id = taskDetailCard.dataset.currentTaskId;
+    if (!id) return;
+
+    taskState[id].password = passwordInput.value;
+
+});
+
+/* --------------------------------------------------
+SHOW / HIDE PASSWORD
+-------------------------------------------------- */
+passwordEye.addEventListener("click", () => {
+
+    if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+    } else {
+        passwordInput.type = "password";
+    }
+
+});
+
+/* --------------------------------------------------
+TASK PICKER CLICK
+-------------------------------------------------- */
+document.querySelectorAll(".task-picker .task-icon").forEach(icon => {
+
+    icon.addEventListener("click", () => {
+
+        const taskData = {
+            id: icon.dataset.id,
+            title: icon.dataset.title,
+            description: icon.dataset.description,
+            amount: icon.dataset.amount,
+            icon: icon.querySelector("img") ? icon.querySelector("img").src : "",
+        };
+
+        addTask(taskData);
+
+    });
+
+});
+
+/* --------------------------------------------------
+SORTABLE
+-------------------------------------------------- */
+new Sortable(selectedContainer, {
+    animation: 150,
+    onEnd() {
+        const ids = Array.from(selectedContainer.children).map(el => el.dataset.id);
+        selected.length = 0;
+        ids.forEach(id => selected.push(id));
+    }
+});
+
+/* --------------------------------------------------
+CLEAR BLOCK
+-------------------------------------------------- */
+document.getElementById("clear-block-btn").onclick = () => {
+
+    selected.length = 0;
+    selectedContainer.innerHTML = "";
+
+    for (let key in taskState) delete taskState[key];
+
+    taskDetailCard.style.display = "none";
+};
+
+/* --------------------------------------------------
+SAVE BLOCK
+-------------------------------------------------- */
+document.getElementById("save-block-btn").onclick = async () => {
+
+    if (!blockTitleInput.value.trim()) {
+        alert("Введите название блока");
+        return;
+    }
+
+    const tasksData = selected.map(id => {
+        const state = taskState[id];
+        let password = "";
+        if (state.is_encrypted && state.password) {
+            password = state.password;
+        }
+
+        return {
+            id: id.startsWith("new-") ? null : parseInt(id),
+            title: state.title,
+            description: state.description,
+            is_encrypted: state.is_encrypted,
+            password: password,
+            amount: state.amount,
+            time: state.time,
+            icon: state.iconSrc,
+        };
+
+    });
+
+    const url = window.location.href;
+
+    const formData = new FormData();
+
+    formData.append("title", blockTitleInput.value);
+    formData.append("tasks", JSON.stringify(tasksData));
+    formData.append("csrfmiddlewaretoken", csrftoken);
+
+    const response = await fetch(url, {
+        method: "POST",
+        body: formData
+    });
+
+    if (response.redirected) {
+        window.location.href = response.url;
+    } else {
+        alert("Ошибка при сохранении блока");
+    }
+};
+
+/* --------------------------------------------------
+LOAD BLOCK (edit)
+-------------------------------------------------- */
+function loadBlock() {
+
+    if (!block_json) return;
+
+    blockTitleInput.value = block_json.title;
+
+    block_json.tasks.forEach(task => {
+
+        addTask(task);
+
+        const id = task.id.toString();
+
+        taskState[id].amount = task.amount;
+        taskState[id].time = task.time;
+        taskState[id].description = task.description;
+
+    });
+}
+
+loadBlock();
+
+
+
+/* --------------------------------------------------
+HORIZONTAL SCROLL
+-------------------------------------------------- */
+const taskPicker = document.querySelector(".task-picker");
+
+if (taskPicker) {
+
+    taskPicker.addEventListener("wheel", (e) => {
+
+        e.preventDefault();
+        taskPicker.scrollLeft += e.deltaY;
+
+    });
+
+}
+
+/* --------------------------------------------------
+GROUP CLICK
+-------------------------------------------------- */
+document.querySelectorAll(".group-icon").forEach(icon => {
+
+    icon.onclick = async () => {
+
+        const groupId = icon.dataset.id;
+
+        const res = await fetch(`/api/groups/${groupId}/`);
+        if (!res.ok) return;
+
+        const data = await res.json();
+
+        data.tasks.forEach(t => addTask(t));
+
+    };
+
+});
+
+/* --------------------------------------------------
+GROUP TOOLTIP
+-------------------------------------------------- */
+const gTooltip = document.getElementById("group-tooltip");
+
+const gTitle = document.getElementById("group-tooltip-title");
+const gDesc = document.getElementById("group-tooltip-description");
+const gCount = document.getElementById("group-tooltip-count");
+const gIcons = document.getElementById("group-tooltip-icons");
+
+document.querySelectorAll(".group-icon").forEach(icon => {
+
+    icon.addEventListener("mouseenter", async () => {
+
+        gTooltip.style.display = "block";
+
+        gTitle.textContent = icon.dataset.title;
+        gDesc.textContent = icon.dataset.description;
+        gCount.textContent = icon.dataset.count;
+
+        gIcons.innerHTML = "";
+
+        const res = await fetch(`/api/groups/${icon.dataset.id}/`);
+
+        if (res.ok) {
+
+            const data = await res.json();
+
+            data.tasks.forEach(t => {
+
+                if (t.icon) {
+
+                    const img = document.createElement("img");
+                    img.src = t.icon;
+
+                    gIcons.appendChild(img);
+
+                }
+
+            });
+
+        }
+
+    });
+
+    icon.addEventListener("mousemove", (e) => {
+
+        gTooltip.style.left = (e.clientX + 15) + "px";
+        gTooltip.style.top = (e.clientY + 15) + "px";
+
+    });
+
+    icon.addEventListener("mouseleave", () => {
+
+        gTooltip.style.display = "none";
+
+    });
+
+});
+
+/* --------------------------------------------------
+TASK TOOLTIP
+-------------------------------------------------- */
+const taskTooltip = document.getElementById("task-tooltip");
+const tooltipTitle = document.getElementById("tooltip-title");
+const tooltipDescription = document.getElementById("tooltip-description");
+const tooltipAmountTime = document.getElementById("tooltip-amount-time");
+
+document.querySelectorAll(".task-picker .task-icon").forEach(icon => {
+
+    icon.addEventListener("mouseenter", () => {
+
+        tooltipTitle.textContent = icon.dataset.title.trim() || "Без названия";
+        let description = icon.dataset.description || "";
+
+        description = description
+            .trim()
+            .replace(/\n+$/g, "")     // убрать переносы в конце
+
+        tooltipDescription.textContent = description;
+        tooltipAmountTime.textContent =
+            `Количество: ${icon.dataset.amount || 1}, Время: ${icon.dataset.time || 1}`;
+
+        taskTooltip.style.display = "block";
+
+        const rect = icon.getBoundingClientRect();
+        const tooltipHeight = taskTooltip.offsetHeight || 80;
+
+        const topPos = rect.top + window.scrollY - tooltipHeight - 8;
+        const leftPos = rect.left + window.scrollX + rect.width / 2 - 110;
+
+        taskTooltip.style.top = `${topPos}px`;
+        taskTooltip.style.left = `${leftPos}px`;
+
+
+    });
+
+    icon.addEventListener("mouseleave", () => {
+
+        taskTooltip.style.display = "none";
+
+    });
+
+});

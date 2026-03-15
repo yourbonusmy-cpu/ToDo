@@ -1,0 +1,553 @@
+[
+  {
+    "code": "pillow_sleep.png",
+    "title": "Сон",
+    "description": "Лег спасть в 23 часа",
+    "icon": "pillow_sleep.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+
+  {
+    "code": "exercise",
+    "title": "Разминка",
+    "description": "Сделал разминку:\n\t- наклоны головы;\n\t- вращение головы;\n\t- вращение прямыми руками;\n\t- ножницы;\n\t- повороты корпуса;,\n\t- вращение тазом;\n\t- вращение ног;\n\t- растяжка ног;\n\t- приседания;\n\t- подъемы с носков на пятки;\n\t- вращения бедер;\n\t- прышки на ногах;\n\t- отжимания;",
+    "icon": "exercise.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "adapter_task",
+    "title": "Зарядка smartphone",
+    "description": "Зарядил smartphone на 100%",
+    "icon": "free-icon-adapter-9977963.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "laundry",
+    "title": "Стирка верхней одежды",
+    "description": "Постирал верхнюю одежду",
+    "icon": "free-icon-clean-clothes-2230776.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "floor_cleaning",
+    "title": "Мыть пол",
+    "description": "Пропылесосил и помыл пол",
+    "icon": "free-icon-clean-floor-16386.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "cleaning_general",
+    "title": "Общая уборка",
+    "description": "Протер поверхности и убрал мусор",
+    "icon": "free-icon-cleaning-995053.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "cleaning_detailed",
+    "title": "Подмести пол",
+    "description": "Подмел пол",
+    "icon": "free-icon-cleaning-3350354.png",
+    "default_amount": 1,
+    "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "coding_task",
+    "title": "Программирование\nмелкие исправления",
+    "description": "Исправил в проекте код",
+    "icon": "free-icon-codes-7065950.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "coding_development",
+    "title": "Разработка кода",
+    "description": "Написал новый функционал",
+    "icon": "free-icon-coding-4516650.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "cooking_meal",
+    "title": "Приготовление супа",
+    "description": "Приготовил суп борщ",
+    "icon": "free-icon-cooking-4065581.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "cooking_meal_alt",
+    "title": "Приготовление пищи",
+    "description": "Приготовил различные блюда",
+    "icon": "free-icon-cooking-10981550.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "nail_cut",
+    "title": "Стричь ногти",
+    "description": "Постриг ногти на руках",
+    "icon": "free-icon-cutting-nail-17563245.png",
+    "default_amount": 1,
+    "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "dishwashing",
+    "title": "Мыть посуду",
+    "description": "Помыл посуду",
+    "icon": "free-icon-dishes-washer-5859284.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "english_study",
+    "title": "Изучение английского",
+    "description": "Учил новые слова, посмотрел видео на английском",
+    "icon": "free-icon-english-5388605.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "movie_watch",
+    "title": "Смотреть фильм",
+    "description": "Смотрел фильм ",
+    "icon": "free-icon-film-8491129.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "iron_clothes",
+    "title": "Гладить",
+    "description": "Погладил одежду",
+    "icon": "free-icon-iron-5193863.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "morning_routine",
+    "title": "Проснулся",
+    "description": "Проснуться в 7 часов",
+    "icon": "free-icon-man-waking-up-on-morning-sitting-on-bed-stretching-his-arms-46609.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "mopping",
+    "title": "Мыть пол",
+    "description": "Помыл пол",
+    "icon": "free-icon-mopping-16963763.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "nail_trimmer",
+    "title": "Постричь ногти",
+    "description": "Постриг ногти на ногах",
+    "icon": "free-icon-nail-trimmer-14477758.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "phone_charge",
+    "title": "Зарядить телефон",
+    "description": "Зарядил телефон",
+    "icon": "free-icon-phone-charge-10017930.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "phone_charge_alt",
+    "title": "Подзарядка телефона",
+    "description": "Подзарядил телефон 50%",
+    "icon": "free-icon-phone-charge-10948661.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "poop_task",
+    "title": "Сходить в туалет",
+    "description": "Сходил по большому",
+    "icon": "free-icon-poop-1642952.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "programming",
+    "title": "Программирование",
+    "description": "Разработал новый функционал",
+    "icon": "free-icon-programming-6062568.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "programming_alt",
+    "title": "Кодинг",
+    "description": "Дописал полностью проект",
+    "icon": "free-icon-programming-16120840.png",
+    "default_amount": 1,
+    "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "ready_meal",
+    "title": "Приготовить блюдо",
+    "description": "Приготовил еду",
+    "icon": "free-icon-ready-meal-9562859.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "soup",
+    "title": "Приготовил еду",
+    "description": "Разогрел суп",
+    "icon": "free-icon-soup-754424.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "soup_alt",
+    "title": "Поел суп",
+    "description": "Поел суп",
+    "icon": "free-icon-soup-5756048.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "toe_care",
+    "title": "Постричь ногти на ногах",
+    "description": "Подрезал ногти на ногах",
+    "icon": "free-icon-toe-15510756.png",
+    "default_amount": 1,
+    "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "vacuum_cleaner1",
+    "title": "Пылесосить",
+    "description": "Пропылесосил комнату",
+    "icon": "free-icon-vacuum-cleaner-697539.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "vacuum_cleaner2",
+    "title": "Пылесосить",
+    "description": "Еженедельная уборка пылесосом",
+    "icon": "free-icon-vacuum-cleaner-821523.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "vacuum_cleaner3",
+    "title": "Пылесосить",
+    "description": "Пропылесосил пол",
+    "icon": "free-icon-vacuum-cleaner-3774590.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "vacuum_cleaner4",
+    "title": "Чистка пылесосом",
+    "description": "Пропылесосить комнату или квартиру",
+    "icon": "free-icon-vacuum-cleaner-8037994.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "video_watch",
+    "title": "Смотреть видео",
+    "description": "Развлечение или обучение",
+    "icon": "free-icon-video-1179120.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "video_watch_alt",
+    "title": "Просмотр сериал",
+    "description": "Смотрел сериал сверхъестественное 1 - 1",
+    "icon": "free-icon-video-11478281.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "wake_up",
+    "title": "Разбужен",
+    "description": "Разбужен дрелью соседа",
+    "icon": "free-icon-wake-up-6051156.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "waking_up",
+    "title": "Просыпаться",
+    "description": "Проснулся бодрым",
+    "icon": "free-icon-waking-up-384166.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "wash_dishes",
+    "title": "Мыть посуду",
+    "description": "Помыл посуду",
+    "icon": "free-icon-wash-dishes-11261549.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "washing_machine",
+    "title": "Стирка",
+    "description": "Запустить стирку белья",
+    "icon": "free-icon-washing-machine-4596016.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "window_cleaning",
+    "title": "Мыть окна",
+    "description": "Помыл окна",
+    "icon": "free-icon-window-cleaning-5115557.png",
+    "default_amount": 1,
+    "period_type": "year",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "wiping",
+    "title": "Протирать пыль",
+    "description": "Удалил пыль и грязь с поверхностей",
+    "icon": "free-icon-wiping-8962593.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "gymnastic",
+    "title": "Гимнастика",
+    "description": "Комплекс упражнений для тела",
+    "icon": "gymnastic.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 3
+  },
+  {
+    "code": "man_task",
+    "title": "Общие мужские дела",
+    "description": "Задачи по дому для мужчины",
+    "icon": "man.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "running",
+    "title": "Пробежка",
+    "description": "Пробежал 2 км, на заливе",
+    "icon": "running.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 2
+  },
+  {
+    "code": "running_man",
+    "title": "Скоростная пробежка",
+    "description": "Пробежал быстро 2 км за 7 минут",
+    "icon": "running-man.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "sauna",
+    "title": "Сходить в баню",
+    "description": "Сходил в баню",
+    "icon": "sauna.png",
+    "default_amount": 1,
+    "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "sauna_hot",
+    "title": "Сходить в баню",
+    "description": "Сходил в баню, очень горячую баню",
+    "icon": "sauna_hot.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "sauna_medium",
+    "title": "Сходить в баню",
+    "description": "Сходил в баню, с средним жаром",
+    "icon": "sauna_medium.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "shower",
+    "title": "Помыться",
+    "description": "Помылся в душе",
+    "icon": "shower.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "sleep",
+    "title": "Сон",
+    "description": "Лег спать в 22 часа",
+    "icon": "sleep.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "taking_shower.png",
+    "title": "Принять душ",
+    "description": "Принял душ",
+    "icon": "taking-a-shower.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "washing_hand",
+    "title": "Помыть руки",
+    "description": "Помыл руки",
+    "icon": "washing-hand.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "washing_hand",
+    "title": "Помыть руки",
+    "description": "Помыл руки",
+    "icon": "washing-hands.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "weight_lifting",
+    "title": "Подкачаться",
+    "description": "Подкачался",
+    "icon": "weight-lifting.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "wipe",
+    "title": "Протереть пыл",
+    "description": "Протер пыль ",
+    "icon": "wipe.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "shopping",
+    "title": "Сходить в магазин",
+    "description": "Купил поесть\n\t- Хлеб",
+    "icon": "free-icon-shopping-cart-5087784.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  }
+]

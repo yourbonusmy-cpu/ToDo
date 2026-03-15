@@ -1,0 +1,47 @@
+<div class="task-block card mb-3 p-0 {% if block.is_hided %}d-none{% endif %}" data-block-id="{{ block.id }}">
+
+    <!-- HEADER: название блока + кнопки -->
+    <div class="block-header d-flex justify-content-between align-items-center p-2 bg-light border-bottom">
+        <!-- Нажимаемая область с названием блока -->
+        <div class="block-title-clickable flex-grow-1" style="cursor:pointer;">
+            {{ block.title }}
+        </div>
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary btn-block-hide" data-block-id="{{ block.id }}">
+                Скрыть
+            </button>
+
+            <a href="{% url 'block_edit' block.id %}" class="btn btn-sm btn-primary">
+                Редактировать
+            </a>
+
+            <button class="btn btn-sm btn-outline-danger btn-block-delete" data-block-id="{{ block.id }}">
+                Удалить
+            </button>
+        </div>
+    </div>
+
+    <!-- TASK ICONS -->
+    <div class="block-tasks d-flex flex-wrap gap-2 p-2 bg-white">
+        {% for bt in block.tasks.all %}
+            <button type="button"
+                    class="btn btn-light position-relative task-icon-btn {% if bt.is_hidden %}task-hidden{% endif %}"
+                    data-bs-toggle="popover"
+                    data-bs-html="true"
+                    data-bs-content="
+                        <strong>{{ bt.title }}</strong><br>
+                        {{ bt.description }}<br>
+                        Кол-во: {{ bt.amount }}<br>
+                        Время: {{ bt.time }}
+                    ">
+                    {% if bt.icon %}
+                        <img src="{{ MEDIA_URL }}{{ bt.icon }}" width="64" height="64" class="rounded">
+                    {% else %}
+                        <div class="placeholder-icon"></div>
+                    {% endif %}
+            </button>
+        {% endfor %}
+    </div>
+
+</div>

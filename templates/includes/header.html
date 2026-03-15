@@ -1,0 +1,92 @@
+<nav class="app-navbar">
+
+<div class="container navbar-inner">
+
+<!-- LOGO -->
+
+<a class="logo" href="/">
+    <span class="logo-icon">
+        <i class="bi bi-check-lg"></i>
+    </span>
+    Tasker
+</a>
+
+<!-- RIGHT -->
+
+<div class="nav-actions">
+
+{% if user.is_authenticated %}
+
+<a class="nav-btn"
+   href="{% url 'block_builder' %}">
+   <i class="bi bi-kanban"></i>
+   Блок
+</a>
+
+<a class="nav-btn"
+   href="/templates/">
+   <i class="bi bi-plus-square"></i>
+   Шаблоны
+</a>
+
+<a class="nav-btn"
+   href="/group-templates/">
+   <i class="bi bi-plus-square"></i>
+   Группы
+</a>
+
+<!-- USER MENU -->
+
+<div class="dropdown">
+
+<button
+class="user-menu"
+data-bs-toggle="dropdown">
+
+<i class="bi bi-person-circle"></i>
+
+<span class="username">
+{{ user.username }}
+</span>
+
+<i class="bi bi-chevron-down small"></i>
+
+</button>
+
+<ul class="dropdown-menu dropdown-menu-end">
+
+<li class="dropdown-header">
+{{ user.username }}
+</li>
+
+<li>
+<a class="dropdown-item"
+   href="{% url 'logout' %}">
+   <i class="bi bi-box-arrow-right"></i>
+   Выйти
+</a>
+</li>
+
+</ul>
+
+</div>
+
+{% else %}
+
+<button
+class="btn btn-primary btn-sm"
+data-bs-toggle="modal"
+data-bs-target="#authModal">
+
+<i class="bi bi-box-arrow-in-right"></i>
+Войти
+
+</button>
+
+{% endif %}
+
+</div>
+
+</div>
+
+</nav>

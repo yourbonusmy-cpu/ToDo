@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}
+Главная
+{% endblock %}
+
+{% block content %}
+
+<div class="mt-4">
+
+    <h1>Tasker</h1>
+
+    <p class="text-muted">
+        Приложение для ежедневных задач.
+    </p>
+
+    {% if user.is_authenticated %}
+
+        <div class="alert alert-success">
+            Вы вошли как <b>{{ user.username }}</b>
+        </div>
+
+    {% else %}
+
+        <div class="alert alert-info">
+            Войдите или зарегистрируйтесь чтобы использовать приложение
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

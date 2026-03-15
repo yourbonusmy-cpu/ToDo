@@ -1,0 +1,41 @@
+/* Карточка задачи */
+.task-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 16px;
+}
+.task-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+}
+
+/* Иконка задачи */
+.task-icon {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+/* Placeholder если иконки нет */
+.placeholder-icon {
+    width: 80px;
+    height: 80px;
+    background: #e9ecef;
+    border-radius: 12px;
+}
+
+/* Заголовок блока */
+.card-body h3 {
+    font-weight: 600;
+}
+
+/* Список свойств задачи */
+.task-card ul li {
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Мелкий текст */
+.card-text.text-muted {
+    font-size: 0.85rem;
+}
