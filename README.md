@@ -7,9 +7,9 @@ Smart Todo Planner — это продвинутое веб-приложение
 
 ---
 
-## ✨ Demo
+## 🎬 Demo (x8)
 
-🔗 Live demo: _coming soon_  
+![Demo 8x](docs/images/demo_8x.gif)
 📸 Screenshots:
 
 - 📅 Календарь задач  
@@ -104,7 +104,7 @@ core/
 ## 🚀 Быстрый старт
 
 ```bash
-git clone https://github.com/yourusername/todo-app.git
+git clone https://github.com/yourbonusmy-cpu/ToDo.git
 cd todo-app
 
 python -m venv venv
