@@ -1,8 +1,8 @@
 import os
-
 from django.core.exceptions import ValidationError
-from django.db import models
 from django.contrib.auth import get_user_model
+from django.db import models
+from django.contrib.auth.hashers import make_password, check_password
 
 User = get_user_model()
 
@@ -50,6 +50,43 @@ def task_icon_upload_path(instance, filename):
     # instance.owner.username → имя пользователя
     # filename → оригинальное имя файла
     return os.path.join("image", instance.owner.username, "task_icons", filename)
+
+
+class UserPin(models.Model):
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    pin_hash = models.CharField(max_length=128, blank=True, null=True)
+
+    is_pin_enabled = models.BooleanField(default=False)
+
+    def enable_pin(self, raw_pin: str | None = None):
+        """
+        Включить PIN.
+        Если PIN не передан — установить 0000.
+        """
+
+        if raw_pin is None:
+            raw_pin = "0000"
+
+        self.pin_hash = make_password(raw_pin)
+        self.is_pin_enabled = True
+        self.save()
+
+    def disable_pin(self):
+        """
+        Отключить PIN.
+        PIN остаётся в базе.
+        """
+        self.is_pin_enabled = False
+        self.save()
+
+    def check_pin(self, raw_pin: str) -> bool:
+
+        if not self.is_pin_enabled or not self.pin_hash:
+            return False
+
+        return check_password(raw_pin, self.pin_hash)
 
 
 class SystemTaskTemplate(models.Model):
@@ -179,9 +216,10 @@ class Block(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=128)
     priority = models.PositiveSmallIntegerField(default=0)
-    is_hided = models.BooleanField(default=False)
+    is_hidden = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    target_date = models.DateField(null=True, blank=True, db_index=True)
 
     class Meta:
         ordering = ["-priority", "created_at"]
@@ -189,10 +227,17 @@ class Block(models.Model):
 
 class BlockTask(models.Model):
     block = models.ForeignKey(Block, on_delete=models.CASCADE, related_name="tasks")
+    template = models.ForeignKey(
+        TaskTemplate,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="block_tasks",
+    )
     title = models.CharField(max_length=128)
     icon = models.CharField(max_length=255, blank=True)
-    is_encrypted = models.BooleanField(default=False)
     is_hidden = models.BooleanField(default=False)
+    is_encrypted = models.BooleanField(default=False)
     description = models.TextField(blank=True)
     position = models.PositiveIntegerField()
     amount = models.PositiveIntegerField(default=1)
@@ -206,3 +251,15 @@ class BlockTask(models.Model):
         indexes = [
             models.Index(fields=["block", "position"]),
         ]
+
+
+class BlockWeather(models.Model):
+    block = models.OneToOneField(
+        Block, on_delete=models.CASCADE, related_name="weather"
+    )
+
+    city = models.CharField(max_length=64)
+
+    data = models.JSONField()  # ← ВСЕ 4 периода сюда
+
+    created_at = models.DateTimeField(auto_now_add=True)

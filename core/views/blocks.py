@@ -1,12 +1,22 @@
 import json
+from datetime import datetime
 
+from django.conf import settings
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 
 from core.crypto import encrypt_text
-from core.models import Block, BlockTask, TaskTemplate, GroupTemplate
+from core.models import (
+    Block,
+    BlockTask,
+    TaskTemplate,
+    GroupTemplate,
+    PeriodType,
+    ScheduleType,
+    BlockWeather,
+)
 
 import json
 from django.shortcuts import get_object_or_404, render
@@ -19,39 +29,342 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 
 
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
+
+
+from core.crypto import decrypt_text
+from django.contrib.auth.hashers import check_password
+from django.views.decorators.http import require_POST
+
+from core.services.weather import (
+    get_forecast,
+    group_by_period,
+    build_fixed_day_weather,
+    get_wind_direction,
+    normalize_weather,
+    get_weather_ui,
+)
 
 
 @login_required
 @csrf_protect
 def decrypt_task(request):
-
     if request.method != "POST":
-        return JsonResponse({"status": "error"}, status=405)
+        return JsonResponse(
+            {"status": "error", "message": "Method not allowed"}, status=405
+        )
 
-    data = json.loads(request.body)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"status": "error", "message": "Invalid JSON"}, status=400)
+
     task_id = data.get("task_id")
     password = data.get("password")
+    if not task_id:
+        return JsonResponse(
+            {"status": "error", "message": "task_id and password required"}, status=400
+        )
 
     bt = get_object_or_404(BlockTask, id=task_id, block__owner=request.user)
 
     if not bt.is_encrypted:
-        return JsonResponse({"status": "error", "message": "Task is not encrypted"})
+        return JsonResponse(
+            {"status": "error", "message": "Task is not encrypted"}, status=400
+        )
 
-    try:
-        from core.crypto import decrypt_text
+    decrypted = decrypt_text(bt.description, password)
 
-        decrypted = decrypt_text(bt.description, password)
-    except Exception:
-        return JsonResponse({"status": "error", "message": "Wrong password"})
+    if decrypted is None:
+        return JsonResponse(
+            {"status": "error", "message": "Wrong password"}, status=403
+        )
 
     return JsonResponse({"status": "ok", "description": decrypted})
 
 
 @login_required
-def block_builder(request, block_id=None):
-
+def block_create(request, block_id=None):
+    # Получаем все шаблоны задач, принадлежащие пользователю
     templates = TaskTemplate.objects.filter(owner=request.user)
+
+    # Фильтруем шаблоны задач по period_type и schedule_type
+    period_type = request.GET.get("period_type", PeriodType.NONE)
+    schedule_type = request.GET.get("schedule_type", ScheduleType.NONE)
+
+    if period_type != PeriodType.NONE:
+        templates = templates.filter(period_type=period_type)
+    if schedule_type != ScheduleType.NONE:
+        templates = templates.filter(schedule_type=schedule_type)
+
+    # Сортировка задач
+    sorted_templates = templates.annotate(
+        is_floating=(
+            Q(schedule_type=ScheduleType.FLOATING)
+            & Q(period_type__in=[PeriodType.WEEK, PeriodType.MONTH, PeriodType.YEAR])
+        ),
+        is_fixed=(
+            Q(schedule_type=ScheduleType.FIXED)
+            & Q(period_type__in=[PeriodType.WEEK, PeriodType.MONTH, PeriodType.YEAR])
+        ),
+    ).order_by(
+        "-is_floating",
+        "-fixed_weekday",
+        "-fixed_day_of_month",
+        "-fixed_month_of_year",
+        "-next_available_at",
+        "-selected_count",
+        "-priority",
+        "-last_used_at",
+    )
+
+    groups = GroupTemplate.objects.filter(owner=request.user).prefetch_related(
+        Prefetch("tasks", queryset=TaskTemplate.objects.only("id", "icon"))
+    )
+
+    block_data = None
+    block = None
+
+    if block_id:
+        block = get_object_or_404(Block, id=block_id, owner=request.user)
+        tasks = block.tasks.order_by("position")
+        block_data = {
+            "id": block.id,
+            "title": block.title,
+            "weather": block.weather.data if hasattr(block, "weather") else None,
+            "weather_city": block.weather.city if hasattr(block, "weather") else None,
+            "target_date": block.target_date.isoformat() if block.target_date else None,
+            "tasks": [
+                {
+                    "id": bt.id,
+                    "title": bt.title,
+                    "description": bt.description,
+                    "amount": bt.amount,
+                    "time": bt.time,
+                    "icon": str(bt.icon) if bt.icon else "",
+                    "is_encrypted": bt.is_encrypted,
+                    "is_hidden": bt.is_hidden,
+                    "template_id": bt.template.id if bt.template else None,
+                }
+                for bt in tasks
+            ],
+        }
+
+    if request.method == "POST":
+        # Получаем данные
+        if request.content_type == "application/json":
+            body = json.loads(request.body)
+            title = body.get("title", "Без названия")
+            target_date = body.get("target_date")
+            with_weather = body.get("with_weather", False)
+            city = body.get("weather_city", "Москва")
+            tasks_list = body.get("tasks", [])
+        else:
+            title = request.POST.get("title", "Без названия")
+            target_date = request.POST.get("target_date") or None
+            tasks_json = request.POST.get("tasks", "[]")
+            with_weather = request.POST.get("with_weather") == "true"
+            city = request.POST.get("weather_city", "Москва")
+            tasks_list = json.loads(tasks_json)
+
+        # ==========================
+        # UPDATE EXISTING BLOCK
+        # ==========================
+        if block:
+            block.title = title
+            if target_date:
+                target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
+            block.target_date = target_date
+            block.save()
+
+            # WEATHER UPDATE
+            if with_weather and block.target_date:
+                data = get_forecast(city)
+
+                grouped = group_by_period(data["list"])
+                weather = build_fixed_day_weather(grouped)
+
+                for w in weather:
+                    w["wind_dir"] = get_wind_direction(w["wind_deg"])
+                    w["description"] = normalize_weather(w["main"], w["description"])
+
+                    icon, color = get_weather_ui(w["main"])
+                    w["icon"] = icon
+                    w["color"] = color
+
+                BlockWeather.objects.update_or_create(
+                    block=block, defaults={"city": city, "data": weather}
+                )
+
+            elif not with_weather and hasattr(block, "weather"):
+                block.weather.delete()
+
+            existing_tasks = {t.id: t for t in block.tasks.all()}
+            incoming_ids = set()
+
+            for idx, task_data in enumerate(tasks_list):
+                # Обязательный template
+                template_id = task_data.get("template_id")
+                if not template_id:
+                    raise ValueError("Каждая задача блока должна иметь template_id")
+                template = get_object_or_404(
+                    TaskTemplate, id=template_id, owner=request.user
+                )
+
+                task_id = task_data.get("id")
+                description = task_data.get("description", "")
+                is_encrypted = task_data.get("is_encrypted", False)
+                is_hidden = task_data.get("is_hidden", False)
+
+                if is_encrypted:
+                    password = task_data.get("password")
+                    decrypted = task_data.get("decrypted")
+
+                    if decrypted and password:
+                        description = encrypt_text(description, password)
+                    else:
+                        if task_id and task_id in existing_tasks:
+                            description = existing_tasks[task_id].description
+
+                if task_id and task_id in existing_tasks:
+                    bt = existing_tasks[task_id]
+                    bt.title = task_data.get("title", bt.title)
+                    bt.description = description
+                    bt.amount = task_data.get("amount", bt.amount)
+                    bt.time = task_data.get("time", bt.time)
+                    bt.icon = task_data.get("icon", bt.icon)
+                    bt.is_encrypted = is_encrypted
+                    bt.is_hidden = is_hidden
+                    bt.template = template
+                    bt.position = idx
+                    bt.save()
+                else:
+                    bt = BlockTask.objects.create(
+                        block=block,
+                        template=template,
+                        title=task_data.get("title"),
+                        description=description,
+                        amount=task_data.get("amount", 0),
+                        time=task_data.get("time", 0),
+                        icon=task_data.get("icon", ""),
+                        is_encrypted=is_encrypted,
+                        is_hidden=is_hidden,
+                        position=idx,
+                    )
+                incoming_ids.add(bt.id)
+
+            # Удаление отсутствующих задач
+            to_delete = set(existing_tasks.keys()) - incoming_ids
+            if to_delete:
+                BlockTask.objects.filter(id__in=to_delete).delete()
+
+        # ==========================
+        # CREATE NEW BLOCK
+        # ==========================
+        else:
+            block = Block.objects.create(
+                title=title, owner=request.user, target_date=target_date
+            )
+            for idx, task_data in enumerate(tasks_list):
+                template_id = task_data.get("template_id")
+                if not template_id:
+                    raise ValueError("Каждая задача блока должна иметь template_id")
+                template = get_object_or_404(
+                    TaskTemplate, id=template_id, owner=request.user
+                )
+
+                description = task_data.get("description", "")
+                is_encrypted = task_data.get("is_encrypted", False)
+                is_hidden = task_data.get("is_hidden", False)
+
+                if is_encrypted:
+                    password = task_data.get("password")
+                    description = encrypt_text(description, password)
+
+                BlockTask.objects.create(
+                    block=block,
+                    template=template,
+                    title=task_data.get("title"),
+                    description=description,
+                    amount=task_data.get("amount", 0),
+                    time=task_data.get("time", 0),
+                    icon=task_data.get("icon", ""),
+                    is_encrypted=is_encrypted,
+                    is_hidden=is_hidden,
+                    position=idx,
+                )
+
+            if with_weather and block.target_date:
+                data = get_forecast(city)
+
+                grouped = group_by_period(data["list"])
+                weather = build_fixed_day_weather(grouped)
+
+                for w in weather:
+                    w["wind_dir"] = get_wind_direction(w["wind_deg"])
+                    w["description"] = normalize_weather(w["description"])
+
+                    icon, color = get_weather_ui(w["main"])
+                    w["icon"] = icon
+                    w["color"] = color
+
+                BlockWeather.objects.update_or_create(
+                    block=block, defaults={"city": city, "data": weather}
+                )
+
+        return redirect("/")
+
+    return render(
+        request,
+        "core/block_create.html",
+        {
+            "templates": sorted_templates,
+            "groups": groups,
+            "block_json": json.dumps(block_data) if block_data else "null",
+            "MEDIA_URL": settings.MEDIA_URL,
+        },
+    )
+
+
+@login_required
+def block_builder__1803(request, block_id=None):
+    # Получаем все шаблоны задач, принадлежащие пользователю
+    templates = TaskTemplate.objects.filter(owner=request.user)
+
+    # Фильтруем шаблоны задач по period_type и schedule_type
+    period_type = request.GET.get("period_type", PeriodType.NONE)
+    schedule_type = request.GET.get("schedule_type", ScheduleType.NONE)
+
+    # Применяем фильтрацию по period_type и schedule_type
+    if period_type != PeriodType.NONE:
+        templates = templates.filter(period_type=period_type)
+
+    if schedule_type != ScheduleType.NONE:
+        templates = templates.filter(schedule_type=schedule_type)
+
+    # ==========================
+    # СОРТИРОВКА ЗАДАЧ ПО ПЕРИОДУ, ТИПУ РАСПИСАНИЯ И ДРУГИМ КРИТЕРИЯМ
+    # ==========================
+    sorted_templates = templates.annotate(
+        # Аннотируем поля для сортировки
+        is_floating=(
+            Q(schedule_type=ScheduleType.FLOATING) & Q(period_type=PeriodType.WEEK)
+        )
+        | (Q(schedule_type=ScheduleType.FLOATING) & Q(period_type=PeriodType.MONTH))
+        | (Q(schedule_type=ScheduleType.FLOATING) & Q(period_type=PeriodType.YEAR)),
+        is_fixed=(Q(schedule_type=ScheduleType.FIXED) & Q(period_type=PeriodType.WEEK))
+        | (Q(schedule_type=ScheduleType.FIXED) & Q(period_type=PeriodType.MONTH))
+        | (Q(schedule_type=ScheduleType.FIXED) & Q(period_type=PeriodType.YEAR)),
+    ).order_by(
+        "-is_floating",  # Сначала плавающие задачи
+        "-fixed_weekday",  # Для недельных задач
+        "-fixed_day_of_month",  # Для месячных задач
+        "-fixed_month_of_year",  # Для годовых задач
+        "-next_available_at",  # Для задач с фиксированным временем
+        "-selected_count",  # Сортировка по количеству выборов
+        "-priority",  # Приоритет
+        "-last_used_at",  # Последнее использование
+    )
 
     groups = GroupTemplate.objects.filter(owner=request.user).prefetch_related(
         Prefetch("tasks", queryset=TaskTemplate.objects.only("id", "icon"))
@@ -117,8 +430,16 @@ def block_builder(request, block_id=None):
                 # 🔐 Server-side encryption
                 if is_encrypted:
                     password = task_data.get("password")
-                    if password:
+                    description_changed = task_data.get("description_changed")
+
+                    if description_changed and password:
+                        # пользователь расшифровал и изменил текст
                         description = encrypt_text(description, password)
+
+                    else:
+                        # описание не менялось → оставляем ciphertext
+                        if task_id and task_id in existing_tasks:
+                            description = existing_tasks[task_id].description
 
                 if task_id and task_id in existing_tasks:
 
@@ -173,8 +494,13 @@ def block_builder(request, block_id=None):
                 # 🔐 Server-side encryption
                 if is_encrypted:
                     password = task_data.get("password")
-                    if password:
-                        description = encrypt_text(description, password)
+                    description_changed = task_data.get("description_changed")
+
+                    if is_encrypted:
+                        password = task_data.get("password")
+
+                        if password:
+                            description = encrypt_text(description, password)
 
                 BlockTask.objects.create(
                     block=block,
@@ -184,7 +510,7 @@ def block_builder(request, block_id=None):
                     time=task_data.get("time", 0),
                     icon=task_data.get("icon", ""),
                     is_encrypted=is_encrypted,
-                    is_hidden=is_hidden,  # 👈 ДОБАВЛЕНО
+                    is_hidden=is_hidden,
                     position=idx,
                 )
 
@@ -192,9 +518,50 @@ def block_builder(request, block_id=None):
 
     return render(
         request,
-        "core/block_builder.html",
+        "core/block_create.html",
         {
-            "templates": templates,
+            "templates": sorted_templates,
+            "groups": groups,
+            "block_json": json.dumps(block_data) if block_data else "null",
+        },
+    )
+
+
+@login_required
+def block_builder_stop(request, block_id=None):
+    # Получаем фильтрованные шаблоны задач
+    sorted_templates = get_filtered_templates(request)
+    groups = GroupTemplate.objects.filter(owner=request.user).prefetch_related(
+        Prefetch("tasks", queryset=TaskTemplate.objects.only("id", "icon"))
+    )
+
+    # Загрузка данных блока (если block_id передан)
+    block, block_data = get_block_data(block_id, request.user)
+
+    if request.method == "POST":
+        # Обработка JSON или формы
+
+        if request.content_type == "application/json":
+            body = json.loads(request.body)
+            title = body.get("title", "Без названия")
+            tasks_list = body.get("tasks", [])
+        else:
+            title = request.POST.get("title", "Без названия")
+            tasks_json = request.POST.get("tasks", "[]")
+            tasks_list = json.loads(tasks_json)
+
+        if block:
+            update_block_data(block, tasks_list)
+        else:
+            create_new_block(title, tasks_list, request.user)
+
+        return redirect("/")
+
+    return render(
+        request,
+        "core/block_create.html",
+        {
+            "templates": sorted_templates,
             "groups": groups,
             "block_json": json.dumps(block_data) if block_data else "null",
         },
@@ -332,97 +699,165 @@ def block_builder_old_2(request, block_id=None):
     )
 
 
-@login_required
-def create_block(request):
-    """
-    Создание нового блока
-    """
-    data = json.loads(request.body)
-    title = data.get("title", "Новый блок")
-    tasks_data = data.get("tasks", [])
+def create_new_block(title, tasks_list, user):
+    block = Block.objects.create(title=title, owner=user)
 
-    block = Block.objects.create(owner=request.user, title=title)
+    for idx, task_data in enumerate(tasks_list):
+        description = task_data.get("description", "")
+        is_encrypted = task_data.get("is_encrypted", False)
+        is_hidden = task_data.get("is_hidden", False)
 
-    block_tasks = []
-    for position, task in enumerate(tasks_data):
-        template = TaskTemplate.objects.get(id=task["id"])
-        block_tasks.append(
-            BlockTask(
-                block=block,
-                template=template,
-                amount=task.get("amount", 1),
-                time=task.get("time", 1),
-                description=task.get("description", ""),
-                position=position,
-            )
+        if is_encrypted:
+            password = task_data.get("password")
+            description = encrypt_text(description, password)
+
+        BlockTask.objects.create(
+            block=block,
+            title=task_data.get("title"),
+            description=description,
+            amount=task_data.get("amount", 0),
+            time=task_data.get("time", 0),
+            icon=task_data.get("icon", ""),
+            is_encrypted=is_encrypted,
+            is_hidden=is_hidden,
+            position=idx,
         )
-    BlockTask.objects.bulk_create(block_tasks)
-    return JsonResponse({"status": "ok"})
+
+    return block
 
 
+@require_POST
 @login_required
-@csrf_exempt
 def delete_block(request, block_id):
-    if request.method != "POST":
-        return JsonResponse(
-            {"status": "error", "message": "Only POST allowed"}, status=405
-        )
 
     block = get_object_or_404(Block, id=block_id, owner=request.user)
+
+    password = request.POST.get("password")
+
+    if not password:
+        return JsonResponse(
+            {"status": "error", "message": "Password required"}, status=400
+        )
+
+    if not check_password(password, request.user.password):
+        return JsonResponse(
+            {"status": "error", "message": "Wrong password"}, status=403
+        )
+
     block.delete()
+
     return JsonResponse({"status": "ok"})
 
 
-@login_required
-def update_block(request, block_id):
-    """
-    Обновление существующего блока
-    """
-    block = get_object_or_404(Block, id=block_id, owner=request.user)
-    data = json.loads(request.body)
-    title = data.get("title", block.title)
-    tasks_data = data.get("tasks", [])
+def get_filtered_templates(request):
+    templates = TaskTemplate.objects.filter(owner=request.user)
 
-    block.title = title
-    block.save()
+    period_type = request.GET.get("period_type", PeriodType.NONE)
+    schedule_type = request.GET.get("schedule_type", ScheduleType.NONE)
 
-    # Собираем текущие BlockTask
-    existing_tasks = {bt.template.id: bt for bt in block.blocktask_set.all()}
+    if period_type != PeriodType.NONE:
+        templates = templates.filter(period_type=period_type)
 
-    new_tasks = []
-    used_template_ids = []
+    if schedule_type != ScheduleType.NONE:
+        templates = templates.filter(schedule_type=schedule_type)
 
-    for position, task in enumerate(tasks_data):
-        template_id = task["id"]
-        used_template_ids.append(template_id)
-        if template_id in existing_tasks:
-            # обновляем
-            bt = existing_tasks[template_id]
-            bt.amount = task.get("amount", bt.amount)
-            bt.time = task.get("time", bt.time)
-            bt.description = task.get("description", bt.description)
-            bt.position = position
+    sorted_templates = templates.annotate(
+        is_floating=(
+            Q(schedule_type=ScheduleType.FLOATING) & Q(period_type=PeriodType.WEEK)
+        )
+        | (Q(schedule_type=ScheduleType.FLOATING) & Q(period_type=PeriodType.MONTH))
+        | (Q(schedule_type=ScheduleType.FLOATING) & Q(period_type=PeriodType.YEAR)),
+        is_fixed=(Q(schedule_type=ScheduleType.FIXED) & Q(period_type=PeriodType.WEEK))
+        | (Q(schedule_type=ScheduleType.FIXED) & Q(period_type=PeriodType.MONTH))
+        | (Q(schedule_type=ScheduleType.FIXED) & Q(period_type=PeriodType.YEAR)),
+    ).order_by(
+        "-is_floating",
+        "-fixed_weekday",
+        "-fixed_day_of_month",
+        "-fixed_month_of_year",
+        "-next_available_at",
+        "-selected_count",
+        "-priority",
+        "-last_used_at",
+    )
+    return sorted_templates
+
+
+def get_block_data(block_id, user):
+    block_data = None
+    block = None
+
+    if block_id:
+        block = get_object_or_404(Block, id=block_id, owner=user)
+        tasks = block.tasks.order_by("position")
+
+        block_data = {
+            "id": block.id,
+            "title": block.title,
+            "tasks": [
+                {
+                    "id": bt.id,
+                    "title": bt.title,
+                    "description": bt.description,
+                    "amount": bt.amount,
+                    "time": bt.time,
+                    "icon": str(bt.icon) if bt.icon else "",
+                    "is_encrypted": bt.is_encrypted,
+                    "is_hidden": bt.is_hidden,
+                }
+                for bt in tasks
+            ],
+        }
+
+    return block, block_data
+
+
+def update_block_data(block, tasks_list):
+    existing_tasks = {t.id: t for t in block.tasks.all()}
+    incoming_ids = set()
+
+    for idx, task_data in enumerate(tasks_list):
+        task_id = task_data.get("id")
+        description = task_data.get("description", "")
+        is_encrypted = task_data.get("is_encrypted", False)
+        is_hidden = task_data.get("is_hidden", False)
+
+        if is_encrypted:
+            password = task_data.get("password")
+            decrypted = task_data.get("decrypted")
+
+            if decrypted and password:
+                description = encrypt_text(description, password)
+            else:
+                if task_id and task_id in existing_tasks:
+                    description = existing_tasks[task_id].description
+
+        if task_id and task_id in existing_tasks:
+            bt = existing_tasks[task_id]
+            bt.title = task_data.get("title", bt.title)
+            bt.description = description
+            bt.amount = task_data.get("amount", bt.amount)
+            bt.time = task_data.get("time", bt.time)
+            bt.icon = task_data.get("icon", bt.icon)
+            bt.is_encrypted = is_encrypted
+            bt.is_hidden = is_hidden
+            bt.position = idx
             bt.save()
         else:
-            # новая задача
-            template = TaskTemplate.objects.get(id=template_id)
-            new_tasks.append(
-                BlockTask(
-                    block=block,
-                    template=template,
-                    amount=task.get("amount", 1),
-                    time=task.get("time", 1),
-                    description=task.get("description", ""),
-                    position=position,
-                )
+            bt = BlockTask.objects.create(
+                block=block,
+                title=task_data.get("title"),
+                description=description,
+                amount=task_data.get("amount", 0),
+                time=task_data.get("time", 0),
+                icon=task_data.get("icon", ""),
+                is_encrypted=is_encrypted,
+                is_hidden=is_hidden,
+                position=idx,
             )
 
-    # удалить ненужные
-    for template_id, bt in existing_tasks.items():
-        if template_id not in used_template_ids:
-            bt.delete()
+        incoming_ids.add(bt.id)
 
-    if new_tasks:
-        BlockTask.objects.bulk_create(new_tasks)
-
-    return JsonResponse({"status": "ok"})
+    to_delete = set(existing_tasks.keys()) - incoming_ids
+    if to_delete:
+        BlockTask.objects.filter(id__in=to_delete).delete()

@@ -1,92 +1,116 @@
 <nav class="app-navbar">
 
-<div class="container navbar-inner">
+    <div class="container navbar-inner">
 
-<!-- LOGO -->
+        <!-- LOGO -->
 
-<a class="logo" href="/">
-    <span class="logo-icon">
-        <i class="bi bi-check-lg"></i>
-    </span>
-    Tasker
-</a>
+        <a class="logo" href="/">
+            <span class="logo-icon">
+                <i class="bi bi-check-lg"></i>
+            </span>
+            Tasker
+        </a>
 
-<!-- RIGHT -->
 
-<div class="nav-actions">
+        <!-- RIGHT -->
 
-{% if user.is_authenticated %}
+        <div class="nav-actions">
 
-<a class="nav-btn"
-   href="{% url 'block_builder' %}">
-   <i class="bi bi-kanban"></i>
-   Блок
-</a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'calendar' %}" class="nav-link">
+                    <i class="bi bi-calendar3"></i> Календарь
+                </a>
 
-<a class="nav-btn"
-   href="/templates/">
-   <i class="bi bi-plus-square"></i>
-   Шаблоны
-</a>
+            <!-- PIN LOCK BUTTON и Логика выхода -->
+            <button class="nav-btn lock-btn">
+                <i class="bi bi-lock"></i>
+                Lock
+            </button>
+            <a href="{% url 'weather' %}" class="nav-link">
+                Погода
+            </a>
+            <a
+                class="nav-btn"
+                href="{% url 'block_create' %}">
+                <i class="bi bi-kanban"></i>
+                Блок
+            </a>
 
-<a class="nav-btn"
-   href="/group-templates/">
-   <i class="bi bi-plus-square"></i>
-   Группы
-</a>
+            <a
+                class="nav-btn"
+                href="/templates/">
+                <i class="bi bi-plus-square"></i>
+                Шаблоны
+            </a>
 
-<!-- USER MENU -->
+            <a
+                class="nav-btn"
+                href="/group-templates/">
+                <i class="bi bi-plus-square"></i>
+                Группы
+            </a>
 
-<div class="dropdown">
 
-<button
-class="user-menu"
-data-bs-toggle="dropdown">
+            <!-- USER MENU -->
 
-<i class="bi bi-person-circle"></i>
+            <div class="dropdown">
 
-<span class="username">
-{{ user.username }}
-</span>
+                <button
+                    class="user-menu"
+                    data-bs-toggle="dropdown">
 
-<i class="bi bi-chevron-down small"></i>
+                    <i class="bi bi-person-circle"></i>
 
-</button>
+                    <span class="username">
+                        {{ user.username }}
+                    </span>
 
-<ul class="dropdown-menu dropdown-menu-end">
+                    <i class="bi bi-chevron-down small"></i>
 
-<li class="dropdown-header">
-{{ user.username }}
-</li>
+                </button>
 
-<li>
-<a class="dropdown-item"
-   href="{% url 'logout' %}">
-   <i class="bi bi-box-arrow-right"></i>
-   Выйти
-</a>
-</li>
+                <ul class="dropdown-menu dropdown-menu-end">
 
-</ul>
+                    <li class="dropdown-header">
+                        {{ user.username }}
+                    </li>
 
-</div>
+                    <li>
+                        <a class="dropdown-item" href="{% url 'profile' %}">
+                            <i class="bi bi-person"></i>
+                            Профиль
+                        </a>
+                    </li>
 
-{% else %}
+                    <li><hr class="dropdown-divider"></li>
 
-<button
-class="btn btn-primary btn-sm"
-data-bs-toggle="modal"
-data-bs-target="#authModal">
+                    <li>
+                        <a class="dropdown-item" href="{% url 'logout' %}">
+                            <i class="bi bi-box-arrow-right"></i>
+                            Выйти
+                        </a>
+                    </li>
 
-<i class="bi bi-box-arrow-in-right"></i>
-Войти
+                </ul>
 
-</button>
+            </div>
 
-{% endif %}
+            {% else %}
 
-</div>
+            <button
+                class="btn btn-primary btn-sm"
+                data-bs-toggle="modal"
+                data-bs-target="#authModal">
 
-</div>
+                <i class="bi bi-box-arrow-in-right"></i>
+                Войти
+
+            </button>
+
+            {% endif %}
+
+        </div>
+
+    </div>
 
 </nav>

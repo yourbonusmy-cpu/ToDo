@@ -3,11 +3,25 @@ import os
 
 from django.conf import settings
 from django.core.files.base import ContentFile
+from django.db.models import F
 from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+
 from ..models import TaskTemplate, SystemTaskTemplate
 from ..forms import TaskTemplateForm
+
+
+@login_required
+@require_POST
+def increment_template_selected(request, template_id):
+    print(f"template_id: {template_id}")
+    TaskTemplate.objects.filter(id=template_id, owner=request.user).update(
+        selected_count=F("selected_count") + 1
+    )
+
+    return JsonResponse({"status": "ok"})
 
 
 @login_required
@@ -68,17 +82,20 @@ def template_create_or_edit(request, template_id=None):
 
 @login_required
 def template_delete(request, template_id):
-
     if request.method != "POST":
         return JsonResponse({"error": "POST required"}, status=400)
 
     template = get_object_or_404(TaskTemplate, id=template_id, owner=request.user)
-
     system_id = template.system_template.id if template.system_template else None
 
-    template.delete()
+    # Считаем блоки, которые будут "отвязаны"
+    affected_blocks = template.block_tasks.count()
 
-    return JsonResponse({"status": "ok", "system_id": system_id})
+    template.delete()  # при SET_NULL ссылки обнуляются автоматически
+
+    return JsonResponse(
+        {"status": "ok", "system_id": system_id, "unlinked_blocks": affected_blocks}
+    )
 
 
 @login_required

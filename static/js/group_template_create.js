@@ -130,6 +130,17 @@ document.querySelectorAll(".task-picker .task-icon").forEach(icon=>{
     });
 
 });
+const taskList = document.querySelector(".task-picker-list");
+
+taskList.addEventListener("wheel", (e) => {
+
+    if (e.deltaY === 0) return;
+
+    e.preventDefault();
+
+    taskList.scrollLeft += e.deltaY;
+
+});
 
 
 /* --------------------------

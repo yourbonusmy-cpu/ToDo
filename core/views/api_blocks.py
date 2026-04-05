@@ -1,8 +1,6 @@
 from datetime import timezone
 
 from django.shortcuts import get_object_or_404
-from django.template.loader import render_to_string
-from django.core.paginator import Paginator
 from django.db.models import Prefetch
 
 from django.views.decorators.csrf import csrf_exempt
@@ -11,11 +9,16 @@ from django.views.decorators.http import require_POST
 from core.models import Block, BlockTask, TaskTemplate
 
 import json
-from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
 from django.utils import timezone
 from core.crypto import encrypt_text
+
+
+from django.core.paginator import Paginator
+from django.db.models import Count, Q
+from django.http import JsonResponse
+from django.template.loader import render_to_string
 
 
 @require_POST
@@ -33,7 +36,7 @@ def block_delete(request, block_id):
 @csrf_exempt
 def hide_block(request, block_id):
     """
-    Переключает состояние is_hided у блока
+    Переключает состояние is_hidden у блока
     """
     if request.method != "POST":
         return JsonResponse(
@@ -41,9 +44,9 @@ def hide_block(request, block_id):
         )
 
     block = get_object_or_404(Block, id=block_id, owner=request.user)
-    block.is_hided = not block.is_hided
+    block.is_hidden = not block.is_hidden
     block.save()
-    return JsonResponse({"status": "ok", "is_hided": block.is_hided})
+    return JsonResponse({"status": "ok", "is_hidden": block.is_hidden})
 
 
 @login_required
@@ -191,6 +194,52 @@ def create_block_old(request):
         BlockTask.objects.bulk_create(block_tasks)
 
     return JsonResponse({"status": "ok", "block_id": block.id})
+
+
+def api_blocks(request):
+    q = request.GET.get("q")
+    task_ids = request.GET.getlist("tasks")
+    show_hidden = request.GET.get("hidden")  # toggle
+
+    blocks = Block.objects.filter(owner=request.user)
+
+    # Поиск по названию
+    if q:
+        blocks = blocks.filter(title__icontains=q)
+
+    # Фильтр скрытых
+    show_hidden = request.GET.get("hidden")
+
+    if show_hidden == "1":
+        # показываем ВСЕ (ничего не фильтруем)
+        pass
+    else:
+        # только не скрытые
+        blocks = blocks.filter(is_hidden=False)
+
+    # Фильтр по задачам (AND)
+    if task_ids:
+        task_ids = list(map(int, task_ids))
+        blocks = blocks.annotate(
+            matched_tasks=Count(
+                "tasks", filter=Q(tasks__template__id__in=task_ids), distinct=True
+            )
+        ).filter(matched_tasks=len(task_ids))
+
+    blocks = blocks.prefetch_related("tasks").order_by("-created_at")
+
+    # Пагинация
+    paginator = Paginator(blocks, 10)
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
+
+    html = render_to_string(
+        "core/partials/block_list.html",
+        {"blocks": page_obj.object_list},
+        request=request,
+    )
+
+    return JsonResponse({"html": html, "has_next": page_obj.has_next()})
 
 
 def load_blocks(request):

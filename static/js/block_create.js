@@ -1,7 +1,9 @@
 /* --------------------------------------------------
 STATE
 -------------------------------------------------- */
+
 const visibilityEye = document.getElementById("visibility-eye");
+const eyeLabel = document.getElementById("visibility-label");
 const selectedContainer = document.getElementById("selected-tasks");
 const taskDetailCard = document.getElementById("task-detail-card");
 
@@ -13,43 +15,238 @@ const detailTime = document.getElementById("task-detail-time");
 const detailDescription = document.getElementById("task-detail-description");
 
 const blockTitleInput = document.getElementById("block-title");
+const blockDateInput = document.getElementById("block-date");
 
 const passwordToggle = document.getElementById("task-password-toggle");
 const passwordContainer = document.getElementById("task-password-container");
 const passwordInput = document.getElementById("task-password");
 const passwordEye = document.getElementById("password-eye");
+const decryptBtn = document.getElementById("decrypt-btn");
+const encryptedLabel = document.getElementById("encrypted-label");
+
+
+const weatherSwitch = document.getElementById("weather-switch");
+const weatherContainer = document.getElementById("weather-container");
 
 const selected = [];
 const taskState = {};
 
+
+weatherSwitch.addEventListener("change", () => {
+    weatherContainer.style.display = weatherSwitch.checked ? "flex" : "none";
+});
+
+
+
+function renderWeatherCompact(weather) {
+    const row = document.getElementById("weather-row");
+    row.innerHTML = "";
+
+    const order = ["Утро", "День", "Вечер", "Ночь"];
+
+    order.forEach(label => {
+        const w = weather.find(x => x.label === label);
+        if (!w) return;
+
+        const el = document.createElement("div");
+        el.className = `weather-mini ${w.main?.toLowerCase() || ""}`;
+
+        el.title = w.description || w.main || "";
+
+        el.innerHTML = `
+            <div class="top d-flex align-items-center justify-content-between">
+
+                <span>${w.label}</span>
+
+                <div class="d-flex align-items-center gap-1">
+                    ${
+                        w.icon_url
+                            ? `<img src="${w.icon_url}" width="18">`
+                            : `<span>${w.icon || ""}</span>`
+                    }
+                    <span>${w.temp}°</span>
+                </div>
+
+            </div>
+
+            <div class="bottom">
+                ${w.description} •
+                ${w.humidity}% •
+                ${w.wind_speed} м/с (${w.wind_dir}) •
+                ${w.pressure}
+            </div>
+        `;
+
+        row.appendChild(el);
+    });
+}
+
+function renderWeatherCompact(weather) {
+    const row = document.getElementById("weather-row");
+    row.innerHTML = "";
+
+    const order = ["Утро", "День", "Вечер", "Ночь"];
+
+    order.forEach(label => {
+        const w = weather.find(x => x.label === label);
+        if (!w) return;
+
+        const el = document.createElement("div");
+
+//        el.className = "weather-mini card px-2 py-1";
+        el.className = `weather-mini card px-2 py-1 ${w.color}`;
+
+        el.innerHTML = `
+            <div class="d-flex flex-column small text-center">
+
+                <div class="fw-semibold">${w.label}</div>
+
+                <div class="d-flex justify-content-center align-items-center gap-1">
+                    <span>${w.icon}</span>
+                    <span>${w.temp}°</span>
+                </div>
+
+                <div class="text-muted" style="font-size:11px;">
+                    💧${w.humidity}%
+                    🌬${w.wind_speed}
+                </div>
+
+            </div>
+        `;
+
+        row.appendChild(el);
+    });
+}
+
 /* --------------------------------------------------
-BLOCK ID (edit mode)
+BLOCK ID
 -------------------------------------------------- */
+
 const blockIdInput = document.getElementById("block-id");
 const blockId = blockIdInput ? blockIdInput.value : null;
+
+function formatDate(date) {
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = String(date.getFullYear()).slice(-2); // последние 2 цифры
+
+    return `${day}.${month}.${year}`;
+}
+
+// если поле пустое — подставляем дату
+if (blockTitleInput && !blockTitleInput.value.trim()) {
+//    const today = formatDate(new Date());
+//    blockTitleInput.value = `${today}`;
+    blockTitleInput.value = formatDate(new Date());
+}
+if (blockDateInput && !blockDateInput.value) {
+    const today = new Date().toISOString().split("T")[0];
+    blockDateInput.value = today;
+}
 
 /* --------------------------------------------------
 CSRF
 -------------------------------------------------- */
+
 function getCookie(name) {
     let cookieValue = null;
+
     if (document.cookie) {
+
         const cookies = document.cookie.split(";");
+
         for (let cookie of cookies) {
+
             cookie = cookie.trim();
+
             if (cookie.startsWith(name + "=")) {
+
                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                 break;
+
             }
+
         }
+
     }
+
     return cookieValue;
+
 }
+
 const csrftoken = getCookie("csrftoken");
+
+
+/* --------------------------------------------------
+DESCRIPTION UI STATE
+-------------------------------------------------- */
+function renderDescriptionState(state) {
+
+    /* -------------------------
+    NOT ENCRYPTED
+    ------------------------- */
+    if (!state.is_encrypted) {
+
+        encryptedLabel.style.display = "none";
+        passwordContainer.style.display = "none";
+        decryptBtn.style.display = "none";
+
+        detailDescription.style.display = "block";
+        detailDescription.disabled = false;
+
+        passwordToggle.disabled = false;
+
+        return;
+    }
+
+    /* -------------------------
+    ENCRYPTED
+    ------------------------- */
+
+    encryptedLabel.style.display = "inline-flex";
+
+    // 🔥 ВАЖНО: пароль показываем ТОЛЬКО если toggle включен
+    if (passwordToggle.checked) {
+        passwordContainer.style.display = "block";
+    } else {
+        passwordContainer.style.display = "none";
+    }
+
+    decryptBtn.style.display = "inline-flex";
+
+    if (state.decrypted) {
+
+        detailDescription.style.display = "block";
+        detailDescription.disabled = false;
+
+        decryptBtn.style.display = "none";
+        encryptedLabel.textContent = "Расшифровано";
+
+        passwordToggle.disabled = false;
+
+    } else {
+
+        detailDescription.style.display = "none";
+        detailDescription.disabled = true;
+
+        encryptedLabel.textContent = "Зашифровано";
+
+        passwordToggle.disabled = true;
+
+        // 🔥 при НЕ расшифрованном — пароль ОБЯЗАТЕЛЬНО показываем
+        passwordContainer.style.display = "block";
+    }
+}
+
+
+/* --------------------------------------------------
+VISIBILITY EYE
+-------------------------------------------------- */
 
 visibilityEye.addEventListener("click", () => {
 
     const id = taskDetailCard.dataset.currentTaskId;
+
     if (!id) return;
 
     const state = taskState[id];
@@ -57,25 +254,58 @@ visibilityEye.addEventListener("click", () => {
     state.is_hidden = !state.is_hidden;
 
     updateDetailEyeIcon(state.is_hidden);
+    updateTaskVisibility(id);
 
 });
+
+
 
 function updateDetailEyeIcon(isHidden) {
 
     const icon = visibilityEye.querySelector("i");
 
     if (isHidden) {
+
         icon.classList.remove("bi-eye");
         icon.classList.add("bi-eye-slash");
+
+        eyeLabel.textContent = "Показать";
+
     } else {
+
         icon.classList.remove("bi-eye-slash");
         icon.classList.add("bi-eye");
+
+        eyeLabel.textContent = "Скрыть";
+
     }
+
 }
+
+
+function updateTaskVisibility(id) {
+
+    const el = selectedContainer.querySelector(`[data-id="${id}"]`);
+
+    if (!el) return;
+
+    if (taskState[id].is_hidden) {
+
+        el.classList.add("task-hidden");
+
+    } else {
+
+        el.classList.remove("task-hidden");
+
+    }
+
+}
+
 
 /* --------------------------------------------------
 ADD TASK
 -------------------------------------------------- */
+
 function addTask(taskData) {
 
     const id = taskData.id?.toString() || `new-${Math.random()}`;
@@ -85,17 +315,16 @@ function addTask(taskData) {
         selected.push(id);
 
         const el = document.createElement("div");
+
         el.className = "selected-task position-relative";
         el.dataset.id = id;
 
         el.innerHTML = `
             <div class="border rounded bg-light d-flex align-items-center justify-content-center w-100 h-100">
-                ${taskData.icon ? `<img src="${taskData.icon}" width="48" height="48">` : ""}
+                ${taskData.icon ? `<img src="${MEDIA_URL + taskData.icon}" width="48" height="48">` : ""}
             </div>
 
-            <button
-                class="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle rounded-circle remove-task"
-            >
+            <button class="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle rounded-circle remove-task">
                 ×
             </button>
         `;
@@ -103,98 +332,140 @@ function addTask(taskData) {
         el.addEventListener("click", () => showTaskDetail(id));
 
         el.querySelector(".remove-task").addEventListener("click", (e) => {
+
             e.stopPropagation();
             removeTask(id);
+
         });
 
         selectedContainer.appendChild(el);
 
         taskState[id] = {
+            id: id,
+            template_id: taskData.template_id || taskData.id,
             title: taskData.title,
             description: taskData.description || "",
+
             amount: parseInt(taskData.amount) || 1,
             time: parseFloat(taskData.time) || 1,
+
             iconSrc: taskData.icon || "",
 
             is_encrypted: taskData.is_encrypted || false,
             password: "",
             is_hidden: taskData.is_hidden || false,
+
+            decrypted: true,
+            description_changed: true
+
         };
+
     }
 
     showTaskDetail(id);
+    toggleEmptyState();
+
 }
+
 
 /* --------------------------------------------------
 REMOVE TASK
 -------------------------------------------------- */
+
 function removeTask(id) {
 
     delete taskState[id];
 
     const index = selected.indexOf(id);
+
     if (index > -1) selected.splice(index, 1);
 
     const el = selectedContainer.querySelector(`[data-id="${id}"]`);
+
     if (el) el.remove();
 
     taskDetailCard.style.display = "none";
+    toggleEmptyState();
+
 }
+
 
 /* --------------------------------------------------
 SHOW DETAIL
 -------------------------------------------------- */
+
 function showTaskDetail(id) {
 
     const state = taskState[id];
+
     if (!state) return;
 
     taskDetailCard.style.display = "block";
 
-    detailIcon.src = state.iconSrc;
+    detailIcon.src = state.iconSrc ? MEDIA_URL + state.iconSrc : "";
     detailTitle.textContent = state.title;
 
     detailAmount.value = state.amount;
     detailTime.value = state.time;
-    detailDescription.value = state.description;
-
-    taskDetailCard.dataset.currentTaskId = id;
-
-    /* PASSWORD STATE */
-
-    passwordToggle.checked = state.is_encrypted;
-    updateDetailEyeIcon(state.is_hidden);
 
     if (state.is_encrypted) {
 
-        passwordContainer.style.display = "block";
-        passwordInput.value = state.password;
+        detailDescription.value = state.decrypted
+            ? state.description
+            : "";
 
     } else {
 
-        passwordContainer.style.display = "none";
-        passwordInput.value = "";
+        detailDescription.value = state.description;
 
     }
+
+    passwordToggle.checked = state.is_encrypted;
+    passwordInput.value = state.password;
+
+    taskDetailCard.dataset.currentTaskId = id;
+
+    updateTaskVisibility(id);
+    updateDetailEyeIcon(state.is_hidden);
+
+    renderDescriptionState(state);
+
 }
+
 
 /* --------------------------------------------------
 INPUT HANDLERS
 -------------------------------------------------- */
+
 detailAmount.addEventListener("input", () => {
+
     const id = taskDetailCard.dataset.currentTaskId;
+
     if (id) taskState[id].amount = parseInt(detailAmount.value);
+
 });
+
 
 detailTime.addEventListener("input", () => {
+
     const id = taskDetailCard.dataset.currentTaskId;
+
     if (id) taskState[id].time = parseFloat(detailTime.value);
+
 });
 
+
 detailDescription.addEventListener("input", () => {
+
     const id = taskDetailCard.dataset.currentTaskId;
-    if (id) taskState[id].description = detailDescription.value;
+
+    const state = taskState[id];
+
+    state.description = detailDescription.value;
+    state.description_changed = true;
+
 });
+
 
 /* --------------------------------------------------
 PASSWORD TOGGLE
@@ -208,59 +479,146 @@ passwordToggle.addEventListener("change", () => {
 
     state.is_encrypted = passwordToggle.checked;
 
-    if (state.is_encrypted) {
+    if (!state.is_encrypted) {
 
-        passwordContainer.style.display = "block";
+        state.password = "";
+        state.decrypted = true;
+
+        // 🔥 сразу скрываем пароль
+        passwordContainer.style.display = "none";
 
     } else {
 
-        passwordContainer.style.display = "none";
-        passwordInput.value = "";
-        state.password = "";
+        if (state.description) {
+            state.decrypted = true;
+        }
 
     }
 
+    renderDescriptionState(state);
+
 });
+
 
 /* --------------------------------------------------
 PASSWORD INPUT
 -------------------------------------------------- */
+
 passwordInput.addEventListener("input", () => {
 
     const id = taskDetailCard.dataset.currentTaskId;
+
     if (!id) return;
 
     taskState[id].password = passwordInput.value;
 
 });
 
+
 /* --------------------------------------------------
 SHOW / HIDE PASSWORD
 -------------------------------------------------- */
+
 passwordEye.addEventListener("click", () => {
 
+    const icon = passwordEye.querySelector("i");
+
     if (passwordInput.type === "password") {
+
         passwordInput.type = "text";
+
+        icon.classList.remove("bi-eye");
+        icon.classList.add("bi-eye-slash");
+
     } else {
+
         passwordInput.type = "password";
+
+        icon.classList.remove("bi-eye-slash");
+        icon.classList.add("bi-eye");
+
     }
 
 });
 
+
 /* --------------------------------------------------
-TASK PICKER CLICK
+DECRYPT
 -------------------------------------------------- */
+
+decryptBtn.addEventListener("click", async () => {
+
+    const id = taskDetailCard.dataset.currentTaskId;
+
+    const state = taskState[id];
+
+    const password = passwordInput.value;
+
+    const res = await fetch(`/decrypt-task/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken
+        },
+
+        body: JSON.stringify({
+            task_id: id,
+            password: password
+        })
+
+    });
+
+    const data = await res.json();
+
+    if (data.status !== "ok") {
+
+        alert("Неверный пароль");
+        return;
+
+    }
+
+    state.description = data.description;
+    state.password = password;
+    state.decrypted = true;
+
+    detailDescription.value = data.description;
+
+    renderDescriptionState(state);
+
+});
+
+
+/* --------------------------------------------------
+TASK PICKER
+-------------------------------------------------- */
+
 document.querySelectorAll(".task-picker .task-icon").forEach(icon => {
 
     icon.addEventListener("click", () => {
 
+        const templateId = icon.dataset.id;
+
         const taskData = {
-            id: icon.dataset.id,
+
+            id: templateId,
+            template_id: templateId,
             title: icon.dataset.title,
             description: icon.dataset.description,
             amount: icon.dataset.amount,
-            icon: icon.querySelector("img") ? icon.querySelector("img").src : "",
+            time: icon.dataset.time,
+
+            icon: icon.querySelector("img")
+                ? icon.querySelector("img").dataset.icon
+                : ""
+
         };
+
+        fetch(`/api/templates/${templateId}/select/`, {
+
+            method: "POST",
+            headers: { "X-CSRFToken": csrftoken }
+
+        });
 
         addTask(taskData);
 
@@ -268,85 +626,106 @@ document.querySelectorAll(".task-picker .task-icon").forEach(icon => {
 
 });
 
+
 /* --------------------------------------------------
 SORTABLE
 -------------------------------------------------- */
+
 new Sortable(selectedContainer, {
     animation: 150,
     onEnd() {
-        const ids = Array.from(selectedContainer.children).map(el => el.dataset.id);
+        const ids = Array.from(selectedContainer.children)
+            .map(el => el.dataset.id)
+            .filter(id => taskState[id]); // <-- фильтруем лишние
         selected.length = 0;
         ids.forEach(id => selected.push(id));
     }
 });
 
+
 /* --------------------------------------------------
 CLEAR BLOCK
 -------------------------------------------------- */
+
 document.getElementById("clear-block-btn").onclick = () => {
 
     selected.length = 0;
+
     selectedContainer.innerHTML = "";
 
     for (let key in taskState) delete taskState[key];
 
     taskDetailCard.style.display = "none";
+    toggleEmptyState();
+
 };
+
 
 /* --------------------------------------------------
 SAVE BLOCK
 -------------------------------------------------- */
+
 document.getElementById("save-block-btn").onclick = async () => {
 
     if (!blockTitleInput.value.trim()) {
+
         alert("Введите название блока");
         return;
+
     }
 
-    const tasksData = selected.map(id => {
-        const state = taskState[id];
-        let password = "";
-        if (state.is_encrypted && state.password) {
-            password = state.password;
-        }
-
-        return {
-            id: id.startsWith("new-") ? null : parseInt(id),
-            title: state.title,
-            description: state.description,
-            is_encrypted: state.is_encrypted,
-            is_hidden: state.is_hidden,
-            password: password,
-            amount: state.amount,
-            time: state.time,
-            icon: state.iconSrc,
-        };
-
-    });
+    const tasksData = selected
+    .map(id => taskState[id])
+    .filter(Boolean) // убираем undefined
+    .map(state => ({
+        id: state.id?.toString().startsWith("new-") ? null : parseInt(state.id),
+        template_id: state.template_id,
+        title: state.title,
+        description: state.description,
+        decrypted: state.decrypted,
+        is_encrypted: state.is_encrypted,
+        is_hidden: state.is_hidden,
+        password: state.password || "",
+        amount: state.amount,
+        time: state.time,
+        icon: state.iconSrc
+    }));
 
     const url = window.location.href;
 
     const formData = new FormData();
 
     formData.append("title", blockTitleInput.value);
+    formData.append("target_date", blockDateInput.value);
+    formData.append("with_weather", weatherSwitch.checked);
+    formData.append("weather_city", "Москва"); // или select
     formData.append("tasks", JSON.stringify(tasksData));
     formData.append("csrfmiddlewaretoken", csrftoken);
 
     const response = await fetch(url, {
+
         method: "POST",
         body: formData
+
     });
 
     if (response.redirected) {
+
         window.location.href = response.url;
+
     } else {
+
         alert("Ошибка при сохранении блока");
+
     }
+
 };
 
+
 /* --------------------------------------------------
-LOAD BLOCK (edit)
+LOAD BLOCK (EDIT)
 -------------------------------------------------- */
+
 function loadBlock() {
 
     if (!block_json) return;
@@ -358,33 +737,84 @@ function loadBlock() {
         addTask(task);
 
         const id = task.id.toString();
-
         taskState[id].amount = task.amount;
         taskState[id].time = task.time;
-        taskState[id].description = task.description;
+
+        taskState[id].is_encrypted = task.is_encrypted;
         taskState[id].is_hidden = task.is_hidden;
+        taskState[id].template_id = task.template_id;
+
+        if (task.is_encrypted) {
+
+            taskState[id].description = task.description || "";
+            taskState[id].decrypted = false;
+
+        } else {
+
+            taskState[id].description = task.description || "";
+            taskState[id].decrypted = true;
+
+        }
+        if (block_json.target_date && blockDateInput) {
+            blockDateInput.value = block_json.target_date;
+        }
+
+        updateTaskVisibility(id);
+        toggleEmptyState();
 
     });
+    if (block_json?.weather) {
+        weatherSwitch.checked = true;
+        weatherContainer.style.display = "block";
+
+        renderWeatherCompact(block_json.weather);
+    }
+
 }
 
 loadBlock();
 
-
-
 /* --------------------------------------------------
 HORIZONTAL SCROLL
 -------------------------------------------------- */
-const taskPicker = document.querySelector(".task-picker");
-
+const taskPicker = document.querySelector(".task-picker-list");
 if (taskPicker) {
-
     taskPicker.addEventListener("wheel", (e) => {
-
         e.preventDefault();
         taskPicker.scrollLeft += e.deltaY;
+    });
+}
+
+
+
+const searchInput = document.getElementById("task-search-input");
+
+searchInput.addEventListener("input", () => {
+
+    const value = searchInput.value.toLowerCase();
+
+    document.querySelectorAll(".task-picker .task-icon").forEach(icon => {
+
+        const title = icon.dataset.title || "";
+
+        if (title.includes(value)) {
+            icon.style.display = "flex";
+        } else {
+            icon.style.display = "none";
+        }
 
     });
 
+});
+
+function toggleEmptyState() {
+    const label = document.getElementById("no-tasks-label");
+
+    if (selected.length === 0) {
+        label.style.display = "block";
+    } else {
+        label.style.display = "none";
+    }
 }
 
 /* --------------------------------------------------
@@ -401,7 +831,10 @@ document.querySelectorAll(".group-icon").forEach(icon => {
 
         const data = await res.json();
 
-        data.tasks.forEach(t => addTask(t));
+        data.tasks.forEach(t => {
+            t.template_id = t.id; // ⚡ фикс
+            addTask(t);
+        });
 
     };
 
@@ -440,7 +873,7 @@ document.querySelectorAll(".group-icon").forEach(icon => {
                 if (t.icon) {
 
                     const img = document.createElement("img");
-                    img.src = t.icon;
+                    img.src = MEDIA_URL + t.icon;
 
                     gIcons.appendChild(img);
 

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Профиль{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <!-- СТАТИСТИКА -->
+    <div class="row text-center mb-4">
+        <div class="col">
+            <div class="card p-3">
+                <h6>Блоки</h6>
+                <h3>{{ blocks_count }}</h3>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card p-3">
+                <h6>Шаблоны</h6>
+                <h3>{{ templates_count }}</h3>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card p-3">
+                <h6>Группы</h6>
+                <h3>{{ groups_count }}</h3>
+            </div>
+        </div>
+    </div>
+
+   <div class="card mb-4 p-3">
+    <h5 class="mb-3">🔥 Топ шаблонов</h5>
+
+    <div class="row g-2 flex-nowrap">
+
+        {% for t in top_templates %}
+        <div class="col" style="flex: 0 0 10%; max-width: 10%;">
+
+            <div class="text-center position-relative">
+
+                {% if t.template__icon %}
+                    <img src="{{ MEDIA_URL }}{{ t.template__icon }}"
+                         class="rounded img-fluid"
+                         style="height:60px;">
+                {% else %}
+                    <div class="bg-light rounded d-flex align-items-center justify-content-center mx-auto"
+                         style="width:60px;height:60px;">
+                        <i class="bi bi-card-checklist fs-3"></i>
+                    </div>
+                {% endif %}
+
+                <span class="badge bg-primary position-absolute top-0 start-100 translate-middle">
+                    {{ t.count }}
+                </span>
+
+                <div class="small mt-1 text-truncate">
+                    {{ t.template__title|truncatechars:12 }}
+                </div>
+
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+
+    <!-- НАСТРОЙКИ -->
+    <div class="card p-4">
+        <h5 class="mb-3">Безопасность</h5>
+
+        <div class="d-grid gap-2">
+
+            <!-- PIN -->
+            <button class="btn btn-outline-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#pinActionModal"
+                    data-action="toggle-pin">
+                {% if user_pin.is_pin_enabled %}
+                    🔒 Отключить PIN
+                {% else %}
+                    🔓 Включить PIN
+                {% endif %}
+            </button>
+
+            <!-- СМЕНА PIN -->
+            <button class="btn btn-outline-secondary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#pinActionModal"
+                    data-action="change-pin">
+                🔁 Сменить PIN
+            </button>
+
+            <!-- СМЕНА ПАРОЛЯ -->
+            <button class="btn btn-outline-success"
+                    data-bs-toggle="modal"
+                    data-bs-target="#changePasswordModal">
+                🔐 Сменить пароль
+            </button>
+
+            <!-- УДАЛЕНИЕ -->
+            <button class="btn btn-outline-danger"
+                    data-bs-toggle="modal"
+                    data-bs-target="#deleteAccountModal">
+                🗑 Удалить аккаунт
+            </button>
+
+        </div>
+    </div>
+
+</div>
+
+{% include "includes/pin_modal.html" %}
+{% include "includes/change_password_modal.html" %}
+{% include "includes/delete_account_modal.html" %}
+
+{% endblock %}
+
+{% block page_js %}
+<script src="{% static 'js/core.js' %}"></script>
+<script src="{% static 'js/pin.js' %}"></script>
+<script src="{% static 'js/profile_actions.js' %}"></script>
+{% endblock %}

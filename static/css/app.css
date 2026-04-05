@@ -1,4 +1,202 @@
-/* NAVBAR */
+
+/* =========================
+   AUTH MODAL
+   ========================= */
+.password-wrapper {
+    position: relative;
+}
+
+.toggle-password {
+    cursor: pointer;
+    border: none;
+    background: transparent;
+}
+
+.password-wrapper input {
+    padding-right: 40px;
+}
+
+.toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #777;
+    font-size: 18px;
+}
+
+.toggle-password:hover {
+    color: #000;
+}
+
+.auth-errors {
+    margin-bottom: 10px;
+}
+
+.auth-error {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+.auth-card {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.auth-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.auth-tabs {
+    display: flex;
+    gap: 10px;
+}
+
+.auth-tab {
+    border: none;
+    background: transparent;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #666;
+    transition: 0.2s;
+}
+
+.auth-tab.active {
+    background: #4f46e5;
+    color: white;
+}
+
+.auth-form {
+    display: none;
+    animation: fadeIn 0.2s ease;
+}
+
+.auth-form.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.auth-form input {
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.auth-form button {
+    border-radius: 10px;
+    padding: 10px;
+}
+
+/* =========================
+   PIN LOCK SCREEN
+   ========================= */
+
+.pin-lock {
+
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background: #111;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 9999;
+}
+
+.pin-container {
+
+    width: 320px;
+
+    background: white;
+
+    padding: 25px;
+
+    border-radius: 12px;
+}
+
+.pin-display {
+
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+
+    margin-bottom: 20px;
+}
+
+.pin-dot {
+
+    width: 12px;
+    height: 12px;
+
+    border-radius: 50%;
+
+    background: #ddd;
+}
+
+.pin-dot.active {
+
+    background: #333;
+}
+
+.pin-pad {
+
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 10px;
+}
+
+.pin-btn {
+
+    padding: 14px;
+
+    font-size: 18px;
+
+    border: none;
+
+    background: #f1f1f1;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+}
+
+.pin-btn:active {
+
+    background: #ddd;
+}
+
+
+
+/* =========================
+   NAVBAR
+   ========================= */
 
 .app-navbar {
 
@@ -21,6 +219,7 @@
 
     height: 64px;
 }
+
 
 /* LOGO */
 
@@ -54,14 +253,17 @@
     font-size: 14px;
 }
 
+
 /* NAV ACTIONS */
 
 .nav-actions {
 
     display: flex;
     align-items: center;
+
     gap: 12px;
 }
+
 
 /* NAV BUTTON */
 
@@ -69,6 +271,7 @@
 
     display: flex;
     align-items: center;
+
     gap: 6px;
 
     padding: 6px 10px;
@@ -80,6 +283,9 @@
     text-decoration: none;
 
     color: #333;
+
+    background: transparent;
+    border: none;
 }
 
 .nav-btn:hover {
@@ -88,12 +294,14 @@
     color: #000;
 }
 
+
 /* USER MENU */
 
 .user-menu {
 
     display: flex;
     align-items: center;
+
     gap: 6px;
 
     padding: 6px 10px;
@@ -101,6 +309,7 @@
     border-radius: 8px;
 
     border: none;
+
     background: transparent;
 
     font-size: 14px;

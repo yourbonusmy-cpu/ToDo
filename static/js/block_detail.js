@@ -64,13 +64,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
         });
 
-        // 👁 показать пароль
         if (toggleVisibility) {
             toggleVisibility.addEventListener("click", function () {
-                passwordInput.type =
-                    passwordInput.type === "password"
-                        ? "text"
-                        : "password";
+
+                if (passwordInput.type === "password") {
+                    passwordInput.type = "text";
+                    toggleVisibility.innerHTML = '<i class="bi bi-eye-slash"></i>';
+                } else {
+                    passwordInput.type = "password";
+                    toggleVisibility.innerHTML = '<i class="bi bi-eye"></i>';
+                }
+
             });
         }
 
@@ -102,6 +106,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 passwordField.classList.add("d-none");
                 decryptBtn.classList.add("d-none");
+                passwordInput.type = "password";
+                toggleVisibility.innerHTML = '<i class="bi bi-eye"></i>';
+                passwordInput.value = "";
+
                 placeholder.classList.add("d-none");
 
                 isDecrypted = true;

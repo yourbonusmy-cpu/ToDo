@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% load static %}
 
 {% block extra_css %}
@@ -11,24 +10,96 @@
 {% block content %}
 <div class="container mt-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="mb-0">Tasker</h1>
-        <a href="{% url 'block_builder' %}" class="btn btn-primary">Новый блок</a>
+    <div class="filters-bar mb-3">
+
+        <!-- Поиск -->
+        <div class="filters-search">
+            <i class="bi bi-search"></i>
+            <input type="text" id="search-input" class="form-control"
+                   placeholder="Поиск блоков...">
+        </div>
+
+        <!-- Фильтр задач -->
+        <div class="dropdown filters-dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle w-100 d-flex align-items-center"
+                    type="button"
+                    data-bs-toggle="dropdown">
+                <i class="bi bi-list-task me-1"></i>
+                <span id="tasks-dropdown-label">Задачи</span>
+            </button>
+
+            <ul class="dropdown-menu p-3 filters-menu">
+
+                <!-- ПОИСК ВНУТРИ DROPDOWN -->
+                <li class="mb-2">
+                    <input type="text"
+                           id="tasks-search-input"
+                           class="form-control form-control-sm d-none"
+                           placeholder="Поиск задачи...">
+                </li>
+
+                <div id="tasks-list">
+                    {% for task in system_tasks %}
+                    <li class="task-item">
+                        <div class="form-check form-switch d-flex align-items-center mb-2">
+                            <input class="form-check-input me-2 task-toggle"
+                                   type="checkbox"
+                                   value="{{ task.id }}"
+                                   id="task-{{ task.id }}">
+
+                            {% if task.icon %}
+                                <img src="{{ task.icon.url }}" class="me-2 task-icon">
+                            {% else %}
+                                <i class="bi bi-check-circle me-2 text-primary"></i>
+                            {% endif %}
+
+                            <label class="form-check-label m-0" for="task-{{ task.id }}">
+                                {{ task.title }}
+                            </label>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </div>
+
+            </ul>
+        </div>
+
+        <!-- Toggle скрытых -->
+        <div class="form-check form-switch filters-toggle">
+            <input class="form-check-input" type="checkbox" id="hidden-filter">
+            <label class="form-check-label" for="hidden-filter">
+                Скрытые
+            </label>
+        </div>
+
+        <!-- Кнопки -->
+        <button id="reset-filters" class="btn btn-outline-secondary">
+            Сброс
+        </button>
+
     </div>
 
-    <p class="text-muted">Ваши блоки задач</p>
+    <!-- DOWNLOAD -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0 text-muted">Ваши блоки задач</h5>
+        <!-- Кнопка "Новый блок" -->
+        <a href="{% url 'block_create' %}" class="btn btn-primary flex-shrink-0">
+            Новый блок
+        </a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'download_blocks_json_zip' %}" class="btn btn-sm btn-success">Скачать JSON + ZIP</a>
+            <a href="{% url 'download_blocks_xlsx' %}" class="btn btn-sm btn-primary">Скачать XLSX</a>
+        </div>
+    </div>
 
     <!-- BLOCK CONTAINER -->
-    <div id="blocks-container">
-        {% for block in blocks %}
-            {% include "core/partials/block.html" with block=block %}
-        {% empty %}
-            <div class="alert alert-info">У вас пока нет блоков</div>
-        {% endfor %}
-    </div>
+    <div id="blocks-container"></div>
 
     <!-- SCROLL TRIGGER -->
     <div id="scroll-trigger"></div>
+
+    <!-- DELETE MODAL -->
+    {% include "core/partials/delete_modal.html" %}
 
 </div>
 

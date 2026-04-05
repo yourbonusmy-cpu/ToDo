@@ -121,7 +121,7 @@ def api_group_detail(request, group_id):
             "title": t.title,
             "description": t.description,
             "amount": t.default_amount,
-            "icon": t.icon.url if t.icon else "",
+            "icon": t.icon.name if t.icon else "",
         }
         for t in group.tasks.all()
     ]

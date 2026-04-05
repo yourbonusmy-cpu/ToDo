@@ -549,5 +549,25 @@
     "period_type": "week",
     "schedule_type": "fixed",
     "priority": 1
+  },
+  {
+    "code": "shave",
+    "title": "Брить бороду",
+    "description": "Побрил бороду",
+    "icon": "free-icon-shave-8816086.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "cut_hair",
+    "title": "Стричь волосы",
+    "description": "Постриг волосы",
+    "icon": "free-icon-hair-cut-17912915.png",
+    "default_amount": 1,
+    "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 1
   }
 ]

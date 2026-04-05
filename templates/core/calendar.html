@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="calendar-page d-flex flex-column">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <button class="btn btn-light border btn-sm" id="prevBtn">
+            <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <h5 class="mb-0 fw-semibold" id="monthTitle"></h5>
+
+        <button class="btn btn-light border btn-sm" id="nextBtn">
+            <i class="bi bi-chevron-right"></i>
+        </button>
+    </div>
+
+    <!-- WEEK -->
+    <div class="calendar-week text-center small fw-semibold mb-1">
+        <div>Пн</div><div>Вт</div><div>Ср</div>
+        <div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
+    </div>
+
+    <!-- GRID -->
+    <div id="calendarGrid" class="calendar-grid flex-grow-1"></div>
+
+</div>
+
+<div id="popover" class="calendar-popover d-none"></div>
+{% include "core/partials/delete_modal.html" %}
+{% endblock %}
+
+{% block page_js %}
+<script src="{% static 'js/calendar.js' %}"></script>
+{% endblock %}

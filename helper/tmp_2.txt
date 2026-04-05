@@ -1,716 +1,370 @@
-нужно рядом с иконкой добавить иконку глаза через bootstrap
-которое будет изменять значение is_hidden если глаз открыт то
-is_hidden = false если закрыт значит is_hidden = true
-у каждой задачи оно свое
 
-block_builder.html
-{% extends "base.html" %}
-{% load static %}
+нужно сделать чтоб шаблон пользователь имел стандартные шаблоны.
+и добавить в хедер профиль.
 
-{% block title %}Создать блок{% endblock %}
+core/views.py
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/block_builder.css' %}">
-{% endblock %}
+from datetime import timedelta
 
-{% block content %}
-
-<div class="container mt-4 mb-5">
-
-<input type="hidden" id="block-id" value="{{ block_json.id|default:'' }}">
-
-<div class="d-flex align-items-center justify-content-between mb-3">
-
-<input
-type="text"
-id="block-title"
-class="form-control w-50"
-placeholder="Название блока"
->
-
-<div class="d-flex gap-2">
-
-<button id="clear-block-btn" class="btn btn-outline-danger">
-Очистить
-</button>
-
-<button id="save-block-btn" class="btn btn-primary">
-Сохранить
-</button>
-
-</div>
-
-</div>
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.utils import timezone
+from django.views.decorators.http import require_POST
+from core.models import UserPin
 
 
-<div class="card shadow-sm mb-3">
+def lock_pin(request):
+    user_pin = getattr(request.user, "userpin", None)
 
-<div
-id="selected-tasks"
-class="card-body d-flex flex-wrap gap-3 align-items-center"
-></div>
+    if not user_pin or not user_pin.is_pin_enabled:
+        return JsonResponse({"success": False})
 
-</div>
+    request.session["pin_locked"] = True
+    return JsonResponse({"success": True})
 
 
-<div
-id="task-detail-card"
-class="card shadow-sm p-3 mb-3"
-style="display:none;"
->
+@login_required
+@require_POST
+def unlock_pin__(request):
 
-<div class="d-flex gap-4 align-items-start">
+    pin = request.POST.get("pin")
 
-<div class="text-center">
+    if not pin or len(pin) != 4 or not pin.isdigit():
+        return JsonResponse({"success": False})
 
-<img id="task-detail-icon" width="72" height="72">
+    try:
+        user_pin = UserPin.objects.get(user=request.user)
+    except UserPin.DoesNotExist:
+        return JsonResponse({"success": False})
 
-<div id="task-detail-title" class="fw-semibold mt-2"></div>
+    if user_pin.check_pin(pin):
+        request.session["pin_locked"] = False
+        return JsonResponse({"success": True})
 
-</div>
+    return JsonResponse({"success": False})
 
-<div class="d-flex flex-column gap-2">
 
-<div>
-<label class="form-label">Количество</label>
-<input id="task-detail-amount" class="form-control form-control-sm" type="number">
-</div>
+@login_required
+def pin_unlock_page(request):
+    return render(request, "core/pin_unlock.html")
 
-<div>
-<label class="form-label">Время</label>
-<input id="task-detail-time" class="form-control form-control-sm" type="number">
-</div>
 
-</div>
+@login_required
+@require_POST
+def unlock_pin(request):
+    pin = request.POST.get("pin")
+    if not pin or len(pin) != 4 or not pin.isdigit():
+        return JsonResponse({"success": False})
 
-<div class="flex-grow-1">
+    user_pin = getattr(request.user, "userpin", None)
+    if not user_pin or not user_pin.is_pin_enabled:
+        return JsonResponse({"success": False})
 
-<div class="d-flex justify-content-between align-items-center mb-1">
-    <label class="form-label m-0">Описание</label>
+    # Проверка cooldown
+    cooldown_until = request.session.get("pin_cooldown_until")
+    now = timezone.now().timestamp()
+    if cooldown_until and now < cooldown_until:
+        remaining = int(cooldown_until - now)
+        return JsonResponse({"success": False, "cooldown": remaining})
 
-    <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" id="task-password-toggle">
+    # Инициализация счётчика ошибок
+    errors = request.session.get("pin_errors", 0)
+
+    if user_pin.check_pin(pin):
+        # Сброс ошибок и cooldown
+        request.session["pin_errors"] = 0
+        request.session["pin_cooldown_until"] = None
+        request.session["pin_locked"] = False
+        return JsonResponse({"success": True})
+
+    # Неверный PIN
+    errors += 1
+    request.session["pin_errors"] = errors
+
+    if errors >= 3:
+        # Включаем cooldown 30 секунд
+        cooldown_seconds = 30
+        request.session["pin_cooldown_until"] = (
+            timezone.now() + timedelta(seconds=cooldown_seconds)
+        ).timestamp()
+        request.session["pin_errors"] = 0  # сбросим счётчик
+        return JsonResponse({"success": False, "cooldown": cooldown_seconds})
+
+    return JsonResponse({"success": False, "errors": errors})
+
+
+templates/base.html
+<!doctype html>
+<html lang="ru">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>{% block title %}Tasker{% endblock %}</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {% load static %}
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body data-page="{% block body_data_page %}{% endblock %}">
+
+    <!-- APP WRAPPER -->
+    <div id="app-wrapper">
+
+        <!-- Header -->
+        {% include "includes/header.html" %}
+
+        <!-- Messages -->
+        {% include "includes/messages.html" %}
+
+        <!-- Main content -->
+        <main class="container">
+            {% block content %}{% endblock %}
+        </main>
+
     </div>
-</div>
-
-<textarea
-id="task-detail-description"
-class="form-control mb-2"
-rows="4"
-></textarea>
-
-<div id="task-password-container" style="display:none; position:relative;">
-
-    <input
-        type="password"
-        id="task-password"
-        class="form-control"
-        placeholder="Пароль"
-    >
-
-    <span
-        id="password-eye"
-        style="
-        position:absolute;
-        right:10px;
-        top:50%;
-        transform:translateY(-50%);
-        cursor:pointer;
-        user-select:none;
-        "
-    >
-        👁
-    </span>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
 
 
-<!-- =========================
-TASK PICKER (справа)
-========================= -->
+    <!-- PIN LOCK SCREEN -->
 
-<div class="task-picker shadow">
-  {% for t in templates %}
-  <div
-      class="task-icon"
-      data-id="{{ t.id }}"
-      data-title="{{ t.title }}"
-      data-description="{{ t.description|escape }}"
-      data-amount="{{ t.default_amount }}"
-      data-time="{{ t.time|default:1 }}"
-  >
-      {% if t.icon %}
-      <img src="{{ t.icon.url }}" width="48" height="48">
-      {% endif %}
-  </div>
-  {% endfor %}
-</div>
+    <div id="pin-lock-screen" class="pin-lock">
+        <div class="pin-container">
 
-<!-- Tooltip карточка -->
-<div id="task-tooltip" class="task-tooltip shadow-sm" style="display:none; position:absolute; z-index:2000;">
-    <div class="fw-bold" id="tooltip-title"></div>
-    <div class="small text-muted" id="tooltip-description"></div>
-    <div class="small text-muted" id="tooltip-amount-time"></div>
-</div>
+            <h5 class="text-center mb-3">Введите PIN</h5>
 
-
-<!-- =========================
-GROUP PICKER (слева)
-========================= -->
-
-<div class="group-picker shadow">
-
-{% for g in groups %}
-
-<div
-class="group-icon"
-data-id="{{ g.id }}"
-data-title="{{ g.title }}"
-data-description="{{ g.description|escape }}"
-data-count="{{ g.tasks.count }}"
->
-
-<div class="group-grid">
-
-{% for t in g.tasks.all|slice:":4" %}
-
-<div class="group-task-mini">
-
-{% if t.icon %}
-<img src="{{ t.icon.url }}" width="20" height="20">
-{% endif %}
-
-</div>
-
-{% endfor %}
-
-</div>
-
-</div>
-
-{% endfor %}
-
-</div>
-
-
-<!-- =========================
-GROUP TOOLTIP
-========================= -->
-
-<div id="group-tooltip" class="group-tooltip" style="display:none">
-<div id="group-tooltip-title" class="fw-semibold"></div>
-<div id="group-tooltip-description" class="small text-muted"></div>
-<div class="small mt-1">
-Задач: <span id="group-tooltip-count"></span>
-</div>
-<div id="group-tooltip-icons" class="tooltip-icons mt-2"></div>
-
-</div>
-
-
-{% endblock %}
-
-
-
-{% block page_js %}
-
-<script>
-const block_json = {{ block_json|safe }};
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-<script src="{% static 'js/block_builder.js' %}"></script>
-
-{% endblock %}
-
-block_builder.js
-/* --------------------------------------------------
-STATE
--------------------------------------------------- */
-const selectedContainer = document.getElementById("selected-tasks");
-const taskDetailCard = document.getElementById("task-detail-card");
-
-const detailIcon = document.getElementById("task-detail-icon");
-const detailTitle = document.getElementById("task-detail-title");
-
-const detailAmount = document.getElementById("task-detail-amount");
-const detailTime = document.getElementById("task-detail-time");
-const detailDescription = document.getElementById("task-detail-description");
-
-const blockTitleInput = document.getElementById("block-title");
-
-const passwordToggle = document.getElementById("task-password-toggle");
-const passwordContainer = document.getElementById("task-password-container");
-const passwordInput = document.getElementById("task-password");
-const passwordEye = document.getElementById("password-eye");
-
-const selected = [];
-const taskState = {};
-
-/* --------------------------------------------------
-BLOCK ID (edit mode)
--------------------------------------------------- */
-const blockIdInput = document.getElementById("block-id");
-const blockId = blockIdInput ? blockIdInput.value : null;
-
-/* --------------------------------------------------
-CSRF
--------------------------------------------------- */
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie) {
-        const cookies = document.cookie.split(";");
-        for (let cookie of cookies) {
-            cookie = cookie.trim();
-            if (cookie.startsWith(name + "=")) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-const csrftoken = getCookie("csrftoken");
-
-/* --------------------------------------------------
-ADD TASK
--------------------------------------------------- */
-function addTask(taskData) {
-
-    const id = taskData.id?.toString() || `new-${Math.random()}`;
-
-    if (!selected.includes(id)) {
-
-        selected.push(id);
-
-        const el = document.createElement("div");
-        el.className = "selected-task position-relative";
-        el.dataset.id = id;
-
-        el.innerHTML = `
-            <div class="border rounded bg-light d-flex align-items-center justify-content-center w-100 h-100">
-                ${taskData.icon ? `<img src="${taskData.icon}" width="48" height="48">` : ""}
+            <div class="pin-display">
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
             </div>
 
-            <button
-                class="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle rounded-circle remove-task"
-            >
-                ×
+            <div class="pin-pad">
+                <button class="pin-btn" data-num="1">1</button>
+                <button class="pin-btn" data-num="2">2</button>
+                <button class="pin-btn" data-num="3">3</button>
+                <button class="pin-btn" data-num="4">4</button>
+                <button class="pin-btn" data-num="5">5</button>
+                <button class="pin-btn" data-num="6">6</button>
+                <button class="pin-btn" data-num="7">7</button>
+                <button class="pin-btn" data-num="8">8</button>
+                <button class="pin-btn" data-num="9">9</button>
+                <button class="pin-btn pin-del">⌫</button>
+                <button class="pin-btn" data-num="0">0</button>
+                <button class="pin-btn pin-ok">OK</button>
+            </div>
+
+            <button id="pin-logout-btn" class="btn btn-danger w-100 mt-2">
+                Выйти и сменить пользователя
             </button>
-        `;
 
-        el.addEventListener("click", () => showTaskDetail(id));
+        </div>
+    </div>
 
-        el.querySelector(".remove-task").addEventListener("click", (e) => {
-            e.stopPropagation();
-            removeTask(id);
-        });
 
-        selectedContainer.appendChild(el);
+    <script>
+        window.PIN_ENABLED = {{ request.user.userpin.is_pin_enabled|yesno:"true,false" }};
+    </script>
 
-        taskState[id] = {
-            title: taskData.title,
-            description: taskData.description || "",
-            amount: parseInt(taskData.amount) || 1,
-            time: parseFloat(taskData.time) || 1,
-            iconSrc: taskData.icon || "",
+    {% if request.session.pin_locked %}
+    <script>
+        window.PIN_LOCKED = true;
+    </script>
+    {% else %}
+    <script>
+        window.PIN_LOCKED = false;
+    </script>
+    {% endif %}
+    <script src="{% static 'js/core.js' %}"></script>
 
-            is_encrypted: false,
-            password: ""
-        };
-    }
+    {% block page_js %}{% endblock %}
+    {% block extra_js %}{% endblock %}
 
-    showTaskDetail(id);
-}
 
-/* --------------------------------------------------
-REMOVE TASK
--------------------------------------------------- */
-function removeTask(id) {
+    <!-- AUTH MODAL -->
 
-    delete taskState[id];
+    <div class="modal fade" id="authModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content auth-card">
 
-    const index = selected.indexOf(id);
-    if (index > -1) selected.splice(index, 1);
+                <!-- HEADER -->
+                <div class="auth-header">
 
-    const el = selectedContainer.querySelector(`[data-id="${id}"]`);
-    if (el) el.remove();
+                    <div class="auth-tabs">
+                        <button class="auth-tab active" data-tab="login">
+                            Вход
+                        </button>
+                        <button class="auth-tab" data-tab="register">
+                            Регистрация
+                        </button>
+                    </div>
 
-    taskDetailCard.style.display = "none";
-}
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 
-/* --------------------------------------------------
-SHOW DETAIL
--------------------------------------------------- */
-function showTaskDetail(id) {
+                </div>
 
-    const state = taskState[id];
-    if (!state) return;
+                <!-- BODY -->
+                <div class="modal-body">
 
-    taskDetailCard.style.display = "block";
+                    <!-- LOGIN -->
+                    <form method="post" action="{% url 'login' %}" class="auth-form active" id="loginForm">
+                        {% csrf_token %}
 
-    detailIcon.src = state.iconSrc;
-    detailTitle.textContent = state.title;
+                        <div class="auth-errors"></div>
 
-    detailAmount.value = state.amount;
-    detailTime.value = state.time;
-    detailDescription.value = state.description;
+                        <input type="text" name="username" class="form-control mb-3" placeholder="Логин">
+                        <div class="password-wrapper mb-3">
+                            <input type="password" name="password" class="form-control" placeholder="Пароль">
+                            <i class="bi bi-eye toggle-password"></i>
+                        </div>
 
-    taskDetailCard.dataset.currentTaskId = id;
+                        <button class="btn btn-primary w-100">Войти</button>
+                    </form>
 
-    /* PASSWORD STATE */
+                    <!-- REGISTER -->
+                    <form method="post" action="{% url 'register' %}" class="auth-form" id="registerForm">
+                        {% csrf_token %}
 
-    passwordToggle.checked = state.is_encrypted;
+                        <div class="auth-errors"></div>
 
-    if (state.is_encrypted) {
+                        <input type="text" name="username" class="form-control mb-3" placeholder="Логин">
+                        <div class="password-wrapper mb-3">
+                            <input type="password" name="password1" class="form-control" placeholder="Пароль">
+                            <i class="bi bi-eye toggle-password"></i>
+                        </div>
 
-        passwordContainer.style.display = "block";
-        passwordInput.value = state.password;
+                        <div class="password-wrapper mb-3">
+                            <input type="password" name="password2" class="form-control" placeholder="Повтор пароля">
+                            <i class="bi bi-eye toggle-password"></i>
+                        </div>
+                        <button class="btn btn-success w-100">Зарегистрироваться</button>
+                    </form>
 
-    } else {
+                </div>
 
-        passwordContainer.style.display = "none";
-        passwordInput.value = "";
+            </div>
+        </div>
+    </div>
 
-    }
-}
 
-/* --------------------------------------------------
-INPUT HANDLERS
--------------------------------------------------- */
-detailAmount.addEventListener("input", () => {
-    const id = taskDetailCard.dataset.currentTaskId;
-    if (id) taskState[id].amount = parseInt(detailAmount.value);
-});
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-detailTime.addEventListener("input", () => {
-    const id = taskDetailCard.dataset.currentTaskId;
-    if (id) taskState[id].time = parseFloat(detailTime.value);
-});
+</body>
+</html>
 
-detailDescription.addEventListener("input", () => {
-    const id = taskDetailCard.dataset.currentTaskId;
-    if (id) taskState[id].description = detailDescription.value;
-});
+templates/includes/header.html
+<nav class="app-navbar">
 
-/* --------------------------------------------------
-PASSWORD TOGGLE
--------------------------------------------------- */
-passwordToggle.addEventListener("change", () => {
+    <div class="container navbar-inner">
 
-    const id = taskDetailCard.dataset.currentTaskId;
-    if (!id) return;
+        <!-- LOGO -->
 
-    const state = taskState[id];
+        <a class="logo" href="/">
+            <span class="logo-icon">
+                <i class="bi bi-check-lg"></i>
+            </span>
+            Tasker
+        </a>
 
-    state.is_encrypted = passwordToggle.checked;
 
-    if (state.is_encrypted) {
+        <!-- RIGHT -->
 
-        passwordContainer.style.display = "block";
+        <div class="nav-actions">
 
-    } else {
+            {% if user.is_authenticated %}
 
-        passwordContainer.style.display = "none";
-        passwordInput.value = "";
-        state.password = "";
+            <!-- PIN LOCK BUTTON и Логика выхода -->
+            <button class="nav-btn lock-btn">
+                <i class="bi bi-lock"></i>
+                Lock
+            </button>
+            <a href="{% url 'weather' %}" class="nav-link">
+                Погода
+            </a>
+            <a
+                class="nav-btn"
+                href="{% url 'block_create' %}">
+                <i class="bi bi-kanban"></i>
+                Блок
+            </a>
 
-    }
+            <a
+                class="nav-btn"
+                href="/templates/">
+                <i class="bi bi-plus-square"></i>
+                Шаблоны
+            </a>
 
-});
+            <a
+                class="nav-btn"
+                href="/group-templates/">
+                <i class="bi bi-plus-square"></i>
+                Группы
+            </a>
 
-/* --------------------------------------------------
-PASSWORD INPUT
--------------------------------------------------- */
-passwordInput.addEventListener("input", () => {
 
-    const id = taskDetailCard.dataset.currentTaskId;
-    if (!id) return;
+            <!-- USER MENU -->
 
-    taskState[id].password = passwordInput.value;
+            <div class="dropdown">
 
-});
+                <button
+                    class="user-menu"
+                    data-bs-toggle="dropdown">
 
-/* --------------------------------------------------
-SHOW / HIDE PASSWORD
--------------------------------------------------- */
-passwordEye.addEventListener("click", () => {
+                    <i class="bi bi-person-circle"></i>
 
-    if (passwordInput.type === "password") {
-        passwordInput.type = "text";
-    } else {
-        passwordInput.type = "password";
-    }
+                    <span class="username">
+                        {{ user.username }}
+                    </span>
 
-});
+                    <i class="bi bi-chevron-down small"></i>
 
-/* --------------------------------------------------
-TASK PICKER CLICK
--------------------------------------------------- */
-document.querySelectorAll(".task-picker .task-icon").forEach(icon => {
+                </button>
 
-    icon.addEventListener("click", () => {
+                <ul class="dropdown-menu dropdown-menu-end">
 
-        const taskData = {
-            id: icon.dataset.id,
-            title: icon.dataset.title,
-            description: icon.dataset.description,
-            amount: icon.dataset.amount,
-            icon: icon.querySelector("img") ? icon.querySelector("img").src : "",
-        };
+                    <li class="dropdown-header">
+                        {{ user.username }}
+                    </li>
 
-        addTask(taskData);
+                    <li>
+                        <a
+                            class="dropdown-item"
+                            href="{% url 'logout' %}">
+                            <i class="bi bi-box-arrow-right"></i>
+                            Выйти
+                        </a>
+                    </li>
 
-    });
+                </ul>
 
-});
+            </div>
 
-/* --------------------------------------------------
-SORTABLE
--------------------------------------------------- */
-new Sortable(selectedContainer, {
-    animation: 150,
-    onEnd() {
-        const ids = Array.from(selectedContainer.children).map(el => el.dataset.id);
-        selected.length = 0;
-        ids.forEach(id => selected.push(id));
-    }
-});
+            {% else %}
 
-/* --------------------------------------------------
-CLEAR BLOCK
--------------------------------------------------- */
-document.getElementById("clear-block-btn").onclick = () => {
+            <button
+                class="btn btn-primary btn-sm"
+                data-bs-toggle="modal"
+                data-bs-target="#authModal">
 
-    selected.length = 0;
-    selectedContainer.innerHTML = "";
+                <i class="bi bi-box-arrow-in-right"></i>
+                Войти
 
-    for (let key in taskState) delete taskState[key];
+            </button>
 
-    taskDetailCard.style.display = "none";
-};
+            {% endif %}
 
-/* --------------------------------------------------
-SAVE BLOCK
--------------------------------------------------- */
-document.getElementById("save-block-btn").onclick = async () => {
+        </div>
 
-    if (!blockTitleInput.value.trim()) {
-        alert("Введите название блока");
-        return;
-    }
+    </div>
 
-    const tasksData = selected.map(id => {
-        const state = taskState[id];
-        let password = "";
-        if (state.is_encrypted && state.password) {
-            password = state.password;
-        }
-
-        return {
-            id: id.startsWith("new-") ? null : parseInt(id),
-            title: state.title,
-            description: state.description,
-            is_encrypted: state.is_encrypted,
-            password: password,
-            amount: state.amount,
-            time: state.time,
-            icon: state.iconSrc,
-        };
-
-    });
-
-    const url = window.location.href;
-
-    const formData = new FormData();
-
-    formData.append("title", blockTitleInput.value);
-    formData.append("tasks", JSON.stringify(tasksData));
-    formData.append("csrfmiddlewaretoken", csrftoken);
-
-    const response = await fetch(url, {
-        method: "POST",
-        body: formData
-    });
-
-    if (response.redirected) {
-        window.location.href = response.url;
-    } else {
-        alert("Ошибка при сохранении блока");
-    }
-};
-
-/* --------------------------------------------------
-LOAD BLOCK (edit)
--------------------------------------------------- */
-function loadBlock() {
-
-    if (!block_json) return;
-
-    blockTitleInput.value = block_json.title;
-
-    block_json.tasks.forEach(task => {
-
-        addTask(task);
-
-        const id = task.id.toString();
-
-        taskState[id].amount = task.amount;
-        taskState[id].time = task.time;
-        taskState[id].description = task.description;
-
-    });
-}
-
-loadBlock();
-
-
-
-/* --------------------------------------------------
-HORIZONTAL SCROLL
--------------------------------------------------- */
-const taskPicker = document.querySelector(".task-picker");
-
-if (taskPicker) {
-
-    taskPicker.addEventListener("wheel", (e) => {
-
-        e.preventDefault();
-        taskPicker.scrollLeft += e.deltaY;
-
-    });
-
-}
-
-/* --------------------------------------------------
-GROUP CLICK
--------------------------------------------------- */
-document.querySelectorAll(".group-icon").forEach(icon => {
-
-    icon.onclick = async () => {
-
-        const groupId = icon.dataset.id;
-
-        const res = await fetch(`/api/groups/${groupId}/`);
-        if (!res.ok) return;
-
-        const data = await res.json();
-
-        data.tasks.forEach(t => addTask(t));
-
-    };
-
-});
-
-/* --------------------------------------------------
-GROUP TOOLTIP
--------------------------------------------------- */
-const gTooltip = document.getElementById("group-tooltip");
-
-const gTitle = document.getElementById("group-tooltip-title");
-const gDesc = document.getElementById("group-tooltip-description");
-const gCount = document.getElementById("group-tooltip-count");
-const gIcons = document.getElementById("group-tooltip-icons");
-
-document.querySelectorAll(".group-icon").forEach(icon => {
-
-    icon.addEventListener("mouseenter", async () => {
-
-        gTooltip.style.display = "block";
-
-        gTitle.textContent = icon.dataset.title;
-        gDesc.textContent = icon.dataset.description;
-        gCount.textContent = icon.dataset.count;
-
-        gIcons.innerHTML = "";
-
-        const res = await fetch(`/api/groups/${icon.dataset.id}/`);
-
-        if (res.ok) {
-
-            const data = await res.json();
-
-            data.tasks.forEach(t => {
-
-                if (t.icon) {
-
-                    const img = document.createElement("img");
-                    img.src = t.icon;
-
-                    gIcons.appendChild(img);
-
-                }
-
-            });
-
-        }
-
-    });
-
-    icon.addEventListener("mousemove", (e) => {
-
-        gTooltip.style.left = (e.clientX + 15) + "px";
-        gTooltip.style.top = (e.clientY + 15) + "px";
-
-    });
-
-    icon.addEventListener("mouseleave", () => {
-
-        gTooltip.style.display = "none";
-
-    });
-
-});
-
-/* --------------------------------------------------
-TASK TOOLTIP
--------------------------------------------------- */
-const taskTooltip = document.getElementById("task-tooltip");
-const tooltipTitle = document.getElementById("tooltip-title");
-const tooltipDescription = document.getElementById("tooltip-description");
-const tooltipAmountTime = document.getElementById("tooltip-amount-time");
-
-document.querySelectorAll(".task-picker .task-icon").forEach(icon => {
-
-    icon.addEventListener("mouseenter", () => {
-
-        tooltipTitle.textContent = icon.dataset.title.trim() || "Без названия";
-        let description = icon.dataset.description || "";
-
-        description = description
-            .trim()
-            .replace(/\n+$/g, "")     // убрать переносы в конце
-
-        tooltipDescription.textContent = description;
-        tooltipAmountTime.textContent =
-            `Количество: ${icon.dataset.amount || 1}, Время: ${icon.dataset.time || 1}`;
-
-        taskTooltip.style.display = "block";
-
-        const rect = icon.getBoundingClientRect();
-        const tooltipHeight = taskTooltip.offsetHeight || 80;
-
-        const topPos = rect.top + window.scrollY - tooltipHeight - 8;
-        const leftPos = rect.left + window.scrollX + rect.width / 2 - 110;
-
-        taskTooltip.style.top = `${topPos}px`;
-        taskTooltip.style.left = `${leftPos}px`;
-
-
-    });
-
-    icon.addEventListener("mouseleave", () => {
-
-        taskTooltip.style.display = "none";
-
-    });
-
-});
+</nav>

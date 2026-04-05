@@ -19,14 +19,20 @@ Tasker
         <button
             class="btn btn-primary btn-lg"
             data-bs-toggle="modal"
-            data-bs-target="#authModal">
+            data-bs-target="#authModal"
+            data-auth-tab="login">
 
             Войти
         </button>
 
-        <a class="btn btn-outline-primary btn-lg" href="{% url 'register' %}">
+        <button
+            class="btn btn-outline-primary btn-lg"
+            data-bs-toggle="modal"
+            data-bs-target="#authModal"
+            data-auth-tab="register">
+
             Регистрация
-        </a>
+        </button>
 
     </div>
 

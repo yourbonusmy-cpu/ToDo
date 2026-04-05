@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Погода{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/weather.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h3 class="mb-4">🌤 Погода</h3>
+
+    <!-- город -->
+    <form method="get" class="mb-4">
+        <select name="city" class="form-select w-auto" onchange="this.form.submit()">
+            {% for c in cities %}
+                <option value="{{ c }}" {% if c == selected_city %}selected{% endif %}>
+                    {{ c }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <!-- карточки -->
+    <div class="row g-3">
+
+        {% for w in weather %}
+        <div class="{% if w.is_current %}col-12 col-md-6{% else %}col-6 col-md-2{% endif %}">
+
+            <div class="card weather-card {{ w.color }} {% if w.is_current %}active{% endif %}">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="period">{{ w.label }}</span>
+                        {% if w.is_current %}
+                            <span class="badge bg-light text-dark">Сейчас</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="temp">{{ w.temp }}°</div>
+                        <div class="icon">
+                            {% if w.label == "Ночь" %}
+                                🌙
+                            {% else %}
+                                {{ w.icon }}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="details">
+                        {{ w.description }} •
+                        ☁ {{ w.clouds }}% •
+                        💧 {{ w.humidity }}% •
+                        🌬 {{ w.wind_speed }} м/с ({{ w.wind_dir }}) •
+                        📊 {{ w.pressure }}
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

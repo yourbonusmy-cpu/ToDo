@@ -1,5 +1,6 @@
 from django.urls import path
 
+from core.views import api_blocks
 from core.views.api_blocks import (
     create_block,
     load_blocks,
@@ -8,14 +9,25 @@ from core.views.api_blocks import (
     hide_block,
 )
 from core.views.auth import UserLoginView, register, user_logout
-from core.views.blocks import block_builder, delete_block, decrypt_task
+from core.views.blocks import (
+    delete_block,
+    decrypt_task,
+    block_builder_stop,
+    block_create,
+)
 from core.views.group_templates import (
     group_template_create_or_edit,
     group_template_delete,
     group_templates_list,
     api_group_detail,
 )
-from core.views.home import home, block_detail
+from core.views.home import (
+    home,
+    block_detail,
+    download_blocks_json_zip,
+    download_blocks_xlsx,
+)
+from core.views.pin import lock_pin, unlock_pin, pin_unlock_page
 from core.views.task_templates import (
     task_template_create_view,
     template_create,
@@ -24,25 +36,58 @@ from core.views.task_templates import (
     template_delete,
     templates_page,
     add_all_system_templates,
+    increment_template_selected,
 )
 
 from core.views.tasks import task_template_create
+from core.views.weather import weather_view
+from core.views.api import calendar_data
+
+from core.views.profile import (
+    profile_view,
+    change_password_view,
+    delete_account_view,
+    toggle_pin_view,
+)
+
+from django.shortcuts import render
+def calendar_page(request):
+    return render(request, "core/calendar.html")
 
 urlpatterns = [
+    path("calendar/", calendar_page, name="calendar"),
+    path("api/calendar/", calendar_data, name="calendar_data"),
+    path("weather/", weather_view, name="weather"),
     path("decrypt-task/", decrypt_task, name="decrypt_task"),
     path("block/<int:block_id>/view/", block_detail, name="block_detail"),
     path("api/block/<int:block_id>/delete/", delete_block, name="api_delete_block"),
     path("api/block/<int:block_id>/hide/", hide_block, name="api_hide_block"),
     path("api/block/<int:block_id>/", get_block, name="api_get_block"),
     path("api/block/<int:block_id>/update/", update_block, name="api_update_block"),
-    path("block/create/", block_builder, name="block_builder"),
+    path("block/create/", block_create, name="block_create"),
     path("api/block/create/", create_block, name="api_create_block"),
-    path("block/<int:block_id>/edit/", block_builder, name="block_edit"),
-    path("api/blocks/", load_blocks, name="api_blocks"),
+    path("block/<int:block_id>/edit/", block_create, name="block_edit"),
+    path("api/blocks/", api_blocks, name="api_blocks"),
     path("login/", UserLoginView.as_view(), name="login"),
     path("register/", register, name="register"),
     path("logout/", user_logout, name="logout"),
     path("", home, name="home"),
+    path("lock-pin/", lock_pin, name="lock_pin"),
+    path("unlock-pin/", unlock_pin, name="unlock_pin"),
+    path("pin-unlock/", pin_unlock_page, name="pin_unlock"),
+    path(
+        "download/json_zip/",
+        download_blocks_json_zip,
+        name="download_blocks_json_zip",
+    ),
+    path("download/xlsx/", download_blocks_xlsx, name="download_blocks_xlsx"),
+]
+
+urlpatterns += [
+    path("profile/", profile_view, name="profile"),
+    path("profile/change-password/", change_password_view, name="change_password"),
+    path("profile/delete/", delete_account_view, name="delete_account"),
+    path("profile/toggle-pin/", toggle_pin_view, name="toggle_pin"),
 ]
 
 urlpatterns += [
@@ -69,6 +114,11 @@ urlpatterns += [
     path("templates/create/", template_create, name="template_create"),
     path(
         "task-template/create/", task_template_create_view, name="task_template_create"
+    ),
+    path(
+        "api/templates/<int:template_id>/select/",
+        increment_template_selected,
+        name="template_select",
     ),
 ]
 
