@@ -8,6 +8,7 @@ from core.views.api_blocks import (
     update_block,
     hide_block,
 )
+from core.views.api_stats import stats_weekdays_api
 from core.views.auth import UserLoginView, register, user_logout
 from core.views.blocks import (
     delete_block,
@@ -28,6 +29,7 @@ from core.views.home import (
     download_blocks_xlsx,
 )
 from core.views.pin import lock_pin, unlock_pin, pin_unlock_page
+from core.views.stats import stats_weekdays_page
 from core.views.task_templates import (
     task_template_create_view,
     template_create,
@@ -51,13 +53,18 @@ from core.views.profile import (
 )
 
 from django.shortcuts import render
+
+
 def calendar_page(request):
     return render(request, "core/calendar.html")
+
 
 urlpatterns = [
     path("calendar/", calendar_page, name="calendar"),
     path("api/calendar/", calendar_data, name="calendar_data"),
     path("weather/", weather_view, name="weather"),
+    path("api/statistics/", stats_weekdays_api, name="stats_weekdays_api"),
+    path("stats/weekdays/", stats_weekdays_page, name="stats_weekdays"),
     path("decrypt-task/", decrypt_task, name="decrypt_task"),
     path("block/<int:block_id>/view/", block_detail, name="block_detail"),
     path("api/block/<int:block_id>/delete/", delete_block, name="api_delete_block"),
