@@ -1,0 +1,66 @@
+<!-- core/templates/core/partials/delete_modal.html -->
+
+<div class="modal fade" id="deleteBlockModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow">
+
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title">Подтверждение удаления</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body pt-2">
+
+                <div class="mb-3">
+                    <div class="text-muted small mb-1">
+                        Вы удаляете список:
+                    </div>
+
+                    <div id="block-name"
+                         class="p-2 rounded bg-light border fw-semibold text-break">
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">
+                        Введите пароль для подтверждения
+                    </label>
+
+                    <div class="position-relative">
+                        <input type="password"
+                               id="delete-block-password"
+                               class="form-control pe-5"
+                               placeholder="Пароль">
+
+                        <button type="button"
+                                id="delete-password-eye"
+                                class="btn btn-sm position-absolute top-50 end-0 translate-middle-y me-2">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="delete-block-error"
+                     class="text-danger small mt-2"
+                     style="display:none;">
+                </div>
+
+            </div>
+
+            <div class="modal-footer border-0">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Отмена
+                </button>
+
+                <button type="button"
+                        id="confirm-delete-block"
+                        class="btn btn-danger">
+                    Удалить
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
