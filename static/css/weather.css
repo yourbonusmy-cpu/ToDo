@@ -1,46 +1,65 @@
-/* база */
+.weather-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.weather-col {
+    flex: 1;
+    min-width: 220px;
+}
+
 .weather-card {
     border-radius: 16px;
-    color: black;
-    transition: 0.25s;
-    border: none;
-    padding: 4px;
+    padding: 16px;
+    color: white;
+    transition: 0.3s;
 }
 
-/* hover */
 .weather-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-5px);
 }
 
-/* активная */
 .weather-card.active {
     transform: scale(1.05);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 
-/* текст */
-.period {
-    font-size: 13px;
-    opacity: 0.8;
+/* структура */
+.top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+}
+
+.middle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
 }
 
 .temp {
-    font-size: 32px;
-    font-weight: 600;
+    font-size: 34px;
+    font-weight: bold;
 }
 
-.details {
-    font-size: 13px;
-    opacity: 0.9;
-}
-
-/* иконка */
 .icon {
     font-size: 28px;
 }
 
-/* 🎨 цвета по погоде */
+.desc {
+    font-size: 14px;
+    margin-bottom: 8px;
+}
 
+.bottom {
+    font-size: 13px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* цвета */
 .weather-clear {
     background: linear-gradient(135deg, #f59e0b, #fbbf24);
 }
@@ -56,8 +75,4 @@
 .weather-snow {
     background: linear-gradient(135deg, #e5e7eb, #9ca3af);
     color: #111;
-}
-
-.weather-thunder {
-    background: linear-gradient(135deg, #4b5563, #111827);
 }

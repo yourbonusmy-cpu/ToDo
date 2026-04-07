@@ -33,9 +33,69 @@ const taskState = {};
 
 
 weatherSwitch.addEventListener("change", () => {
-    weatherContainer.style.display = weatherSwitch.checked ? "flex" : "none";
+    if (weatherSwitch.checked) {
+        weatherContainer.style.display = "flex";
+        loadWeather();
+    } else {
+        weatherContainer.style.display = "none";
+        currentWeatherData = null;
+    }
 });
 
+async function loadWeather() {
+    const res = await fetch("/api/weather/?city=Москва");
+    if (!res.ok) return;
+
+    const data = await res.json();
+
+    currentWeatherData = data.weather;
+
+    renderWeatherCompact(currentWeatherData);
+}
+
+
+//function renderWeatherCompact(weather) {
+//    const row = document.getElementById("weather-row");
+//    row.innerHTML = "";
+//
+//    const order = ["Утро", "День", "Вечер", "Ночь"];
+//
+//    order.forEach(label => {
+//        const w = weather.find(x => x.label === label);
+//        if (!w) return;
+//
+//        const el = document.createElement("div");
+//        el.className = `weather-mini ${w.main?.toLowerCase() || ""}`;
+//
+//        el.title = w.description || w.main || "";
+//
+//        el.innerHTML = `
+//            <div class="top d-flex align-items-center justify-content-between">
+//
+//                <span>${w.label}</span>
+//
+//                <div class="d-flex align-items-center gap-1">
+//                    ${
+//                        w.icon_url
+//                            ? `<img src="${w.icon_url}" width="18">`
+//                            : `<span>${w.icon || ""}</span>`
+//                    }
+//                    <span>${w.temp}°</span>
+//                </div>
+//
+//            </div>
+//
+//            <div class="bottom">
+//                ${w.description} •
+//                ${w.humidity}% •
+//                ${w.wind_speed} м/с (${w.wind_dir}) •
+//                ${w.pressure}
+//            </div>
+//        `;
+//
+//        row.appendChild(el);
+//    });
+//}
 
 
 function renderWeatherCompact(weather) {
@@ -54,61 +114,33 @@ function renderWeatherCompact(weather) {
         el.title = w.description || w.main || "";
 
         el.innerHTML = `
-            <div class="top d-flex align-items-center justify-content-between">
+            <div class="weather-head">
 
-                <span>${w.label}</span>
+                <div class="left">
+                    <div class="period">${w.label}</div>
+                    <div class="desc">${w.description || ""}</div>
+                </div>
 
-                <div class="d-flex align-items-center gap-1">
-                    ${
-                        w.icon_url
-                            ? `<img src="${w.icon_url}" width="18">`
-                            : `<span>${w.icon || ""}</span>`
-                    }
-                    <span>${w.temp}°</span>
+                <div class="right">
+                    <div class="clouds">
+                        ${w.humidity ?? 0}%
+                    </div>
                 </div>
 
             </div>
 
-            <div class="bottom">
-                ${w.description} •
-                ${w.humidity}% •
-                ${w.wind_speed} м/с (${w.wind_dir}) •
-                ${w.pressure}
-            </div>
-        `;
+            <div class="weather-meta">
 
-        row.appendChild(el);
-    });
-}
-
-function renderWeatherCompact(weather) {
-    const row = document.getElementById("weather-row");
-    row.innerHTML = "";
-
-    const order = ["Утро", "День", "Вечер", "Ночь"];
-
-    order.forEach(label => {
-        const w = weather.find(x => x.label === label);
-        if (!w) return;
-
-        const el = document.createElement("div");
-
-//        el.className = "weather-mini card px-2 py-1";
-        el.className = `weather-mini card px-2 py-1 ${w.color}`;
-
-        el.innerHTML = `
-            <div class="d-flex flex-column small text-center">
-
-                <div class="fw-semibold">${w.label}</div>
-
-                <div class="d-flex justify-content-center align-items-center gap-1">
-                    <span>${w.icon}</span>
-                    <span>${w.temp}°</span>
+                <div class="meta-item">
+                    🌡 ${w.temp}°
                 </div>
 
-                <div class="text-muted" style="font-size:11px;">
-                    💧${w.humidity}%
-                    🌬${w.wind_speed}
+                <div class="meta-item">
+                    💨 ${w.wind_speed} ${w.wind_dir}
+                </div>
+
+                <div class="meta-item">
+                    ⏲ ${w.pressure}
                 </div>
 
             </div>
@@ -117,7 +149,6 @@ function renderWeatherCompact(weather) {
         row.appendChild(el);
     });
 }
-
 /* --------------------------------------------------
 BLOCK ID
 -------------------------------------------------- */
@@ -700,6 +731,9 @@ document.getElementById("save-block-btn").onclick = async () => {
     formData.append("with_weather", weatherSwitch.checked);
     formData.append("weather_city", "Москва"); // или select
     formData.append("tasks", JSON.stringify(tasksData));
+    if (weatherSwitch.checked && currentWeatherData) {
+        formData.append("weather_data", JSON.stringify(currentWeatherData));
+    }
     formData.append("csrfmiddlewaretoken", csrftoken);
 
     const response = await fetch(url, {
@@ -766,6 +800,7 @@ function loadBlock() {
     if (block_json?.weather) {
         weatherSwitch.checked = true;
         weatherContainer.style.display = "block";
+        currentWeatherData = block_json.weather;
 
         renderWeatherCompact(block_json.weather);
     }

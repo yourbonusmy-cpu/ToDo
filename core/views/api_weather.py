@@ -1,5 +1,5 @@
+from django.http import JsonResponse
 from datetime import datetime
-from django.shortcuts import render
 
 from core.services.weather import (
     get_forecast,
@@ -10,13 +10,12 @@ from core.services.weather import (
 )
 
 
-def weather_view(request):
+def weather_api(request):
     city = request.GET.get("city", "Чебоксары")
 
     data = get_forecast(city)
 
     grouped = group_by_period(data["list"], data["city"]["timezone"])
-
     current_period = get_day_part(datetime.now().hour)
 
     weather = build_weather_cards(grouped, current_period)
@@ -24,23 +23,4 @@ def weather_view(request):
     for w in weather:
         w["wind_dir"] = get_wind_direction(w["wind_deg"])
 
-    cities = [
-        "Чебоксары",
-        "Москва",
-        "Санкт-Петербург",
-        "Казань",
-        "Новосибирск",
-        "Сочи",
-        "Анапа",
-        "Ялта",
-    ]
-
-    return render(
-        request,
-        "core/weather.html",
-        {
-            "weather": weather,
-            "cities": cities,
-            "selected_city": city,
-        },
-    )
+    return JsonResponse({"weather": weather})

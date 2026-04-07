@@ -1,111 +1,318 @@
-/* --- SYSTEM PANEL --- */
+/* =======================
+SYSTEM PANEL
+======================= */
+
+.system-panel-wrapper {
+    position: relative;
+}
+
+/* PANEL — сдвинута правее кнопки */
 .system-panel {
-  position: fixed;
-  left: 12px;
-  top: 80px;
-  bottom: 20px;
-  width: 80px;
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #e6e6e6;
-  display: flex;
-  flex-direction: column;
-  overflow: visible;
+    position: fixed;
+    left: 24px; /* 👈 ключевое: отступ от кнопки */
+    top: 80px;
+    bottom: 20px;
+    width: 90px;
+
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,0.06);
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: visible;
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+
+    transition: transform 0.25s ease, opacity 0.2s ease;
 }
 
+/* SCROLL */
 .system-scroll {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: visible;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: visible;
+
+    padding: 10px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
+/* ICON */
 .system-icon-wrapper {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .system-icon {
-  width: 56px;
-  height: 56px;
-  object-fit: contain;
-  border-radius: 6px;
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    border-radius: 8px;
+
+    transition: transform 0.15s ease;
 }
 
+.system-icon-wrapper:hover .system-icon {
+    transform: scale(1.06);
+}
+
+/* ADD BUTTON */
 .system-add {
-  position: absolute;
-  top: -4px;
-  left: -4px;
-  width: 20px;
-  height: 20px;
-  font-size: 12px;
-  border-radius: 50%;
-  background: #28a745;
-  color: #fff;
-  border: none;
+    position: absolute;
+    top: -4px;
+    left: -4px;
+
+    width: 20px;
+    height: 20px;
+
+    font-size: 12px;
+
+    border-radius: 50%;
+    background: #28a745;
+    color: #fff;
+
+    border: none;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: all 0.15s ease;
 }
 
+.system-add:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+/* FOOTER */
 .system-footer {
-  padding: 10px;
-  border-top: 1px solid #eee;
+    padding: 10px;
+    border-top: 1px solid #eee;
 }
 
-/* Tooltip */
-.system-tooltip{
-    white-space: pre-line;
-    position:absolute;
-    z-index:1000;
-    opacity:0;
-    transition:opacity .15s;
-    background:white;
-    border:1px solid #ddd;
-    border-radius:6px;
-    padding:8px 10px;
-    width:220px;
-    line-height:0.5;
-    pointer-events:none;
-    box-shadow:0 4px 10px rgba(0,0,0,.08);
-}
-.system-tooltip h6,
-.system-tooltip p,
-.system-tooltip div{
-    margin:0;
-    line-height:1.0;
+/* CLOSED */
+.system-panel.closed {
+    transform: translateX(-140%);
+    opacity: 0;
+    pointer-events: none;
 }
 
-/* --- USER TEMPLATES --- */
+/* HIDDEN */
+.system-panel-wrapper.hidden {
+    display: none;
+}
+
+
+/* =======================
+TOGGLE BUTTON (УЛУЧШЕННЫЙ)
+======================= */
+
+.system-toggle-btn {
+    position: fixed;
+    left: 0; /* 👈 строго к краю */
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1000;
+
+    width: 10px; /* 👈 ультра-узкий */
+    height: 64px;
+
+    border-radius: 0 8px 8px 0;
+    border: none;
+
+    background: rgba(0,0,0,0.2); /* 👈 видимый, но лёгкий */
+    backdrop-filter: blur(6px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+/* hover — расширяется */
+.system-toggle-btn:hover {
+    width: 18px;
+    background: rgba(0,0,0,0.18);
+}
+
+/* иконка */
+.system-toggle-btn i {
+    font-size: 12px;
+    opacity: 0.8;
+    transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+/* показываем иконку только при hover */
+.system-toggle-btn i {
+    opacity: 0;
+}
+
+.system-toggle-btn:hover i {
+    opacity: 1;
+}
+
+
+/* =======================
+HEADER / SEARCH
+======================= */
+
+.templates-header {
+    position: relative;
+}
+
+/* HEADER */
+.templates-header {
+    position: relative;
+}
+
+/* SEARCH CENTER */
+.search-wrapper {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* INPUT STYLE */
+#template-search {
+    width: 260px;
+
+    border-radius: 999px;
+    border: 1px solid rgba(0,0,0,0.08);
+
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(8px);
+
+    padding: 6px 14px;
+
+    font-size: 13px;
+
+    transition: all 0.2s ease;
+}
+
+#template-search:focus {
+    outline: none;
+    border-color: rgba(0,0,0,0.2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    background: rgba(255,255,255,0.95);
+}
+
+/* INPUT — современный стиль */
+#template-search {
+    width: 260px;
+
+    border-radius: 999px;
+    border: 1px solid rgba(0,0,0,0.08);
+
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(8px);
+
+    padding: 6px 14px;
+
+    font-size: 13px;
+
+    transition: all 0.2s ease;
+}
+
+#template-search:focus {
+    outline: none;
+    border-color: rgba(0,0,0,0.2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    background: rgba(255,255,255,0.95);
+}
+
+
+/* =======================
+USER TEMPLATES
+======================= */
+
 .templates-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
 }
 
 .template-card .template-left img,
 .template-left .placeholder {
-  width: 56px;
-  height: 56px;
+    width: 56px;
+    height: 56px;
 }
 
 .template-meta {
-  font-size: 11px;
-  color: #777;
+    font-size: 11px;
+    color: #777;
 }
 
 .template-title {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 .template-description {
-  font-size: 12px;
-  color: #666;
+    font-size: 12px;
+    color: #666;
 }
 
 .template-dates {
-  font-size: 10px;
-  color: #aaa;
+    font-size: 10px;
+    color: #aaa;
+}
+
+
+/* =======================
+POPOVER
+======================= */
+
+.modern-popover {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+}
+
+.popover-body {
+    padding: 10px 12px;
+    font-size: 13px;
+}
+
+/* =======================
+TEMPLATE BADGE (selected_count)
+======================= */
+
+.template-card {
+    position: relative;
+}
+
+.template-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+
+    border-radius: 999px;
+
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+
+    font-size: 11px;
+    font-weight: 500;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+
+    pointer-events: none;
 }

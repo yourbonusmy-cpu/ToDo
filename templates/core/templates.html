@@ -8,42 +8,44 @@
 <link rel="stylesheet" href="{% static 'css/templates.css' %}">
 {% endblock %}
 
+
 {% block content %}
 
 <div class="d-flex templates-page">
 
   <!-- SYSTEM PANEL -->
-
   {% if system_templates %}
-  <div class="system-panel d-flex flex-column">
+  <div class="system-panel-wrapper">
 
-    <div class="system-scroll flex-grow-1">
+    <div class="system-panel d-flex flex-column" id="system-panel">
 
-      {% for t in system_templates %}
+      <div class="system-scroll flex-grow-1">
 
-      <div class="system-icon-wrapper"
-           data-id="{{ t.id }}"
-           data-title="{{ t.title }}"
-           data-description="{{ t.description }}"
-           data-amount="{{ t.default_amount }}"
-           data-period="{{ t.period_type }}"
-           data-schedule="{{ t.schedule_type }}">
+        {% for t in system_templates %}
+        <div class="system-icon-wrapper"
+             data-id="{{ t.id }}"
+             data-title="{{ t.title }}"
+             data-description="{{ t.description }}"
+             data-amount="{{ t.default_amount }}"
+             data-period="{{ t.period_type }}"
+             data-schedule="{{ t.schedule_type }}">
 
-          <img src="{% static 'default_templates/icons/' %}{{ t.icon }}"
-               class="system-icon">
+            <img src="{% static 'default_templates/icons/' %}{{ t.icon }}"
+                 class="system-icon">
 
-          <button class="system-add">+</button>
+            <button class="system-add">+</button>
+
+        </div>
+        {% endfor %}
 
       </div>
 
-      {% endfor %}
+      <div class="system-footer">
+        <button class="system-show-all btn btn-light btn-sm w-100">
+          Все
+        </button>
+      </div>
 
-    </div>
-
-    <div class="system-footer">
-      <button class="system-show-all btn btn-light btn-sm w-100">
-        Все
-      </button>
     </div>
 
   </div>
@@ -51,94 +53,40 @@
 
 
   <!-- USER TEMPLATES -->
-
   <div class="templates-content flex-grow-1 ms-5 p-3">
 
-    <div class="templates-header d-flex justify-content-between align-items-center mb-3">
-      <h4>Шаблоны задач</h4>
+    <div class="templates-header d-flex align-items-center mb-3">
 
-      <a href="{% url 'template_create' %}" class="btn btn-primary">
-        Создать шаблон
-      </a>
-    </div>
+      <h4 class="me-auto">Шаблоны задач</h4>
 
-
-    <div class="templates-grid">
-
-      {% for t in user_templates %}
-
-      <div class="template-card card shadow-sm"
-           data-id="{{ t.id }}"
-           {% if t.system_template %}
-           data-system-id="{{ t.system_template.id }}"
-           {% endif %}>
-
-        <div class="card-body d-flex gap-3">
-
-          <div class="template-left d-flex flex-column align-items-center">
-
-            {% if t.icon %}
-                <img src="{{ t.icon.url }}" class="template-icon rounded mb-1">
-            {% else %}
-                <div class="placeholder rounded mb-1"></div>
-            {% endif %}
-
-            <div class="template-meta text-center small text-muted">
-              Кол-во: {{ t.default_amount }}<br>
-              P{{ t.priority }} | {{ t.period_type }} | {{ t.schedule_type }}
-            </div>
-
-          </div>
-
-
-          <div class="template-content d-flex flex-column flex-grow-1">
-
-            <div class="d-flex justify-content-between align-items-center">
-
-              <div class="template-title fw-semibold">
-                {{ t.title }}
-              </div>
-
-              <div class="template-actions d-flex gap-2">
-
-                <button class="btn btn-sm btn-outline-secondary edit-template">
-                  <i class="bi bi-pencil-square"></i>
-                </button>
-
-                <button class="btn btn-sm btn-outline-danger delete-template">
-                  <i class="bi bi-trash"></i>
-                </button>
-
-              </div>
-
-            </div>
-
-            <div class="template-description text-muted small">
-              {{ t.description }}
-            </div>
-
-            <div class="template-dates d-flex justify-content-between mt-auto small text-muted">
-              <span>{{ t.updated_at }}</span>
-              <span>{{ t.created_at }}</span>
-            </div>
-
-          </div>
-
-        </div>
-
+      <!-- центр -->
+      <div class="search-wrapper">
+        <input type="text"
+               id="template-search"
+               class="form-control form-control-sm"
+               placeholder="Поиск...">
       </div>
 
-      {% endfor %}
+      <!-- справа -->
+      <div class="ms-auto">
+        <a href="{% url 'template_create' %}" class="btn btn-primary">
+          Создать шаблон
+        </a>
+      </div>
 
     </div>
+
+    <!-- API RENDER -->
+    <div class="templates-grid"></div>
 
   </div>
 
 </div>
 
-
-<!-- GLOBAL TOOLTIP -->
-<div id="system-tooltip" class="system-tooltip"></div>
+<!-- FIXED TOGGLE BUTTON -->
+<button id="system-toggle" class="system-toggle-btn">
+  <i class="bi bi-chevron-left"></i>
+</button>
 
 {% endblock %}
 

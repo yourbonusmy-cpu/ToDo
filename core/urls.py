@@ -9,6 +9,8 @@ from core.views.api_blocks import (
     hide_block,
 )
 from core.views.api_stats import stats_weekdays_api
+from core.views.api_templates import api_templates
+from core.views.api_weather import weather_api
 from core.views.auth import UserLoginView, register, user_logout
 from core.views.blocks import (
     delete_block,
@@ -63,6 +65,7 @@ urlpatterns = [
     path("calendar/", calendar_page, name="calendar"),
     path("api/calendar/", calendar_data, name="calendar_data"),
     path("weather/", weather_view, name="weather"),
+    path("api/weather/", weather_api, name="api_weather"),
     path("api/statistics/", stats_weekdays_api, name="stats_weekdays_api"),
     path("stats/weekdays/", stats_weekdays_page, name="stats_weekdays"),
     path("decrypt-task/", decrypt_task, name="decrypt_task"),
@@ -98,6 +101,7 @@ urlpatterns += [
 ]
 
 urlpatterns += [
+    path("api/templates/", api_templates, name="api_templates"),
     path("templates/", templates_page, name="templates"),
     path("task-template/create/", task_template_create, name="task_template_create"),
     path(

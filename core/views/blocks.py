@@ -39,7 +39,7 @@ from django.views.decorators.http import require_POST
 from core.services.weather import (
     get_forecast,
     group_by_period,
-    build_fixed_day_weather,
+    build_weather_cards,
     get_wind_direction,
     normalize_weather,
     get_weather_ui,
@@ -85,10 +85,11 @@ def decrypt_task(request):
 
 @login_required
 def block_create(request, block_id=None):
-    # Получаем все шаблоны задач, принадлежащие пользователю
+    # ==========================
+    # LOAD TEMPLATES
+    # ==========================
     templates = TaskTemplate.objects.filter(owner=request.user)
 
-    # Фильтруем шаблоны задач по period_type и schedule_type
     period_type = request.GET.get("period_type", PeriodType.NONE)
     schedule_type = request.GET.get("schedule_type", ScheduleType.NONE)
 
@@ -97,7 +98,6 @@ def block_create(request, block_id=None):
     if schedule_type != ScheduleType.NONE:
         templates = templates.filter(schedule_type=schedule_type)
 
-    # Сортировка задач
     sorted_templates = templates.annotate(
         is_floating=(
             Q(schedule_type=ScheduleType.FLOATING)
@@ -122,17 +122,29 @@ def block_create(request, block_id=None):
         Prefetch("tasks", queryset=TaskTemplate.objects.only("id", "icon"))
     )
 
-    block_data = None
+    # ==========================
+    # LOAD BLOCK (edit mode)
+    # ==========================
     block = None
+    block_data = None
 
     if block_id:
         block = get_object_or_404(Block, id=block_id, owner=request.user)
         tasks = block.tasks.order_by("position")
+
         block_data = {
             "id": block.id,
             "title": block.title,
-            "weather": block.weather.data if hasattr(block, "weather") else None,
-            "weather_city": block.weather.city if hasattr(block, "weather") else None,
+            "weather": (
+                getattr(block.weather, "data", None)
+                if hasattr(block, "weather")
+                else None
+            ),
+            "weather_city": (
+                getattr(block.weather, "city", None)
+                if hasattr(block, "weather")
+                else None
+            ),
             "target_date": block.target_date.isoformat() if block.target_date else None,
             "tasks": [
                 {
@@ -150,63 +162,73 @@ def block_create(request, block_id=None):
             ],
         }
 
+    # ==========================
+    # POST HANDLER
+    # ==========================
     if request.method == "POST":
-        # Получаем данные
+
+        # ---------- JSON ----------
         if request.content_type == "application/json":
             body = json.loads(request.body)
+
             title = body.get("title", "Без названия")
             target_date = body.get("target_date")
+            tasks_list = body.get("tasks", [])
+
             with_weather = body.get("with_weather", False)
             city = body.get("weather_city", "Москва")
-            tasks_list = body.get("tasks", [])
+            weather_data_raw = body.get("weather_data")
+
+        # ---------- FORM ----------
         else:
             title = request.POST.get("title", "Без названия")
             target_date = request.POST.get("target_date") or None
+
             tasks_json = request.POST.get("tasks", "[]")
-            with_weather = request.POST.get("with_weather") == "true"
-            city = request.POST.get("weather_city", "Москва")
             tasks_list = json.loads(tasks_json)
 
+            with_weather = request.POST.get("with_weather") == "true"
+            city = request.POST.get("weather_city", "Москва")
+            weather_data_raw = request.POST.get("weather_data")
+
+        # parse date safely
+        if target_date:
+            target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
+
         # ==========================
-        # UPDATE EXISTING BLOCK
+        # UPDATE BLOCK
         # ==========================
         if block:
             block.title = title
-            if target_date:
-                target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
             block.target_date = target_date
             block.save()
 
-            # WEATHER UPDATE
-            if with_weather and block.target_date:
-                data = get_forecast(city)
+            # ---------- WEATHER ----------
+            if with_weather and weather_data_raw:
+                try:
+                    BlockWeather.objects.update_or_create(
+                        block=block,
+                        defaults={
+                            "city": city,
+                            "data": json.loads(weather_data_raw),
+                        },
+                    )
+                except json.JSONDecodeError:
+                    pass  # можно логировать
 
-                grouped = group_by_period(data["list"])
-                weather = build_fixed_day_weather(grouped)
+            elif not with_weather:
+                BlockWeather.objects.filter(block=block).delete()
 
-                for w in weather:
-                    w["wind_dir"] = get_wind_direction(w["wind_deg"])
-                    w["description"] = normalize_weather(w["main"], w["description"])
-
-                    icon, color = get_weather_ui(w["main"])
-                    w["icon"] = icon
-                    w["color"] = color
-
-                BlockWeather.objects.update_or_create(
-                    block=block, defaults={"city": city, "data": weather}
-                )
-
-            elif not with_weather and hasattr(block, "weather"):
-                block.weather.delete()
-
+            # ---------- TASKS ----------
             existing_tasks = {t.id: t for t in block.tasks.all()}
             incoming_ids = set()
 
             for idx, task_data in enumerate(tasks_list):
-                # Обязательный template
+
                 template_id = task_data.get("template_id")
                 if not template_id:
-                    raise ValueError("Каждая задача блока должна иметь template_id")
+                    raise ValueError("Каждая задача должна иметь template_id")
+
                 template = get_object_or_404(
                     TaskTemplate, id=template_id, owner=request.user
                 )
@@ -216,15 +238,15 @@ def block_create(request, block_id=None):
                 is_encrypted = task_data.get("is_encrypted", False)
                 is_hidden = task_data.get("is_hidden", False)
 
+                # encryption
                 if is_encrypted:
                     password = task_data.get("password")
                     decrypted = task_data.get("decrypted")
 
                     if decrypted and password:
                         description = encrypt_text(description, password)
-                    else:
-                        if task_id and task_id in existing_tasks:
-                            description = existing_tasks[task_id].description
+                    elif task_id in existing_tasks:
+                        description = existing_tasks[task_id].description
 
                 if task_id and task_id in existing_tasks:
                     bt = existing_tasks[task_id]
@@ -251,24 +273,30 @@ def block_create(request, block_id=None):
                         is_hidden=is_hidden,
                         position=idx,
                     )
+
                 incoming_ids.add(bt.id)
 
-            # Удаление отсутствующих задач
-            to_delete = set(existing_tasks.keys()) - incoming_ids
-            if to_delete:
-                BlockTask.objects.filter(id__in=to_delete).delete()
+            # delete removed tasks
+            BlockTask.objects.filter(
+                id__in=set(existing_tasks.keys()) - incoming_ids
+            ).delete()
 
         # ==========================
-        # CREATE NEW BLOCK
+        # CREATE BLOCK
         # ==========================
         else:
             block = Block.objects.create(
-                title=title, owner=request.user, target_date=target_date
+                title=title,
+                owner=request.user,
+                target_date=target_date,
             )
+
             for idx, task_data in enumerate(tasks_list):
+
                 template_id = task_data.get("template_id")
                 if not template_id:
-                    raise ValueError("Каждая задача блока должна иметь template_id")
+                    raise ValueError("Каждая задача должна иметь template_id")
+
                 template = get_object_or_404(
                     TaskTemplate, id=template_id, owner=request.user
                 )
@@ -279,7 +307,8 @@ def block_create(request, block_id=None):
 
                 if is_encrypted:
                     password = task_data.get("password")
-                    description = encrypt_text(description, password)
+                    if password:
+                        description = encrypt_text(description, password)
 
                 BlockTask.objects.create(
                     block=block,
@@ -294,26 +323,22 @@ def block_create(request, block_id=None):
                     position=idx,
                 )
 
-            if with_weather and block.target_date:
-                data = get_forecast(city)
-
-                grouped = group_by_period(data["list"])
-                weather = build_fixed_day_weather(grouped)
-
-                for w in weather:
-                    w["wind_dir"] = get_wind_direction(w["wind_deg"])
-                    w["description"] = normalize_weather(w["description"])
-
-                    icon, color = get_weather_ui(w["main"])
-                    w["icon"] = icon
-                    w["color"] = color
-
-                BlockWeather.objects.update_or_create(
-                    block=block, defaults={"city": city, "data": weather}
-                )
+            # ---------- WEATHER ----------
+            if with_weather and weather_data_raw:
+                try:
+                    BlockWeather.objects.create(
+                        block=block,
+                        city=city,
+                        data=json.loads(weather_data_raw),
+                    )
+                except json.JSONDecodeError:
+                    pass
 
         return redirect("/")
 
+    # ==========================
+    # RENDER
+    # ==========================
     return render(
         request,
         "core/block_create.html",
