@@ -1,3 +1,5 @@
+{% load static clock_filters %}
+
 <div class="task-block card mb-3 p-0" data-block-id="{{ block.id }}">
 
     <!-- HEADER: название блока + кнопки -->
@@ -46,6 +48,18 @@
                     {% else %}
                         <div class="placeholder-icon"></div>
                     {% endif %}
+                    <!-- CLOCK OVERLAY -->
+
+                    {% with idx=bt.time|clock_icon_index %}
+                    <div class="clock-overlay">
+
+                        <!-- SVG часы -->
+                        <img src="{% static 'img/clocks_1_12/clock-' %}{{ idx }}.svg"
+                             class="clock-icon">
+
+
+                    </div>
+                    {% endwith %}
             </button>
         {% endfor %}
     </div>

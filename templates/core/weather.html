@@ -1,69 +1,60 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends "base.html" %} 
+{% load static %} 
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/weather.css' %}">
-{% endblock %}
+  <link rel="stylesheet" href="{% static 'css/weather.css' %}" />
+{% endblock %} 
 
 {% block content %}
-
 <div class="container mt-4">
+  <h3 class="mb-4">Погода</h3>
 
-    <h3 class="mb-4">Погода</h3>
+  <!-- выбор города -->
+  <form method="get" class="mb-4">
+    <select name="city" class="form-select w-auto">
+      {% for c in cities %}
 
-    <!-- выбор города -->
-    <form method="get" class="mb-4">
-        <select name="city" class="form-select w-auto">
-            {% for c in cities %}
-                <option value="{{ c }}" {% if c == selected_city %}selected{% endif %}>
-                    {{ c }}
-                </option>
-            {% endfor %}
-        </select>
-    </form>
 
-    <!-- карточки -->
-    <div class="weather-row">
+      <option value="{{ c }}" {% if c == selected_city %}selected{% endif %}>
+        {{ c }}
+      </option>
+      {% endfor %}
+    </select>
+  </form>
 
-        {% for w in weather %}
-        <div class="weather-col">
-
-            <div class="weather-card {{ w.color }} {% if w.is_current %}active{% endif %}">
-
-                <div class="top">
-                    <span>{{ w.label }}</span>
-                    {% if w.is_current %}
-                        <span class="badge">Сейчас</span>
-                    {% endif %}
-                </div>
-
-                <div class="middle">
-                    <div class="temp">{{ w.temp }}°</div>
-                    <div class="icon">{{ w.icon }}</div>
-                </div>
-
-                <div class="desc">
-                    {{ w.description }}
-                </div>
-
-                <div class="bottom">
-                    <span>☁ {{ w.clouds }}%</span>
-                    <span>💧 {{ w.humidity }}%</span>
-                    <span>🌬 {{ w.wind_speed }} м/с ({{ w.wind_dir }})</span>
-                    <span>📊 {{ w.pressure }}</span>
-                </div>
-
-            </div>
-
+  <!-- карточки -->
+  <div class="weather-row">
+    {% for w in weather %}
+    <div class="weather-col">
+      <div
+        class="weather-card {{ w.color }} {% if w.is_current %}active{% endif %}"
+      >
+        <div class="top">
+          <span>{{ w.label }}</span>
+          {% if w.is_current %}
+          <span class="badge">Сейчас</span>
+          {% endif %}
         </div>
-        {% endfor %}
 
+        <div class="middle">
+          <div class="temp">{{ w.temp }}°</div>
+          <div class="icon">{{ w.icon }}</div>
+        </div>
+
+        <div class="desc">{{ w.description }}</div>
+
+        <div class="bottom">
+          <span>☁ {{ w.clouds }}%</span>
+          <span>💧 {{ w.humidity }}%</span>
+          <span>🌬 {{ w.wind_speed }} м/с ({{ w.wind_dir }})</span>
+          <span>📊 {{ w.pressure }}</span>
+        </div>
+      </div>
     </div>
-
+    {% endfor %}
+  </div>
 </div>
 
-{% endblock %}
-
-{% block page_js %}
-<script src="{% static 'js/weather.js' %}"></script>
+{% endblock %} {% block page_js %}
+  <script src="{% static 'js/weather.js' %}"></script>
 {% endblock %}

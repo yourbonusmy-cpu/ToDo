@@ -1,13 +1,13 @@
 #stats-container .card {
-    border-radius: 12px;
+  border-radius: 12px;
 }
 
 #stats-container img {
-    object-fit: contain;
+  object-fit: contain;
 }
 
 .text-truncate {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

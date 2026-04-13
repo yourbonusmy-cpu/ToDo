@@ -1,115 +1,129 @@
 .weather-row {
-    display: flex;
-    gap: 6px;
-    overflow-x: auto;
-    white-space: nowrap;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
 .weather-mini {
-    flex: 0 0 auto;
-    min-width: 120px;
+  flex: 0 0 auto;
+  min-width: 120px;
 
-    padding: 6px 8px;
-    border-radius: 10px;
-    background: #f8f9fa;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: #f8f9fa;
 
-    font-size: 12px;
-    line-height: 1.2;
+  font-size: 12px;
+  line-height: 1.2;
 
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 /* верх: период + (иконка + температура) */
 .weather-mini .top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 
-    font-size: 12px;
-    font-weight: 600;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 /* правая часть в top (иконка + температура) */
 .weather-mini .top div {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* нижняя строка — все метрики */
 .weather-mini .bottom {
-    font-size: 11px;
-    color: #6c757d;
+  font-size: 11px;
+  color: #6c757d;
 
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* цвета по погоде */
-.weather-mini.clear { background: #fff3cd; }
-.weather-mini.clouds { background: #e2e3e5; }
-.weather-mini.rain { background: #d1ecf1; }
-.weather-mini.snow { background: #f8f9fa; }
-.weather-mini.thunderstorm { background: #d6d8db; }
-.weather-mini.drizzle { background: #e2f0fb; }
-.weather-mini.mist { background: #eef1f3; }
+.weather-mini.clear {
+  background: #fff3cd;
+}
+.weather-mini.clouds {
+  background: #e2e3e5;
+}
+.weather-mini.rain {
+  background: #d1ecf1;
+}
+.weather-mini.snow {
+  background: #f8f9fa;
+}
+.weather-mini.thunderstorm {
+  background: #d6d8db;
+}
+.weather-mini.drizzle {
+  background: #e2f0fb;
+}
+.weather-mini.mist {
+  background: #eef1f3;
+}
 /* =========================
    NEW LAYOUT (non-breaking)
 ========================= */
 
 .weather-mini {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 /* TOP */
 .weather-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .weather-head .left {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .weather-head .period {
-    font-weight: 700;
-    font-size: 12px;
+  font-weight: 700;
+  font-size: 12px;
 }
 
 .weather-head .desc {
-    font-size: 11px;
-    color: #6c757d;
+  font-size: 11px;
+  color: #6c757d;
 }
 
 .weather-head .right {
-    font-weight: 700;
-    font-size: 12px;
-    color: #495057;
+  font-weight: 700;
+  font-size: 12px;
+  color: #495057;
 }
 
 /* BOTTOM METRICS */
 .weather-meta {
-    display: flex;
-    justify-content: space-between;
-    gap: 6px;
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
 
-    font-size: 11px;
-    color: #6c757d;
+  font-size: 11px;
+  color: #6c757d;
 }
 
 .weather-meta .meta-item {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
 }
 
 /* =====================================================
@@ -117,244 +131,377 @@
 ===================================================== */
 
 .task-tooltip {
-    white-space: pre-line;
-    background: white;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    max-width: 220px;
-    pointer-events: none;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-    font-size: 0.875rem;
-    padding: 6px 8px;
-    line-height: 1.2;
+  white-space: pre-line;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  max-width: 220px;
+  pointer-events: none;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  font-size: 0.875rem;
+  padding: 6px 8px;
+  line-height: 1.2;
 }
 
 #tooltip-title,
 #tooltip-description,
 #tooltip-amount-time {
-    margin: 0;
-    padding: 0;
-    line-height: 1.2;
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
 }
-
 
 /* =====================================================
    FLOATING TASK PICKER
 ===================================================== */
 
 .task-picker {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 70%;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
 
-    background: white;
-    border-radius: 16px;
-    border: 1px solid #ddd;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #ddd;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 
-    display: flex;
-    flex-direction: column;
-    max-height: 220px;
+  display: flex;
+  flex-direction: column;
+  max-height: 220px;
 
-    z-index: 1000;
+  z-index: 1000;
 }
 
 /* search bar */
 .task-search {
-    flex-shrink: 0;
-    padding: 8px 12px;
-    border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
 }
 
 /* scrollable list */
 .task-picker-list {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    gap: 12px;
-    padding: 12px 16px;
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 12px;
+  padding: 12px 16px;
 }
 
 /* hide element */
 .hidden {
-    display: none !important;
+  display: none !important;
 }
 
 .task-hidden {
-    filter: blur(5px) brightness(0.5);
-    transition: filter 0.2s ease;
+  filter: blur(5px) brightness(0.5);
+  transition: filter 0.2s ease;
 }
-
 
 /* =====================================================
    TASK ICON
 ===================================================== */
 
 .task-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .task-icon:hover {
-    transform: scale(1.1);
+  transform: scale(1.1);
 }
-
 
 /* =====================================================
    SELECTED TASKS (BLOCK)
 ===================================================== */
 
 .selected-task {
-    width: 64px;
-    height: 64px;
-    cursor: pointer;
+  width: 64px;
+  height: 64px;
+  cursor: pointer;
 }
 
 .remove-task {
-    width: 22px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    font-size: 12px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 12px;
 }
-
 
 /* =====================================================
    DELETE ZONE
 ===================================================== */
 
 #delete-zone {
-    opacity: 0.5;
-    transition: 0.2s;
+  opacity: 0.5;
+  transition: 0.2s;
 }
 
 #delete-zone.drag-active {
-    opacity: 1;
-    transform: scale(1.1);
+  opacity: 1;
+  transform: scale(1.1);
 }
-
 
 /* =====================================================
    PLACEHOLDER
 ===================================================== */
 
 .placeholder-icon {
-    width: 48px;
-    height: 48px;
-    background: #e9ecef;
-    border-radius: 6px;
+  width: 48px;
+  height: 48px;
+  background: #e9ecef;
+  border-radius: 6px;
 }
-
 
 /* =====================================================
    GROUP PICKER (LEFT PANEL)
 ===================================================== */
+/* =======================
+GROUP PANEL
+======================= */
+
+.group-panel-wrapper {
+  position: relative;
+}
 
 .group-picker {
-    position: fixed;
-    left: 20px;
-    top: 90px;
-    bottom: 60px;
+  position: fixed;
 
-    width: 80px;
+  left: 24px; /* 👈 отступ от кнопки */
+  top: 90px;
+  bottom: 60px;
 
-    overflow-y: auto;
-    background: #fff;
+  width: 80px;
 
-    border-radius: 12px;
-    padding: 12px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
 
-    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.08);
 
-    z-index: 50;
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+/* CLOSED */
+.group-picker.closed {
+  transform: translateX(-140%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .group-picker::-webkit-scrollbar {
-    width: 6px;
+  width: 6px;
 }
 
 .group-picker::-webkit-scrollbar-thumb {
-    background: rgba(0,0,0,0.2);
-    border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
 }
-
 
 /* =====================================================
    GROUP ICON
 ===================================================== */
 
 .group-icon {
-    width: 56px;
-    height: 56px;
-    background: #f8f9fa;
-    border-radius: 10px;
+  width: 56px;
+  height: 56px;
+  background: #f8f9fa;
+  border-radius: 10px;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    cursor: pointer;
-    transition: .2s;
+  cursor: pointer;
+  transition: 0.2s;
 }
 
 .group-icon:hover {
-    transform: scale(1.08);
+  transform: scale(1.08);
 }
 
 .group-grid {
-    display: grid;
-    grid-template-columns: repeat(2,1fr);
-    grid-template-rows: repeat(2,1fr);
-    gap: 3px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 3px;
 }
 
 .group-task-mini img {
-    border-radius: 3px;
+  border-radius: 3px;
 }
-
 
 /* =====================================================
    GROUP TOOLTIP
 ===================================================== */
 
 .group-tooltip {
-    position: fixed;
-    background: white;
+  position: fixed;
+  background: white;
 
-    border-radius: 10px;
-    padding: 10px;
+  border-radius: 10px;
+  padding: 10px;
 
-    width: 200px;
+  width: 200px;
 
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    border: 1px solid #eee;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border: 1px solid #eee;
 
-    pointer-events: none;
-    z-index: 2000;
+  pointer-events: none;
+  z-index: 2000;
 }
 
 .tooltip-icons {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
 .tooltip-icons img {
-    width: 18px;
-    height: 18px;
-    border-radius: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+/* =======================
+TASK PANEL
+======================= */
+
+.task-panel-wrapper {
+  position: relative;
+}
+
+.task-picker {
+  position: fixed;
+
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: 70%;
+  max-height: 220px;
+
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #ddd;
+
+  display: flex;
+  flex-direction: column;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+/* CLOSED */
+.task-picker.closed {
+  transform: translate(-50%, 140%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* GROUP — уезжает влево */
+.group-picker.closed {
+  transform: translateX(-120%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* кнопки */
+
+
+/* позиционирование */
+/* =========================
+   TOGGLE BUTTONS (FIXED TO PANEL)
+========================= */
+.task-toggle-btn {
+  position: fixed;
+
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+
+  z-index: 1000;
+
+  width: 64px;
+  height: 10px;
+
+  border-radius: 8px 8px 0 0;
+  border: none;
+
+  background: rgba(0,0,0,0.2);
+  backdrop-filter: blur(6px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.task-toggle-btn:hover {
+  height: 18px;
+}
+
+.task-toggle-btn i {
+  font-size: 12px;
+  opacity: 0;
+}
+
+.task-toggle-btn:hover i {
+  opacity: 1;
+}
+
+/* GROUP */
+.group-toggle-btn {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+
+  width: 10px;
+  height: 64px;
+
+  border-radius: 0 8px 8px 0;
+  border: none;
+
+  background: rgba(0,0,0,0.2);
+  backdrop-filter: blur(6px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.group-toggle-btn:hover {
+  width: 18px;
+}
+
+.group-toggle-btn i {
+  font-size: 12px;
+  opacity: 0;
+}
+
+.group-toggle-btn:hover i {
+  opacity: 1;
 }

@@ -1,110 +1,87 @@
-{% extends "base.html" %}
-{% load static %}
-
-{% block title %}
-{% if group %}Редактировать группу{% else %}Создать группу задач{% endif %}
+{% extends "base.html" %} 
+{% load static %} 
+{% block title %} 
+{% if group %}Редактировать группу{% else %}Создать группу задач{% endif %} 
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/group_template_create.css' %}">
-{% endblock %}
+  <link rel="stylesheet" href="{% static 'css/group_template_create.css' %}" />
+{% endblock %} 
 
 {% block content %}
-
 <div class="container mt-4 mb-5">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <input
+      type="text"
+      id="group-title"
+      class="form-control w-50"
+      placeholder="Название группы"
+      value="{{ group.title|default:'' }}"
+    />
 
-    <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex gap-2">
+      <button id="clear-group-btn" class="btn btn-outline-danger">
+        Очистить
+      </button>
 
-        <input
-            type="text"
-            id="group-title"
-            class="form-control w-50"
-            placeholder="Название группы"
-            value="{{ group.title|default:'' }}"
-        >
-
-        <div class="d-flex gap-2">
-
-            <button id="clear-group-btn" class="btn btn-outline-danger">
-                Очистить
-            </button>
-
-            <button id="save-group-btn" class="btn btn-primary">
-                Сохранить
-            </button>
-
-        </div>
-
+      <button id="save-group-btn" class="btn btn-primary">Сохранить</button>
     </div>
+  </div>
 
+  <textarea
+    id="group-description"
+    class="form-control mb-3"
+    placeholder="Описание группы"
+    rows="3"
+  >
+{{ group.description|default:'' }}</textarea
+  >
 
-    <textarea
-        id="group-description"
-        class="form-control mb-3"
-        placeholder="Описание группы"
-        rows="3"
-    >{{ group.description|default:'' }}</textarea>
-
-
-    <div class="card shadow-sm mb-3">
-
-        <div
-            id="selected-tasks"
-            class="card-body d-flex flex-wrap gap-3 align-items-center"
-        ></div>
-
-    </div>
-
+  <div class="card shadow-sm mb-3">
+    <div
+      id="selected-tasks"
+      class="card-body d-flex flex-wrap gap-3 align-items-center"
+    ></div>
+  </div>
 </div>
-
 
 <!-- TASK PICKER -->
 
 <!-- TASK PICKER -->
 
 <div class="task-picker shadow">
+  <div class="task-search p-2 border-bottom">
+    <input
+      type="text"
+      id="task-search-input"
+      class="form-control"
+      placeholder="Поиск задачи..."
+      autocomplete="off"
+    />
+  </div>
 
-    <div class="task-search p-2 border-bottom">
-        <input
-            type="text"
-            id="task-search-input"
-            class="form-control"
-            placeholder="Поиск задачи..."
-            autocomplete="off"
-        >
-    </div>
-
-    <div class="task-picker-list">
-
+  <div class="task-picker-list">
     {% for t in templates %}
 
-        <div
-        class="task-icon"
-        data-id="{{ t.id }}"
-        data-title="{{ t.title|lower }}"
-        >
-
-        {% if t.icon %}
-        <img src="{{ t.icon.url }}" width="48" height="48">
-        {% endif %}
-
-        </div>
-
-    {% endfor %}
-
+    <div
+      class="task-icon"
+      data-id="{{ t.id }}"
+      data-title="{{ t.title|lower }}"
+    >
+      {% if t.icon %}
+      <img src="{{ t.icon.url }}" width="48" height="48" />
+      {% endif %}
     </div>
 
+    {% endfor %}
+  </div>
 </div>
 
-{% endblock %}
-
-
-{% block page_js %}
+{% endblock %} {% block page_js %}
 
 <script>
 
-window.groupData = {{ group_json|default:"null"|safe }};
-
+  window.groupData = {{ group_json|default:"null"|safe }};
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>

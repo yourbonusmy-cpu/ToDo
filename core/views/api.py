@@ -10,7 +10,6 @@ from core.models import Block, BlockTask, TaskTemplate
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import localtime
-from datetime import datetime
 
 from core.models import Block
 

@@ -1,110 +1,108 @@
-.icon-container { position: relative; }
+.icon-container {
+  position: relative;
+}
 .icon-preview {
-    width: 120px;
-    height: 120px;
-    border-radius: 28px;
-    display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(145deg, #ffffff, #f3f4f6);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6);
-    cursor: pointer;
+  width: 120px;
+  height: 120px;
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #ffffff, #f3f4f6);
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  cursor: pointer;
 }
 
-.icon-preview img { width: 75%; height: 75%; object-fit: contain; transition: transform 0.25s ease; }
+.icon-preview img {
+  width: 75%;
+  height: 75%;
+  object-fit: contain;
+  transition: transform 0.25s ease;
+}
 
-.icon-remove { position: absolute; top: -8px; right: -8px; width: 28px; height: 28px; padding: 0; }
+.icon-remove {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+}
 
 .amount-container input.form-control {
-    max-width: 80px; /* компактно */
+  max-width: 80px; /* компактно */
 }
 
-.priority-selector{
+.priority-selector {
+  display: flex;
 
-display:flex;
+  gap: 20px;
 
-gap:20px;
+  justify-content: center;
 
-justify-content:center;
-
-margin-top:6px;
-
+  margin-top: 6px;
 }
 
-.priority-item{
+.priority-item {
+  display: flex;
 
-display:flex;
+  flex-direction: column;
 
-flex-direction:column;
+  align-items: center;
 
-align-items:center;
+  cursor: pointer;
 
-cursor:pointer;
-
-gap:4px;
-
+  gap: 4px;
 }
 
-.priority-item input{
-
-display:none;
-
+.priority-item input {
+  display: none;
 }
 
 /* точки */
 
-.priority-dot{
+.priority-dot {
+  width: 18px;
 
-width:18px;
+  height: 18px;
 
-height:18px;
+  border-radius: 50%;
 
-border-radius:50%;
-
-transition:all .2s;
-
+  transition: all 0.2s;
 }
 
-.priority-dot.low{
-
-background:#22c55e;
-
+.priority-dot.low {
+  background: #22c55e;
 }
 
-.priority-dot.mid{
-
-background:#f59e0b;
-
+.priority-dot.mid {
+  background: #f59e0b;
 }
 
-.priority-dot.high{
-
-background:#ef4444;
-
+.priority-dot.high {
+  background: #ef4444;
 }
 
 /* текст */
 
-.priority-label{
+.priority-label {
+  font-size: 12px;
 
-font-size:12px;
-
-color:#666;
-
+  color: #666;
 }
 
 /* выбранный */
 
-.priority-item input:checked + .priority-dot{
+.priority-item input:checked + .priority-dot {
+  transform: scale(1.35);
 
-transform:scale(1.35);
-
-box-shadow:0 0 0 4px rgba(0,0,0,0.08);
-
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
 }
 
 /* hover */
 
-.priority-item:hover .priority-dot{
-
-transform:scale(1.2);
-
+.priority-item:hover .priority-dot {
+  transform: scale(1.2);
 }

@@ -1,41 +1,31 @@
-{% extends "base.html" %}
-
-{% block title %}
-Tasker
-{% endblock %}
-
+{% extends "base.html" %} 
+{% block title %} Tasker {% endblock %} 
 {% block content %}
 
 <div class="text-center mt-5">
+  <h1 class="display-4">Tasker</h1>
 
-    <h1 class="display-4">Tasker</h1>
+  <p class="lead">Простое приложение для ежедневных задач</p>
 
-    <p class="lead">
-        Простое приложение для ежедневных задач
-    </p>
+  <div class="mt-4">
+    <button
+      class="btn btn-primary btn-lg"
+      data-bs-toggle="modal"
+      data-bs-target="#authModal"
+      data-auth-tab="login"
+    >
+      Войти
+    </button>
 
-    <div class="mt-4">
-
-        <button
-            class="btn btn-primary btn-lg"
-            data-bs-toggle="modal"
-            data-bs-target="#authModal"
-            data-auth-tab="login">
-
-            Войти
-        </button>
-
-        <button
-            class="btn btn-outline-primary btn-lg"
-            data-bs-toggle="modal"
-            data-bs-target="#authModal"
-            data-auth-tab="register">
-
-            Регистрация
-        </button>
-
-    </div>
-
+    <button
+      class="btn btn-outline-primary btn-lg"
+      data-bs-toggle="modal"
+      data-bs-target="#authModal"
+      data-auth-tab="register"
+    >
+      Регистрация
+    </button>
+  </div>
 </div>
 
 {% endblock %}

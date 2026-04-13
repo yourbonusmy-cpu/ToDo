@@ -1,70 +1,58 @@
-{% extends "base.html" %}
-{% load static %}
-
-{% block title %}Шаблоны задач{% endblock %}
-{% block body_data_page %}task-templates{% endblock %}
+{% extends "base.html" %} 
+{% load static %} 
+{% block title %}Шаблоны задач{% endblock %} 
+{% block body_data_page %}task-templates{% endblock %} 
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/templates.css' %}">
-{% endblock %}
-
-
-{% block content %}
+  <link rel="stylesheet" href="{% static 'css/templates.css' %}" />
+{% endblock %} {% block content %}
 
 <div class="d-flex templates-page">
-
   <!-- SYSTEM PANEL -->
   {% if system_templates %}
   <div class="system-panel-wrapper">
-
     <div class="system-panel d-flex flex-column" id="system-panel">
-
       <div class="system-scroll flex-grow-1">
-
         {% for t in system_templates %}
-        <div class="system-icon-wrapper"
-             data-id="{{ t.id }}"
-             data-title="{{ t.title }}"
-             data-description="{{ t.description }}"
-             data-amount="{{ t.default_amount }}"
-             data-period="{{ t.period_type }}"
-             data-schedule="{{ t.schedule_type }}">
+        <div
+          class="system-icon-wrapper"
+          data-id="{{ t.id }}"
+          data-title="{{ t.title }}"
+          data-description="{{ t.description }}"
+          data-amount="{{ t.default_amount }}"
+          data-period="{{ t.period_type }}"
+          data-schedule="{{ t.schedule_type }}"
+        >
+          <img
+            src="{% static 'default_templates/icons/' %}{{ t.icon }}"
+            class="system-icon"
+          />
 
-            <img src="{% static 'default_templates/icons/' %}{{ t.icon }}"
-                 class="system-icon">
-
-            <button class="system-add">+</button>
-
+          <button class="system-add">+</button>
         </div>
         {% endfor %}
-
       </div>
 
       <div class="system-footer">
-        <button class="system-show-all btn btn-light btn-sm w-100">
-          Все
-        </button>
+        <button class="system-show-all btn btn-light btn-sm w-100">Все</button>
       </div>
-
     </div>
-
   </div>
   {% endif %}
 
-
   <!-- USER TEMPLATES -->
   <div class="templates-content flex-grow-1 ms-5 p-3">
-
     <div class="templates-header d-flex align-items-center mb-3">
-
       <h4 class="me-auto">Шаблоны задач</h4>
 
       <!-- центр -->
       <div class="search-wrapper">
-        <input type="text"
-               id="template-search"
-               class="form-control form-control-sm"
-               placeholder="Поиск...">
+        <input
+          type="text"
+          id="template-search"
+          class="form-control form-control-sm"
+          placeholder="Поиск..."
+        />
       </div>
 
       <!-- справа -->
@@ -73,14 +61,11 @@
           Создать шаблон
         </a>
       </div>
-
     </div>
 
     <!-- API RENDER -->
     <div class="templates-grid"></div>
-
   </div>
-
 </div>
 
 <!-- FIXED TOGGLE BUTTON -->
@@ -88,9 +73,6 @@
   <i class="bi bi-chevron-left"></i>
 </button>
 
-{% endblock %}
-
-
-{% block page_js %}
+{% endblock %} {% block page_js %}
 <script src="{% static 'js/templates.js' %}"></script>
 {% endblock %}

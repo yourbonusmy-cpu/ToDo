@@ -1,320 +1,304 @@
-{% extends "base.html" %}
-{% load static %}
-
-{% block title %}Создать блок{% endblock %}
+{% extends "base.html" %} 
+{% load static %} 
+{% block title %} Создать блок {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/block_create.css' %}">
-<link rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-{% endblock %}
+  <link rel="stylesheet" href="{% static 'css/block_create.css' %}" />
+{% endblock %} 
 
 {% block content %}
-
 <div class="container mt-4 mb-5">
+  <input type="hidden" id="block-id" value="{{ block_json.id|default:'' }}" />
 
-    <input type="hidden" id="block-id" value="{{ block_json.id|default:'' }}">
-
-    <!-- =========================
+  <!-- =========================
     HEADER
     ========================== -->
 
-    <div class="d-flex align-items-center justify-content-between mb-3">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-2 w-50">
+      <input
+        type="text"
+        id="block-title"
+        class="form-control"
+        placeholder="Название блока"
+      />
 
-        <div class="d-flex align-items-center gap-2 w-50">
-
-            <input
-                type="text"
-                id="block-title"
-                class="form-control"
-                placeholder="Название блока"
-            >
-
-            <input
-                type="date"
-                id="block-date"
-                class="form-control"
-                style="max-width: 180px;"
-            >
-            <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="weather-switch">
-                <label class="form-check-label">Погода</label>
-            </div>
-           <div id="weather-container" class="mt-2" style="display:none;">
-                <div id="weather-row" class="weather-row"></div>
-            </div>
-
-        </div>
-
-        <div class="d-flex gap-2">
-            <button id="clear-block-btn" class="btn btn-outline-danger">
-                Очистить
-            </button>
-
-            <button id="save-block-btn" class="btn btn-primary">
-                Сохранить
-            </button>
-        </div>
-
+      <input
+        type="date"
+        id="block-date"
+        class="form-control"
+        style="max-width: 180px"
+      />
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="weather-switch" />
+        <label class="form-check-label">Погода</label>
+      </div>
+      <div id="weather-container" class="mt-2" style="display: none">
+        <div id="weather-row" class="weather-row"></div>
+      </div>
     </div>
 
-    <!-- =========================
+    <div class="d-flex gap-2">
+      <button id="clear-block-btn" class="btn btn-outline-danger">
+        Очистить
+      </button>
+
+      <button id="save-block-btn" class="btn btn-primary">Сохранить</button>
+    </div>
+  </div>
+
+  <!-- =========================
     SELECTED TASKS
     ========================== -->
 
-    <div class="card shadow-sm mb-3">
-        <div id="selected-tasks"
-             class="card-body d-flex flex-wrap gap-3 align-items-center">
-            <div id="no-tasks-label" class="text-muted">
-                Нет задач
-            </div>
-        </div>
+  <div class="card shadow-sm mb-3">
+    <div
+      id="selected-tasks"
+      class="card-body d-flex flex-wrap gap-3 align-items-center"
+    >
+      <div id="no-tasks-label" class="text-muted">Нет задач</div>
     </div>
+  </div>
 
-    <!-- =========================
+  <!-- =========================
     TASK DETAIL CARD
     ========================== -->
 
-    <div id="task-detail-card"
-         class="card shadow-sm p-3 mt-3"
-         style="display:none;">
+  <div
+    id="task-detail-card"
+    class="card shadow-sm p-3 mt-3"
+    style="display: none"
+  >
+    <div class="d-flex gap-4 align-items-start">
+      <!-- ICON + EYE -->
+      <div class="text-center position-relative mt-3">
+        <img id="task-detail-icon" width="80" height="80" />
 
-        <div class="d-flex gap-4 align-items-start">
+        <!-- Eye Button -->
+        <div class="d-flex justify-content-end mt-4">
+          <button
+            id="visibility-eye"
+            type="button"
+            class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+            title="Скрыть / показать"
+          >
+            <i class="bi bi-eye"></i>
+            <span id="visibility-label">Скрыть</span>
+          </button>
+        </div>
+      </div>
 
-            <!-- ICON + EYE -->
-            <div class="text-center position-relative mt-3">
-
-                <img id="task-detail-icon" width="80" height="80">
-
-                <!-- Eye Button -->
-                <div class="d-flex justify-content-end mt-4">
-
-                    <button
-                        id="visibility-eye"
-                        type="button"
-                        class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
-                        title="Скрыть / показать"
-                    >
-                        <i class="bi bi-eye"></i>
-                        <span id="visibility-label">Скрыть</span>
-                    </button>
-
-                </div>
-
-            </div>
-
-            <!-- AMOUNT / TIME -->
-            <div class="d-flex flex-column gap-2">
-                <div id="task-detail-title"
-                     class="fw-semibold mt-2">
-                </div>
-                <div>
-                    <label class="form-label">Количество</label>
-                    <input id="task-detail-amount"
-                           class="form-control form-control-sm"
-                           type="number">
-                </div>
-
-                <div>
-                    <label class="form-label">Время</label>
-                    <input id="task-detail-time"
-                           class="form-control form-control-sm"
-                           type="number">
-                </div>
-
-            </div>
-
-            <!-- DESCRIPTION -->
-            <div class="flex-grow-1">
-
-                <!-- CONTROL ROW -->
-                <div class="d-flex align-items-center gap-2 mb-2 flex-nowrap">
-
-                    <label class="form-label m-0">Описание</label>
-
-                    <span id="encrypted-label" class="badge text-bg-warning" style="display:none;">
-                        <i class="bi bi-lock-fill"></i> Зашифровано
-                    </span>
-
-                    <!-- PASSWORD + EYE -->
-                    <div id="task-password-container" style="display:none; min-width:180px;">
-
-                        <div class="position-relative">
-
-                            <input
-                                type="password"
-                                id="task-password"
-                                class="form-control form-control-sm pe-5"
-                                placeholder="Пароль"
-                            >
-
-                            <button type="button"
-                                    id="password-eye"
-                                    class="btn btn-sm position-absolute top-50 end-0 translate-middle-y me-2">
-
-                                <i class="bi bi-eye"></i>
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                    <!-- DECRYPT BUTTON -->
-                    <button id="decrypt-btn" class="btn btn-sm btn-primary" style="display:none;">
-                        <i class="bi bi-unlock"></i>
-                    </button>
-
-                    <div class="ms-auto"></div> <!-- пушим toggle вправо -->
-
-                    <!-- TOGGLE -->
-                    <div class="d-flex align-items-center gap-2">
-
-                        <label for="task-password-toggle"
-                               id="password-toggle-label"
-                               class="small text-muted m-0"
-                               style="cursor:pointer; white-space:nowrap;">
-                            Шифрование
-                        </label>
-
-                        <div class="form-check form-switch m-0">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   id="task-password-toggle">
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <!-- TEXTAREA -->
-                <textarea id="task-detail-description" class="form-control" rows="4" style="display:none;"></textarea>
-
-            </div>
-
+      <!-- AMOUNT / TIME -->
+      <div class="d-flex flex-column gap-2">
+        <div id="task-detail-title" class="fw-semibold mt-2"></div>
+        <div>
+          <label class="form-label">Количество</label>
+          <input
+            id="task-detail-amount"
+            class="form-control form-control-sm"
+            type="number"
+          />
         </div>
 
-    </div>
+        <div>
+          <label class="form-label">Время</label>
+          <input
+            id="task-detail-time"
+            class="form-control form-control-sm"
+            type="number"
+          />
+        </div>
+      </div>
 
+      <!-- DESCRIPTION -->
+      <div class="flex-grow-1">
+        <!-- CONTROL ROW -->
+        <div class="d-flex align-items-center gap-2 mb-2 flex-nowrap">
+          <label class="form-label m-0">Описание</label>
+
+          <span
+            id="encrypted-label"
+            class="badge text-bg-warning"
+            style="display: none"
+          >
+            <i class="bi bi-lock-fill"></i> Зашифровано
+          </span>
+
+          <!-- PASSWORD + EYE -->
+          <div
+            id="task-password-container"
+            style="display: none; min-width: 180px"
+          >
+            <div class="position-relative">
+              <input
+                type="password"
+                id="task-password"
+                class="form-control form-control-sm pe-5"
+                placeholder="Пароль"
+              />
+
+              <button
+                type="button"
+                id="password-eye"
+                class="btn btn-sm position-absolute top-50 end-0 translate-middle-y me-2"
+              >
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- DECRYPT BUTTON -->
+          <button
+            id="decrypt-btn"
+            class="btn btn-sm btn-primary"
+            style="display: none"
+          >
+            <i class="bi bi-unlock"></i>
+          </button>
+
+          <div class="ms-auto"></div>
+          <!-- пушим toggle вправо -->
+
+          <!-- TOGGLE -->
+          <div class="d-flex align-items-center gap-2">
+            <label
+              for="task-password-toggle"
+              id="password-toggle-label"
+              class="small text-muted m-0"
+              style="cursor: pointer; white-space: nowrap"
+            >
+              Шифрование
+            </label>
+
+            <div class="form-check form-switch m-0">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="task-password-toggle"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- TEXTAREA -->
+        <textarea
+          id="task-detail-description"
+          class="form-control"
+          rows="4"
+          style="display: none"
+        ></textarea>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- =========================
 TASK PICKER
 ========================= -->
 
-<div class="task-picker shadow">
-
-    <div class="task-search p-2 border-bottom">
+<div class="task-panel-wrapper">
+    <div class="task-picker shadow" id="task-panel">
+      <div class="task-search p-2 border-bottom">
         <input
-            type="text"
-            id="task-search-input"
-            class="form-control"
-            placeholder="Поиск задачи..."
-            autocomplete="off"
-        >
-    </div>
+          type="text"
+          id="task-search-input"
+          class="form-control"
+          placeholder="Поиск задачи..."
+          autocomplete="off"
+        />
+      </div>
 
-    <div class="task-picker-list">
-
+      <div class="task-picker-list">
         {% for t in templates %}
-        <div class="task-icon"
-             data-id="{{ t.id }}"
-             data-title="{{ t.title|lower }}"
-             data-description="{{ t.description|escape }}"
-             data-amount="{{ t.default_amount }}"
-             data-time="{{ t.time|default:1 }}">
-
-            {% if t.icon %}
-            <img
-                src="{{ t.icon.url }}"
-                data-icon="{{ t.icon.name }}"
-                width="48"
-                height="48"
-            >
-            {% endif %}
-
+        <div
+          class="task-icon"
+          data-id="{{ t.id }}"
+          data-title="{{ t.title|lower }}"
+          data-description="{{ t.description|escape }}"
+          data-amount="{{ t.default_amount }}"
+          data-time="{{ t.time|default:1 }}"
+        >
+          {% if t.icon %}
+          <img
+            src="{{ t.icon.url }}"
+            data-icon="{{ t.icon.name }}"
+            width="48"
+            height="48"
+          />
+          {% endif %}
         </div>
         {% endfor %}
-
+      </div>
     </div>
-
 </div>
-
+<button id="task-toggle" class="task-toggle-btn">
+  <i class="bi bi-chevron-down"></i>
+</button>
 <!-- =========================
 TASK TOOLTIP
 ========================= -->
 
-<div id="task-tooltip"
-     class="task-tooltip shadow-sm"
-     style="display:none; position:absolute; z-index:2000;">
-
-    <div class="fw-bold" id="tooltip-title"></div>
-    <div class="small text-muted" id="tooltip-description"></div>
-    <div class="small text-muted" id="tooltip-amount-time"></div>
-
+<div
+  id="task-tooltip"
+  class="task-tooltip shadow-sm"
+  style="display: none; position: absolute; z-index: 2000"
+>
+  <div class="fw-bold" id="tooltip-title"></div>
+  <div class="small text-muted" id="tooltip-description"></div>
+  <div class="small text-muted" id="tooltip-amount-time"></div>
 </div>
 
 <!-- =========================
 GROUP PICKER
 ========================= -->
 
-<div class="group-picker shadow">
-
-    {% for g in groups %}
-    <div class="group-icon"
-         data-id="{{ g.id }}"
-         data-title="{{ g.title }}"
-         data-description="{{ g.description|escape }}"
-         data-count="{{ g.tasks.count }}">
-
+<div class="group-panel-wrapper">
+    <div class="group-picker shadow" id="group-panel">
+      {% for g in groups %}
+      <div
+        class="group-icon"
+        data-id="{{ g.id }}"
+        data-title="{{ g.title }}"
+        data-description="{{ g.description|escape }}"
+        data-count="{{ g.tasks.count }}"
+      >
         <div class="group-grid">
-
-            {% for t in g.tasks.all|slice:":4" %}
-            <div class="group-task-mini">
-                {% if t.icon %}
-                <img src="{{ t.icon.url }}" width="20" height="20">
-                {% endif %}
-            </div>
-            {% endfor %}
-
+          {% for t in g.tasks.all|slice:":4" %}
+          <div class="group-task-mini">
+            {% if t.icon %}
+            <img src="{{ t.icon.url }}" width="20" height="20" />
+            {% endif %}
+          </div>
+          {% endfor %}
         </div>
-
+      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
-
 </div>
+<button id="group-toggle" class="group-toggle-btn">
+  <i class="bi bi-chevron-left"></i>
+</button>
 
 <!-- =========================
 GROUP TOOLTIP
 ========================= -->
 
-<div id="group-tooltip"
-     class="group-tooltip"
-     style="display:none">
+<div id="group-tooltip" class="group-tooltip" style="display: none">
+  <div id="group-tooltip-title" class="fw-semibold"></div>
 
-    <div id="group-tooltip-title"
-         class="fw-semibold"></div>
+  <div id="group-tooltip-description" class="small text-muted"></div>
 
-    <div id="group-tooltip-description"
-         class="small text-muted"></div>
+  <div class="small mt-1">Задач: <span id="group-tooltip-count"></span></div>
 
-    <div class="small mt-1">
-        Задач: <span id="group-tooltip-count"></span>
-    </div>
-
-    <div id="group-tooltip-icons"
-         class="tooltip-icons mt-2"></div>
-
+  <div id="group-tooltip-icons" class="tooltip-icons mt-2"></div>
 </div>
-
-{% endblock %}
+{% endblock %} 
 
 {% block page_js %}
-<script>
+  <script>
     const block_json = {{ block_json|safe }};
-</script>
+  </script>
 
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-<script src="{% static 'js/block_create.js' %}"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+  <script src="{% static 'js/block_create.js' %}"></script>
 {% endblock %}

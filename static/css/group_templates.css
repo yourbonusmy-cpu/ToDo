@@ -1,89 +1,78 @@
-.group-task-icons{
-min-height:40px;
+.group-task-icons {
+  min-height: 40px;
 }
 
-.task-icon img{
-border-radius:6px;
-cursor:pointer;
-transition:0.15s;
+.task-icon img {
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.15s;
 }
 
-.task-icon img:hover{
-transform:scale(1.2);
+.task-icon img:hover {
+  transform: scale(1.2);
 }
 
-.placeholder-icon{
-width:32px;
-height:32px;
-background:#e9ecef;
-border-radius:6px;
+.placeholder-icon {
+  width: 32px;
+  height: 32px;
+  background: #e9ecef;
+  border-radius: 6px;
 }
-
 
 /* TOOLTIP */
 
-.task-tooltip{
+.task-tooltip {
+  position: fixed;
 
-position:fixed;
+  background: white;
 
-background:white;
+  border-radius: 12px;
 
-border-radius:12px;
+  padding: 12px;
 
-padding:12px;
+  width: 240px;
 
-width:240px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
 
-box-shadow:0 15px 40px rgba(0,0,0,0.2);
+  z-index: 2000;
 
-z-index:2000;
+  pointer-events: none;
 
-pointer-events:none;
+  font-size: 14px;
 
-font-size:14px;
-
-border:1px solid #eee;
-
+  border: 1px solid #eee;
 }
 
-.tooltip-header{
+.tooltip-header {
+  display: flex;
 
-display:flex;
+  align-items: center;
 
-align-items:center;
+  gap: 10px;
 
-gap:10px;
-
-margin-bottom:6px;
-
+  margin-bottom: 6px;
 }
 
-.tooltip-title{
-
-font-weight:600;
-
+.tooltip-title {
+  font-weight: 600;
 }
 
-.tooltip-description{
+.tooltip-description {
+  font-size: 13px;
 
-font-size:13px;
+  color: #666;
 
-color:#666;
-
-margin-bottom:8px;
-
+  margin-bottom: 8px;
 }
 
-.tooltip-meta{
+.tooltip-meta {
+  font-size: 12px;
 
-font-size:12px;
+  color: #888;
 
-color:#888;
+  display: flex;
 
-display:flex;
+  flex-direction: column;
 
-flex-direction:column;
-
-gap:2px;
-
+  gap: 2px;
 }

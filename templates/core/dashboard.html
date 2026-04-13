@@ -1,106 +1,197 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends "base.html" %} 
+{% load static %} 
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-{% endblock %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
+{% endblock %} 
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Dashboard{% endblock %} 
 
 {% block content %}
 <div class="container mt-4">
+  <!-- DOWNLOAD -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0 text-muted">Ваши блоки задач</h5>
+    <!-- Кнопка "Новый блок" -->
+    <a href="{% url 'block_create' %}" class="btn btn-primary flex-shrink-0">
+      Новый блок
+    </a>
+    <div class="d-flex gap-2">
+      <a
+        href="{% url 'download_blocks_json_zip' %}"
+        class="btn btn-sm btn-success"
+        >Скачать JSON + ZIP</a
+      >
+      <a href="{% url 'download_blocks_xlsx' %}" class="btn btn-sm btn-primary"
+        >Скачать XLSX</a
+      >
+    </div>
+  </div>
 
-    <div class="filters-bar mb-3">
+  <div class="filters-bar mb-3">
+    <!-- Фильтр задач -->
+    <div class="dropdown filters-dropdown">
+      <button
+        class="btn btn-outline-secondary dropdown-toggle w-100 d-flex align-items-center"
+        type="button"
+        data-bs-toggle="dropdown"
+      >
+        <i class="bi bi-list-task me-1"></i>
+        <span id="tasks-dropdown-label">Задачи</span>
+      </button>
 
-        <!-- Поиск -->
-        <div class="filters-search">
-            <i class="bi bi-search"></i>
-            <input type="text" id="search-input" class="form-control"
-                   placeholder="Поиск блоков...">
+      <ul class="dropdown-menu p-3 filters-menu">
+        <!-- ПОИСК ВНУТРИ DROPDOWN -->
+        <li class="mb-2">
+          <input
+            type="text"
+            id="tasks-search-input"
+            class="form-control form-control-sm d-none"
+            placeholder="Поиск задачи..."
+          />
+        </li>
+
+        <div id="tasks-list">
+          {% for task in system_tasks %}
+          <li class="task-item">
+            <div class="form-check form-switch d-flex align-items-center mb-2">
+              <input
+                class="form-check-input me-2 task-toggle"
+                type="checkbox"
+                value="{{ task.id }}"
+                id="task-{{ task.id }}"
+              />
+
+              {% if task.icon %}
+              <img src="{{ task.icon.url }}" class="me-2 task-icon" />
+              {% else %}
+              <i class="bi bi-check-circle me-2 text-primary"></i>
+              {% endif %}
+
+              <label class="form-check-label m-0" for="task-{{ task.id }}">
+                {{ task.title }}
+              </label>
+            </div>
+          </li>
+          {% endfor %}
         </div>
-
-        <!-- Фильтр задач -->
-        <div class="dropdown filters-dropdown">
-            <button class="btn btn-outline-secondary dropdown-toggle w-100 d-flex align-items-center"
-                    type="button"
-                    data-bs-toggle="dropdown">
-                <i class="bi bi-list-task me-1"></i>
-                <span id="tasks-dropdown-label">Задачи</span>
-            </button>
-
-            <ul class="dropdown-menu p-3 filters-menu">
-
-                <!-- ПОИСК ВНУТРИ DROPDOWN -->
-                <li class="mb-2">
-                    <input type="text"
-                           id="tasks-search-input"
-                           class="form-control form-control-sm d-none"
-                           placeholder="Поиск задачи...">
-                </li>
-
-                <div id="tasks-list">
-                    {% for task in system_tasks %}
-                    <li class="task-item">
-                        <div class="form-check form-switch d-flex align-items-center mb-2">
-                            <input class="form-check-input me-2 task-toggle"
-                                   type="checkbox"
-                                   value="{{ task.id }}"
-                                   id="task-{{ task.id }}">
-
-                            {% if task.icon %}
-                                <img src="{{ task.icon.url }}" class="me-2 task-icon">
-                            {% else %}
-                                <i class="bi bi-check-circle me-2 text-primary"></i>
-                            {% endif %}
-
-                            <label class="form-check-label m-0" for="task-{{ task.id }}">
-                                {{ task.title }}
-                            </label>
-                        </div>
-                    </li>
-                    {% endfor %}
-                </div>
-
-            </ul>
-        </div>
-
-        <!-- Toggle скрытых -->
-        <div class="form-check form-switch filters-toggle">
-            <input class="form-check-input" type="checkbox" id="hidden-filter">
-            <label class="form-check-label" for="hidden-filter">
-                Скрытые
-            </label>
-        </div>
-
-        <!-- Кнопки -->
-        <button id="reset-filters" class="btn btn-outline-secondary">
-            Сброс
-        </button>
-
+      </ul>
     </div>
 
-    <!-- DOWNLOAD -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0 text-muted">Ваши блоки задач</h5>
-        <!-- Кнопка "Новый блок" -->
-        <a href="{% url 'block_create' %}" class="btn btn-primary flex-shrink-0">
-            Новый блок
-        </a>
-        <div class="d-flex gap-2">
-            <a href="{% url 'download_blocks_json_zip' %}" class="btn btn-sm btn-success">Скачать JSON + ZIP</a>
-            <a href="{% url 'download_blocks_xlsx' %}" class="btn btn-sm btn-primary">Скачать XLSX</a>
-        </div>
+    <!-- Поиск -->
+    <div class="filters-search">
+      <i class="bi bi-search"></i>
+      <input
+        type="text"
+        id="search-input"
+        class="form-control"
+        placeholder="Поиск блоков..."
+      />
     </div>
 
-    <!-- BLOCK CONTAINER -->
-    <div id="blocks-container"></div>
+    <div class="dropdown filters-dropdown">
+      <button
+        class="btn btn-outline-secondary dropdown-toggle w-100 d-flex align-items-center"
+        type="button"
+        data-bs-toggle="dropdown"
+      >
+        <span id="weekday-dropdown-label">Дни недели</span>
+      </button>
 
-    <!-- SCROLL TRIGGER -->
-    <div id="scroll-trigger"></div>
+      <ul class="dropdown-menu p-3 filters-menu">
+        {% comment %} каждое li — один день недели с switch {% endcomment %}
+        <li class="mb-2">
+          <div class="form-check form-switch d-flex align-items-center">
+            <input
+              class="form-check-input weekday-toggle me-2"
+              type="checkbox"
+              data-day="0"
+              id="weekday-0"
+            />
+            <label class="form-check-label m-0" for="weekday-0">Пн</label>
+          </div>
+        </li>
+        <li class="mb-2">
+          <div class="form-check form-switch d-flex align-items-center">
+            <input
+              class="form-check-input weekday-toggle me-2"
+              type="checkbox"
+              data-day="1"
+              id="weekday-1"
+            />
+            <label class="form-check-label m-0" for="weekday-1">Вт</label>
+          </div>
+        </li>
+        <li class="mb-2">
+          <div class="form-check form-switch d-flex align-items-center">
+            <input
+              class="form-check-input weekday-toggle me-2"
+              type="checkbox"
+              data-day="2"
+              id="weekday-2"
+            />
+            <label class="form-check-label m-0" for="weekday-2">Ср</label>
+          </div>
+        </li>
+        <li class="mb-2">
+          <div class="form-check form-switch d-flex align-items-center">
+            <input
+              class="form-check-input weekday-toggle me-2"
+              type="checkbox"
+              data-day="3"
+              id="weekday-3"
+            />
+            <label class="form-check-label m-0" for="weekday-3">Чт</label>
+          </div>
+        </li>
+        <li class="mb-2">
+          <div class="form-check form-switch d-flex align-items-center">
+            <input
+              class="form-check-input weekday-toggle me-2"
+              type="checkbox"
+              data-day="4"
+              id="weekday-4"
+            />
+            <label class="form-check-label m-0" for="weekday-4">Пт</label>
+          </div>
+        </li>
+        <li class="mb-2">
+          <div class="form-check form-switch d-flex align-items-center">
+            <input
+              class="form-check-input weekday-toggle me-2"
+              type="checkbox"
+              data-day="5"
+              id="weekday-5"
+            />
+            <label class="form-check-label m-0" for="weekday-5">Сб</label>
+          </div>
+        </li>
+        <li class="mb-2">
+          <div class="form-check form-switch d-flex align-items-center">
+            <input
+              class="form-check-input weekday-toggle me-2"
+              type="checkbox"
+              data-day="6"
+              id="weekday-6"
+            />
+            <label class="form-check-label m-0" for="weekday-6">Вс</label>
+          </div>
+        </li>
+      </ul>
+    </div>
 
-    <!-- DELETE MODAL -->
-    {% include "core/partials/delete_modal.html" %}
+    <!-- Кнопки -->
+    <button id="reset-filters" class="btn btn-outline-secondary">Сброс</button>
+  </div>
 
+  <!-- BLOCK CONTAINER -->
+  <div id="blocks-container"></div>
+
+  <!-- SCROLL TRIGGER -->
+  <div id="scroll-trigger"></div>
+
+  <!-- DELETE MODAL -->
+  {% include "core/partials/delete_modal.html" %}
 </div>
 
 <script src="{% static 'js/dashboard.js' %}"></script>

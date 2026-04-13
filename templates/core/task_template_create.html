@@ -1,248 +1,208 @@
-{% extends "base.html" %}
-{% load static %}
-{% load form_tags %}
-
-{% block title %}Создание шаблона задачи{% endblock %}
-{% block body_data_page %}task-template-create{% endblock %}
+{% extends "base.html" %} 
+{% load static %} 
+{% load form_tags %} 
+{% block title %}Создание шаблона задачи{% endblock %} 
+{% block body_data_page %}task-template-create{% endblock %} 
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/task_template_create.css' %}">
-{% endblock %}
+  <link rel="stylesheet" href="{% static 'css/task_template_create.css' %}" />
+{% endblock %} {% block content %}
 
-{% block content %}
 <div class="container my-4">
-
-	<div class="card shadow-sm border-0 rounded-4">
-
-		<div class="card-body p-4">
-
-			<h4 class="fw-bold mb-4 text-center">
-				{{ page_title }}
-			</h4>
-
-			<form method="post" enctype="multipart/form-data">
-				{% csrf_token %}
-
-				<div class="row g-4">
-
-					<!-- LEFT COLUMN -->
-					<div class="col-md-3 d-flex flex-column align-items-center justify-content-start gap-4">
-
-						<div class="icon-container d-flex flex-column align-items-center gap-2">
-
-							<label for="id_icon" class="icon-preview">
-								<img
-									id="iconImage"
-									src="{% if form.instance.icon %}{{ form.instance.icon.url }}{% else %}{% static 'img/plus-square-dotted.svg' %}{% endif %}"
-									alt="icon"
-								>
-							</label>
-
-							<input
-								type="file"
-								id="id_icon"
-								name="icon"
-								accept="image/png, image/svg+xml"
-								hidden
-							>
-
-							<button
-								type="button"
-								id="removeIcon"
-								class="btn btn-sm btn-danger icon-remove hidden"
-							>
-								✕
-							</button>
-
-						</div>
-
-						<div class="amount-container d-flex flex-column align-items-center w-75">
-
-							<label class="form-label small fw-semibold text-center mb-1">
-								Количество
-							</label>
-
-							{{ form.default_amount|add_class:"form-control text-center" }}
-
-						</div>
-
-						<div class="priority-container d-flex flex-column align-items-center w-75">
-
-							<label class="form-label small fw-semibold text-center mb-1">
-								Приоритет
-							</label>
-
-							<div class="priority-selector">
-
-								<label class="priority-item">
-
-								<input
-								type="radio"
-								name="priority"
-								value="1"
-								{% if form.instance.priority == 1 or not form.instance.pk %}checked{% endif %}
-								>
-
-								<span class="priority-dot low"></span>
-
-								<span class="priority-label">Low</span>
-
-								</label>
-
-
-								<label class="priority-item">
-
-								<input
-								type="radio"
-								name="priority"
-								value="2"
-								{% if form.instance.priority == 2 %}checked{% endif %}
-								>
-
-								<span class="priority-dot mid"></span>
-
-								<span class="priority-label">Mid</span>
-
-								</label>
-
-
-								<label class="priority-item">
-
-								<input
-								type="radio"
-								name="priority"
-								value="3"
-								{% if form.instance.priority == 3 %}checked{% endif %}
-								>
-
-								<span class="priority-dot high"></span>
-
-								<span class="priority-label">High</span>
-
-								</label>
-
-							</div>
-
-
-						</div>
-
-					</div>
-
-
-					<!-- RIGHT COLUMN -->
-					<div class="col-md-9">
-
-						<div class="mb-3">
-
-							<label class="form-label small fw-semibold">
-								Название
-							</label>
-
-							{{ form.title|add_class:"form-control" }}
-
-						</div>
-
-						<div class="mb-3">
-
-							<label class="form-label small fw-semibold">
-								Описание
-							</label>
-
-							{{ form.description|add_class:"form-control" }}
-
-						</div>
-
-
-						<!-- REPEAT SETTINGS -->
-						<div class="card bg-light border-0 rounded-4 p-3 mt-4">
-
-							<h6 class="fw-semibold mb-3">
-								Настройки повторения
-							</h6>
-
-							<div class="row g-3">
-
-								<div class="col-md-6">
-
-									<label class="form-label small">
-										Тип повторений
-									</label>
-
-									{{ form.period_type|add_class:"form-select" }}
-
-								</div>
-
-								<div class="col-md-6">
-
-									<label class="form-label small">
-										Расписание
-									</label>
-
-									{{ form.schedule_type|add_class:"form-select" }}
-
-								</div>
-
-
-								<div id="fixedFields" class="row g-3 mt-2" style="display:none;">
-
-									<div class="col-md-4" id="weekdayField">
-
-										{{ form.fixed_weekday.label_tag }}
-										{{ form.fixed_weekday|add_class:"form-select" }}
-
-									</div>
-
-									<div class="col-md-4" id="monthField">
-
-										{{ form.fixed_month_of_year.label_tag }}
-										{{ form.fixed_month_of_year|add_class:"form-select" }}
-
-									</div>
-
-									<div class="col-md-4" id="dayField">
-
-										{{ form.fixed_day_of_month.label_tag }}
-										{{ form.fixed_day_of_month|add_class:"form-control" }}
-
-									</div>
-
-								</div>
-
-							</div>
-
-						</div>
-
-
-						<div class="d-flex justify-content-end gap-3 mt-4">
-
-							<a href="{% url 'templates' %}" class="btn btn-outline-secondary">
-								Отменить
-							</a>
-
-							<button type="reset" class="btn btn-outline-danger">
-								Очистить
-							</button>
-
-							<button type="submit" class="btn btn-primary px-4">
-								Сохранить
-							</button>
-
-						</div>
-
-					</div>
-
-				</div>
-
-			</form>
-
-		</div>
-
-	</div>
-
+  <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-4">
+      <h4 class="fw-bold mb-4 text-center">{{ page_title }}</h4>
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="row g-4">
+          <!-- LEFT COLUMN -->
+          <div
+            class="col-md-3 d-flex flex-column align-items-center justify-content-start gap-4"
+          >
+            <div
+              class="icon-container d-flex flex-column align-items-center gap-2"
+            >
+              <label for="id_icon" class="icon-preview">
+                <img
+                  id="iconImage"
+                  src="{% if form.instance.icon %}{{ form.instance.icon.url }}{% else %}{% static 'img/plus-square-dotted.svg' %}{% endif %}"
+                  alt="icon"
+                />
+              </label>
+
+              <input
+                type="file"
+                id="id_icon"
+                name="icon"
+                accept="image/png, image/svg+xml"
+                hidden
+              />
+
+              <button
+                type="button"
+                id="removeIcon"
+                class="btn btn-sm btn-danger icon-remove hidden"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div
+              class="amount-container d-flex flex-column align-items-center w-75"
+            >
+              <label class="form-label small fw-semibold text-center mb-1">
+                Количество
+              </label>
+
+              {{ form.default_amount|add_class:"form-control text-center" }}
+            </div>
+
+            <div
+              class="priority-container d-flex flex-column align-items-center w-75"
+            >
+              <label class="form-label small fw-semibold text-center mb-1">
+                Приоритет
+              </label>
+
+              <div class="priority-selector">
+                <label class="priority-item">
+                  <input
+                    type="radio"
+                    name="priority"
+                    value="1"
+                    {%
+                    if
+                    form.instance.priority=""
+                    ="1"
+                    or
+                    not
+                    form.instance.pk
+                    %}checked{%
+                    endif
+                    %}
+                  />
+
+                  <span class="priority-dot low"></span>
+
+                  <span class="priority-label">Low</span>
+                </label>
+
+                <label class="priority-item">
+                  <input
+                    type="radio"
+                    name="priority"
+                    value="2"
+                    {%
+                    if
+                    form.instance.priority=""
+                    ="2"
+                    %}checked{%
+                    endif
+                    %}
+                  />
+
+                  <span class="priority-dot mid"></span>
+
+                  <span class="priority-label">Mid</span>
+                </label>
+
+                <label class="priority-item">
+                  <input
+                    type="radio"
+                    name="priority"
+                    value="3"
+                    {%
+                    if
+                    form.instance.priority=""
+                    ="3"
+                    %}checked{%
+                    endif
+                    %}
+                  />
+
+                  <span class="priority-dot high"></span>
+
+                  <span class="priority-label">High</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN -->
+          <div class="col-md-9">
+            <div class="mb-3">
+              <label class="form-label small fw-semibold"> Название </label>
+
+              {{ form.title|add_class:"form-control" }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold"> Описание </label>
+
+              {{ form.description|add_class:"form-control" }}
+            </div>
+
+            <!-- REPEAT SETTINGS -->
+            <div class="card bg-light border-0 rounded-4 p-3 mt-4">
+              <h6 class="fw-semibold mb-3">Настройки повторения</h6>
+
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label small"> Тип повторений </label>
+
+                  {{ form.period_type|add_class:"form-select" }}
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label small"> Расписание </label>
+
+                  {{ form.schedule_type|add_class:"form-select" }}
+                </div>
+
+                <div
+                  id="fixedFields"
+                  class="row g-3 mt-2"
+                  style="display: none"
+                >
+                  <div class="col-md-4" id="weekdayField">
+                    {{ form.fixed_weekday.label_tag }} {{
+                    form.fixed_weekday|add_class:"form-select" }}
+                  </div>
+
+                  <div class="col-md-4" id="monthField">
+                    {{ form.fixed_month_of_year.label_tag }} {{
+                    form.fixed_month_of_year|add_class:"form-select" }}
+                  </div>
+
+                  <div class="col-md-4" id="dayField">
+                    {{ form.fixed_day_of_month.label_tag }} {{
+                    form.fixed_day_of_month|add_class:"form-control" }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-3 mt-4">
+              <a href="{% url 'templates' %}" class="btn btn-outline-secondary">
+                Отменить
+              </a>
+
+              <button type="reset" class="btn btn-outline-danger">
+                Очистить
+              </button>
+
+              <button type="submit" class="btn btn-primary px-4">
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
-{% endblock %}
-
-
-{% block page_js %}
+{% endblock %} {% block page_js %}
 <script src="{% static 'js/task_template/create.js' %}"></script>
 {% endblock %}

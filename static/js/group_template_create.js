@@ -5,61 +5,49 @@ const groupDescription = document.getElementById("group-description");
 
 const selected = [];
 
-
 /* --------------------------
 CSRF
 --------------------------- */
 
-function getCookie(name){
+function getCookie(name) {
+  let cookieValue = null;
 
-    let cookieValue = null;
+  if (document.cookie) {
+    const cookies = document.cookie.split(";");
 
-    if(document.cookie){
+    for (let cookie of cookies) {
+      cookie = cookie.trim();
 
-        const cookies = document.cookie.split(";");
+      if (cookie.startsWith(name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
 
-        for(let cookie of cookies){
-
-            cookie = cookie.trim();
-
-            if(cookie.startsWith(name + "=")){
-
-                cookieValue = decodeURIComponent(
-                    cookie.substring(name.length + 1)
-                );
-
-                break;
-
-            }
-
-        }
-
+        break;
+      }
     }
+  }
 
-    return cookieValue;
+  return cookieValue;
 }
 
 const csrftoken = getCookie("csrftoken");
-
 
 /* --------------------------
 ADD TASK
 --------------------------- */
 
-function addTask(taskData){
+function addTask(taskData) {
+  const id = taskData.id.toString();
 
-    const id = taskData.id.toString();
+  if (selected.includes(id)) return;
 
-    if(selected.includes(id)) return;
+  selected.push(id);
 
-    selected.push(id);
+  const el = document.createElement("div");
 
-    const el = document.createElement("div");
+  el.className = "selected-task position-relative";
+  el.dataset.id = id;
 
-    el.className = "selected-task position-relative";
-    el.dataset.id = id;
-
-    el.innerHTML = `
+  el.innerHTML = `
 
         <div class="border rounded bg-light d-flex align-items-center justify-content-center w-100 h-100">
 
@@ -75,173 +63,129 @@ function addTask(taskData){
 
     `;
 
-    el.querySelector(".remove-task").onclick = (e)=>{
+  el.querySelector(".remove-task").onclick = (e) => {
+    e.stopPropagation();
 
-        e.stopPropagation();
+    removeTask(id);
+  };
 
-        removeTask(id);
-
-    };
-
-    selectedContainer.appendChild(el);
-
+  selectedContainer.appendChild(el);
 }
-
 
 /* --------------------------
 REMOVE TASK
 --------------------------- */
 
-function removeTask(id){
+function removeTask(id) {
+  const index = selected.indexOf(id);
 
-    const index = selected.indexOf(id);
+  if (index > -1) {
+    selected.splice(index, 1);
+  }
 
-    if(index > -1){
+  const el = selectedContainer.querySelector(`[data-id="${id}"]`);
 
-        selected.splice(index,1);
-
-    }
-
-    const el = selectedContainer.querySelector(`[data-id="${id}"]`);
-
-    if(el) el.remove();
-
+  if (el) el.remove();
 }
-
 
 /* --------------------------
 TASK PICKER CLICK
 --------------------------- */
 
-document.querySelectorAll(".task-picker .task-icon").forEach(icon=>{
+document.querySelectorAll(".task-picker .task-icon").forEach((icon) => {
+  icon.addEventListener("click", () => {
+    const taskData = {
+      id: icon.dataset.id,
+      title: icon.dataset.title,
+      icon: icon.querySelector("img") ? icon.querySelector("img").src : "",
+    };
 
-    icon.addEventListener("click", ()=>{
-
-        const taskData = {
-
-            id: icon.dataset.id,
-            title: icon.dataset.title,
-            icon: icon.querySelector("img") ? icon.querySelector("img").src : ""
-
-        };
-
-        addTask(taskData);
-
-    });
-
+    addTask(taskData);
+  });
 });
 const taskList = document.querySelector(".task-picker-list");
 
 taskList.addEventListener("wheel", (e) => {
+  if (e.deltaY === 0) return;
 
-    if (e.deltaY === 0) return;
+  e.preventDefault();
 
-    e.preventDefault();
-
-    taskList.scrollLeft += e.deltaY;
-
+  taskList.scrollLeft += e.deltaY;
 });
-
 
 /* --------------------------
 SORTABLE
 --------------------------- */
 
-new Sortable(selectedContainer,{
+new Sortable(selectedContainer, {
+  animation: 150,
 
-    animation:150,
+  onEnd() {
+    const ids = Array.from(selectedContainer.children).map(
+      (el) => el.dataset.id,
+    );
 
-    onEnd(){
+    selected.length = 0;
 
-        const ids = Array.from(
-            selectedContainer.children
-        ).map(el=>el.dataset.id);
-
-        selected.length = 0;
-
-        ids.forEach(id=>selected.push(id));
-
-    }
-
+    ids.forEach((id) => selected.push(id));
+  },
 });
-
 
 /* --------------------------
 CLEAR GROUP
 --------------------------- */
 
-document.getElementById("clear-group-btn").onclick = ()=>{
+document.getElementById("clear-group-btn").onclick = () => {
+  selected.length = 0;
 
-    selected.length = 0;
-
-    selectedContainer.innerHTML = "";
-
+  selectedContainer.innerHTML = "";
 };
-
 
 /* --------------------------
 SAVE GROUP
 --------------------------- */
 
-document.getElementById("save-group-btn").onclick = async ()=>{
+document.getElementById("save-group-btn").onclick = async () => {
+  if (!groupTitle.value.trim()) {
+    alert("Введите название группы");
 
-    if(!groupTitle.value.trim()){
+    return;
+  }
 
-        alert("Введите название группы");
+  const formData = new FormData();
 
-        return;
+  formData.append("title", groupTitle.value);
 
-    }
+  formData.append("description", groupDescription.value);
 
-    const formData = new FormData();
+  formData.append("tasks", JSON.stringify(selected));
 
-    formData.append("title", groupTitle.value);
+  formData.append("csrfmiddlewaretoken", csrftoken);
 
-    formData.append("description", groupDescription.value);
+  const response = await fetch(window.location.href, {
+    method: "POST",
+    body: formData,
+  });
 
-    formData.append("tasks", JSON.stringify(selected));
-
-    formData.append("csrfmiddlewaretoken", csrftoken);
-
-    const response = await fetch(
-
-        window.location.href,
-        {
-            method:"POST",
-            body:formData
-        }
-
-    );
-
-    if(response.redirected){
-
-        window.location.href = response.url;
-
-    }else{
-
-        alert("Ошибка сохранения");
-
-    }
-
+  if (response.redirected) {
+    window.location.href = response.url;
+  } else {
+    alert("Ошибка сохранения");
+  }
 };
-
 
 /* --------------------------
 LOAD GROUP DATA (EDIT MODE)
 --------------------------- */
 
-if(window.groupData){
+if (window.groupData) {
+  groupTitle.value = window.groupData.title || "";
 
-    groupTitle.value = window.groupData.title || "";
+  groupDescription.value = window.groupData.description || "";
 
-    groupDescription.value = window.groupData.description || "";
-
-    window.groupData.tasks.forEach(task=>{
-
-        addTask(task);
-
-    });
-
+  window.groupData.tasks.forEach((task) => {
+    addTask(task);
+  });
 }
 
 /* --------------------------
@@ -250,30 +194,20 @@ TASK SEARCH
 
 const searchInput = document.getElementById("task-search-input");
 
-if(searchInput){
+if (searchInput) {
+  const icons = document.querySelectorAll(".task-picker .task-icon");
 
-    const icons = document.querySelectorAll(".task-picker .task-icon");
+  searchInput.addEventListener("input", () => {
+    const query = searchInput.value.toLowerCase().trim();
 
-    searchInput.addEventListener("input", ()=>{
+    icons.forEach((icon) => {
+      const title = icon.dataset.title || "";
 
-        const query = searchInput.value.toLowerCase().trim();
-
-        icons.forEach(icon=>{
-
-            const title = icon.dataset.title || "";
-
-            if(title.includes(query)){
-
-                icon.style.display = "";
-
-            }else{
-
-                icon.style.display = "none";
-
-            }
-
-        });
-
+      if (title.includes(query)) {
+        icon.style.display = "";
+      } else {
+        icon.style.display = "none";
+      }
     });
-
+  });
 }

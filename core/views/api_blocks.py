@@ -199,23 +199,12 @@ def create_block_old(request):
 def api_blocks(request):
     q = request.GET.get("q")
     task_ids = request.GET.getlist("tasks")
-    show_hidden = request.GET.get("hidden")  # toggle
 
-    blocks = Block.objects.filter(owner=request.user)
+    blocks = Block.objects.filter(owner=request.user, is_hidden=False)
 
     # Поиск по названию
     if q:
         blocks = blocks.filter(title__icontains=q)
-
-    # Фильтр скрытых
-    show_hidden = request.GET.get("hidden")
-
-    if show_hidden == "1":
-        # показываем ВСЕ (ничего не фильтруем)
-        pass
-    else:
-        # только не скрытые
-        blocks = blocks.filter(is_hidden=False)
 
     # Фильтр по задачам (AND)
     if task_ids:

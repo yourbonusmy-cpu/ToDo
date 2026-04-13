@@ -2,163 +2,170 @@
    FILTERS BAR (основа)
 ---------------------------------*/
 .filters-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* -------------------------------
    Поиск (главный элемент)
 ---------------------------------*/
 .filters-search {
-    position: relative;
-    flex: 1 1 320px;
-    min-width: 200px;
+  position: relative;
+  flex: 1 1 320px;
+  min-width: 200px;
 }
 
 #search-input {
-    width: 100%;
-    height: 42px;
-    padding-left: 36px;
-    border-radius: 10px;
+  width: 100%;
+  height: 42px;
+  padding-left: 36px;
+  border-radius: 10px;
 }
 
 .filters-search i {
-    position: absolute;
-    top: 50%;
-    left: 12px;
-    transform: translateY(-50%);
-    font-size: 14px;
-    color: #888;
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #888;
 }
 
 /* -------------------------------
    Dropdown (фильтр задач)
 ---------------------------------*/
 .filters-dropdown {
-    flex: 1 1 200px;
-    max-width: 260px;
+  flex: 1 1 200px;
+  max-width: 260px;
 }
 
 .dropdown-menu {
-    min-width: 220px;
-    max-height: 300px;
-    overflow-y: auto;
+  min-width: 220px;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 /* Toggle внутри dropdown */
 .dropdown-menu .form-check {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 0.5rem;
 }
 
 .dropdown-menu .form-check-label {
-    flex: 1;
-    cursor: pointer;
+  flex: 1;
+  cursor: pointer;
 }
 
 /* Иконка задачи */
 .task-icon {
-    width: 20px;
-    height: 20px;
-    object-fit: cover;
-    border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  object-fit: cover;
+  border-radius: 4px;
 }
 
 /* -------------------------------
    Toggle "скрытые"
 ---------------------------------*/
 .filters-toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 /* -------------------------------
    Кнопки
 ---------------------------------*/
 .filters-bar .btn {
-    height: 42px;
-    padding: 0 14px;
-    flex-shrink: 0;
-    border-radius: 10px;
+  height: 42px;
+  padding: 0 14px;
+  flex-shrink: 0;
+  border-radius: 10px;
 }
 
 /* УБИРАЕМ старое поведение */
 #reset-filters {
-    width: auto; /* было 100% — ломало layout */
+  width: auto; /* было 100% — ломало layout */
 }
 
 /* -------------------------------
    Dropdown кнопка
 ---------------------------------*/
 .dropdown-toggle i {
-    font-size: 1rem;
+  font-size: 1rem;
 }
 
 .dropdown-toggle span {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* -------------------------------
    Hover/UX улучшения
 ---------------------------------*/
 .filters-bar .btn:hover {
-    transform: translateY(-1px);
-    transition: 0.15s ease;
+  transform: translateY(-1px);
+  transition: 0.15s ease;
 }
 
 /* -------------------------------
    АДАПТИВ
 ---------------------------------*/
 @media (max-width: 992px) {
-    .filters-dropdown {
-        max-width: 220px;
-    }
+  .filters-dropdown {
+    max-width: 220px;
+  }
 }
 
 @media (max-width: 768px) {
-    .filters-bar {
-        flex-direction: column;
-        align-items: stretch;
-    }
+  .filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
 
-    .filters-search,
-    .filters-dropdown {
-        flex: 1 1 auto;
-        max-width: 100%;
-    }
+  .filters-search,
+  .filters-dropdown {
+    flex: 1 1 auto;
+    max-width: 100%;
+  }
 
-    .filters-toggle {
-        justify-content: space-between;
-    }
+  .filters-toggle {
+    justify-content: space-between;
+  }
 
-    .filters-bar .btn {
-        width: 100%;
-    }
-}
-
-/* -------------------------------
-   СКРЫТЫЕ ЗАДАЧИ (размытие)
----------------------------------*/
-.task-icon-btn.task-hidden img {
-    filter: blur(6px);
-    opacity: 0.6;
-    transition: 0.2s ease;
-}
-
-/* при наведении — чуть видно */
-.task-icon-btn.task-hidden:hover img {
-    filter: blur(1px);
-    opacity: 0.8;
+  .filters-bar .btn {
+    width: 100%;
+  }
 }
 
 #tasks-search-input {
-    transition: all 0.2s ease;
+  transition: all 0.2s ease;
+}
+
+/* контейнер кнопки */
+.task-icon-btn {
+  position: relative;
+}
+
+/* overlay */
+.clock-overlay {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+
+  width: 16px;
+  height: 16px;
+}
+
+/* SVG */
+.clock-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
