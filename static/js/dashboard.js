@@ -20,6 +20,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const tasksSearchInput = document.getElementById("tasks-search-input");
   const tasksList = document.getElementById("tasks-list");
   const dropdown = document.querySelector(".filters-dropdown");
+  const resetTasksBtn = document.getElementById("reset-tasks-filter");
+
+
 
   // -------------------------------
   // STATE
@@ -312,6 +315,21 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  if (resetTasksBtn) {
+      resetTasksBtn.addEventListener("click", (e) => {
+        e.stopPropagation(); // важно: чтобы dropdown не схлопнулся раньше времени
+
+
+        document
+          .querySelectorAll(".task-toggle")
+          .forEach((cb) => (cb.checked = false));
+
+        updateTasksLabel();
+        loadBlocks(true);
+        e.preventDefault();
+      });
+    }
 
   // -------------------------------
   // INIT

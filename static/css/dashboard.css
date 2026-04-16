@@ -4,8 +4,8 @@
 .filters-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
 /* -------------------------------
@@ -15,6 +15,7 @@
   position: relative;
   flex: 1 1 320px;
   min-width: 200px;
+  max-width: 400px;
 }
 
 #search-input {
@@ -37,8 +38,8 @@
    Dropdown (фильтр задач)
 ---------------------------------*/
 .filters-dropdown {
-  flex: 1 1 200px;
-  max-width: 260px;
+  flex: 0 0 auto;        /* ❗ фикс */
+  max-width: 220px;
 }
 
 .dropdown-menu {
@@ -83,9 +84,9 @@
 ---------------------------------*/
 .filters-bar .btn {
   height: 42px;
-  padding: 0 14px;
-  flex-shrink: 0;
-  border-radius: 10px;
+  padding: 0 12px;
+  flex: 0 0 auto;        /* ❗ запрет роста */
+  white-space: nowrap;
 }
 
 /* УБИРАЕМ старое поведение */

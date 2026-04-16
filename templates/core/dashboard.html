@@ -9,87 +9,107 @@
 
 {% block content %}
 <div class="container mt-4">
-  <!-- DOWNLOAD -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0 text-muted">Ваши блоки задач</h5>
-    <!-- Кнопка "Новый блок" -->
-    <a href="{% url 'block_create' %}" class="btn btn-primary flex-shrink-0">
-      Новый блок
-    </a>
-    <div class="d-flex gap-2">
-      <a
-        href="{% url 'download_blocks_json_zip' %}"
-        class="btn btn-sm btn-success"
-        >Скачать JSON + ZIP</a
-      >
-      <a href="{% url 'download_blocks_xlsx' %}" class="btn btn-sm btn-primary"
-        >Скачать XLSX</a
-      >
-    </div>
+
+    <div class="d-flex align-items-center gap-2 flex-wrap mb-3">
+
+  <!-- Заголовок -->
+  <h5 class="mb-0 text-muted me-2">Ваши блоки задач</h5>
+
+  <!-- Скачать (иконка + dropdown) -->
+  <div class="dropdown">
+    <button
+      class="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center"
+      style="width: 38px; height: 38px;"
+      data-bs-toggle="dropdown"
+    >
+      <i class="bi bi-download"></i>
+    </button>
+
+    <ul class="dropdown-menu">
+      <li>
+        <a class="dropdown-item" href="{% url 'download_blocks_json_zip' %}">
+          JSON + ZIP
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" href="{% url 'download_blocks_xlsx' %}">
+          XLSX
+        </a>
+      </li>
+    </ul>
   </div>
 
-  <div class="filters-bar mb-3">
-    <!-- Фильтр задач -->
-    <div class="dropdown filters-dropdown">
-      <button
-        class="btn btn-outline-secondary dropdown-toggle w-100 d-flex align-items-center"
-        type="button"
-        data-bs-toggle="dropdown"
-      >
-        <i class="bi bi-list-task me-1"></i>
-        <span id="tasks-dropdown-label">Задачи</span>
-      </button>
+  <!-- Фильтр задач -->
+  <div class="dropdown filters-dropdown">
+    <button
+      class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center"
+      type="button"
+      data-bs-toggle="dropdown"
+    >
+      <i class="bi bi-list-task me-1"></i>
+      <span id="tasks-dropdown-label">Задачи</span>
+    </button>
 
-      <ul class="dropdown-menu p-3 filters-menu">
-        <!-- ПОИСК ВНУТРИ DROPDOWN -->
-        <li class="mb-2">
-          <input
-            type="text"
-            id="tasks-search-input"
-            class="form-control form-control-sm d-none"
-            placeholder="Поиск задачи..."
-          />
+    <ul class="dropdown-menu p-3 filters-menu">
+      <li class="mb-2">
+        <input
+          type="text"
+          id="tasks-search-input"
+          class="form-control form-control-sm d-none"
+          placeholder="Поиск задачи..."
+        />
+      </li>
+        <li><hr class="dropdown-divider" /></li>
+
+        <li>
+          <button
+            type="button"
+            id="reset-tasks-filter"
+            class="btn btn-sm btn-outline-secondary w-100"
+          >
+            Сбросить задачи
+          </button>
         </li>
+      <div id="tasks-list">
+        {% for task in system_tasks %}
+        <li class="task-item">
+          <div class="form-check form-switch d-flex align-items-center mb-2">
+            <input
+              class="form-check-input me-2 task-toggle"
+              type="checkbox"
+              value="{{ task.id }}"
+              id="task-{{ task.id }}"
+            />
 
-        <div id="tasks-list">
-          {% for task in system_tasks %}
-          <li class="task-item">
-            <div class="form-check form-switch d-flex align-items-center mb-2">
-              <input
-                class="form-check-input me-2 task-toggle"
-                type="checkbox"
-                value="{{ task.id }}"
-                id="task-{{ task.id }}"
-              />
+            {% if task.icon %}
+            <img src="{{ task.icon.url }}" class="me-2 task-icon" />
+            {% else %}
+            <i class="bi bi-check-circle me-2 text-primary"></i>
+            {% endif %}
 
-              {% if task.icon %}
-              <img src="{{ task.icon.url }}" class="me-2 task-icon" />
-              {% else %}
-              <i class="bi bi-check-circle me-2 text-primary"></i>
-              {% endif %}
+            <label class="form-check-label m-0" for="task-{{ task.id }}">
+              {{ task.title }}
+            </label>
+          </div>
+        </li>
+        {% endfor %}
+      </div>
+    </ul>
+  </div>
 
-              <label class="form-check-label m-0" for="task-{{ task.id }}">
-                {{ task.title }}
-              </label>
-            </div>
-          </li>
-          {% endfor %}
-        </div>
-      </ul>
-    </div>
+  <!-- Поиск -->
+  <div class="filters-search">
+    <i class="bi bi-search"></i>
+    <input
+      type="text"
+      id="search-input"
+      class="form-control"
+      placeholder="Поиск блоков..."
+    />
+  </div>
 
-    <!-- Поиск -->
-    <div class="filters-search">
-      <i class="bi bi-search"></i>
-      <input
-        type="text"
-        id="search-input"
-        class="form-control"
-        placeholder="Поиск блоков..."
-      />
-    </div>
-
-    <div class="dropdown filters-dropdown">
+  <!-- Дни недели -->
+  <div class="dropdown filters-dropdown">
       <button
         class="btn btn-outline-secondary dropdown-toggle w-100 d-flex align-items-center"
         type="button"
@@ -180,9 +200,18 @@
       </ul>
     </div>
 
-    <!-- Кнопки -->
-    <button id="reset-filters" class="btn btn-outline-secondary">Сброс</button>
-  </div>
+  <!-- Сброс -->
+  <button id="reset-filters" class="btn btn-outline-secondary">
+    Сброс
+  </button>
+
+  <!-- Новый блок -->
+  <a href="{% url 'block_create' %}" class="btn btn-primary ms-auto">
+    Новый блок
+  </a>
+
+</div>
+
 
   <!-- BLOCK CONTAINER -->
   <div id="blocks-container"></div>
