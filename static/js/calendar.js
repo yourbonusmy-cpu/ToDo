@@ -2,6 +2,7 @@
 let currentDate = new Date();
 let cache = {};
 
+
 const popover = document.getElementById("popover");
 
 // ================= DELETE MODAL =================
@@ -13,7 +14,14 @@ const deletePasswordInput = document.getElementById("delete-block-password");
 const deleteError = document.getElementById("delete-block-error");
 const confirmDeleteBtn = document.getElementById("confirm-delete-block");
 const blockNameElement = document.getElementById("block-name");
+// ================= FILTER STATE =================
+const searchInput = document.getElementById("search-input");
+const tasksDropdownLabel = document.getElementById("tasks-dropdown-label");
 
+const tasksSearchInput = document.getElementById("tasks-search-input");
+const tasksList = document.getElementById("tasks-list");
+const dropdown = document.querySelector(".filters-dropdown");
+const resetTasksBtn = document.getElementById("reset-tasks-filter");
 let currentDeleteBlockId = null;
 
 // ================= CSRF =================
@@ -89,6 +97,7 @@ async function renderCalendar() {
 function createDay(day, blocks) {
   const el = document.createElement("div");
   el.className = "calendar-day";
+  el._blocks = blocks || [];
 
   const today = new Date();
   if (
@@ -323,5 +332,129 @@ document.getElementById("nextBtn").onclick = () => {
   renderCalendar();
 };
 
+
+function getSelectedTasks() {
+  return Array.from(document.querySelectorAll(".task-toggle:checked")).map(
+    (cb) => cb.value,
+  );
+}
+
+function updateTasksLabel() {
+  const selected = getSelectedTasks();
+
+  if (!selected.length) {
+    tasksDropdownLabel.textContent = "Задачи";
+  } else {
+    tasksDropdownLabel.textContent = `Задачи (${selected.length})`;
+  }
+}
+
+function dayMatchesFilters(blocks) {
+  if (!blocks || !blocks.length) return false;
+
+  const selectedTasks = getSelectedTasks().map(String);
+  const search = searchInput.value.toLowerCase().trim();
+
+  return blocks.some((block) => {
+    // --- FILTER BY TASKS (OR) ---
+    const taskMatch =
+      selectedTasks.length === 0 ||
+      selectedTasks.every(selectedId =>
+        block.tasks.some(t => String(t.id) === selectedId)
+      );
+
+    // --- FILTER BY SEARCH ---
+    const searchMatch =
+      !search ||
+      block.title.toLowerCase().includes(search) ||
+      block.tasks.some((t) =>
+        t.title.toLowerCase().includes(search),
+      );
+
+    // --- FINAL ---
+    return taskMatch && searchMatch;
+  });
+}
+
+function applyFiltersToCalendar() {
+  const days = document.querySelectorAll(".calendar-day");
+
+  const hasFilters =
+    getSelectedTasks().length > 0 ||
+    searchInput.value.trim().length > 0;
+
+  days.forEach((day) => {
+    const blocks = day._blocks;
+
+    // всегда очищаем
+    day.classList.remove("filtered-match", "filtered-dim");
+
+    // ❗ НЕТ фильтров — вообще ничего не делаем
+    if (!hasFilters) return;
+
+    if (dayMatchesFilters(blocks)) {
+      day.classList.add("filtered-match");
+    } else {
+      day.classList.add("filtered-dim");
+    }
+  });
+}
+
+// поиск
+searchInput.addEventListener("input", () => {
+  applyFiltersToCalendar();
+});
+
+// чекбоксы задач
+document.querySelectorAll(".task-toggle").forEach((cb) => {
+  cb.addEventListener("change", () => {
+    updateTasksLabel();
+    applyFiltersToCalendar();
+  });
+});
+
+
+dropdown.addEventListener("show.bs.dropdown", () => {
+  tasksSearchInput.classList.remove("d-none");
+  setTimeout(() => tasksSearchInput.focus(), 100);
+});
+
+dropdown.addEventListener("hide.bs.dropdown", () => {
+  tasksSearchInput.value = "";
+  tasksSearchInput.classList.add("d-none");
+
+  tasksList.querySelectorAll(".task-item").forEach((el) => {
+    el.style.display = "";
+  });
+});
+
+tasksSearchInput.addEventListener("input", () => {
+  const query = tasksSearchInput.value.toLowerCase();
+
+  tasksList.querySelectorAll(".task-item").forEach((item) => {
+    item.style.display = item.innerText.toLowerCase().includes(query)
+      ? ""
+      : "none";
+  });
+});
+
+if (resetTasksBtn) {
+  resetTasksBtn.addEventListener("click", (e) => {
+    e.stopPropagation(); // ❗ чтобы dropdown не схлопывался
+
+    // 1. сброс чекбоксов
+    document.querySelectorAll(".task-toggle").forEach((cb) => {
+      cb.checked = false;
+    });
+
+    // 2. обновить label
+    updateTasksLabel();
+
+    // 3. применить фильтр
+    applyFiltersToCalendar();
+  });
+}
+
 // ================= INIT =================
 renderCalendar();
+applyFiltersToCalendar();

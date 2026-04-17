@@ -34,6 +34,7 @@ def calendar_data(request):
 
         tasks = [
             {
+                "id": t.template.id,
                 "title": t.title,
                 "icon": t.icon,
             }

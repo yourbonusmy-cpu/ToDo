@@ -1,5 +1,6 @@
 from django.urls import path
 
+from core.models import TaskTemplate
 from core.views import api_blocks
 from core.views.api_blocks import (
     create_block,
@@ -58,7 +59,18 @@ from django.shortcuts import render
 
 
 def calendar_page(request):
-    return render(request, "core/calendar.html")
+    if not request.user.is_authenticated:
+        return render(request, "core/landing.html")
+
+    system_tasks = TaskTemplate.objects.filter(owner=request.user).order_by("title")
+
+    return render(
+        request,
+        "core/calendar.html",
+        {
+            "system_tasks": system_tasks,
+        },
+    )
 
 
 urlpatterns = [

@@ -9,7 +9,6 @@
     "schedule_type": "fixed",
     "priority": 1
   },
-
   {
     "code": "exercise",
     "title": "Разминка",
@@ -567,6 +566,356 @@
     "icon": "free-icon-hair-cut-17912915.png",
     "default_amount": 1,
     "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "nature",
+    "title": "Саженцы",
+    "description": "Полил саженцы",
+    "icon": "727703_nature_512x512.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "abdominal",
+    "title": "Боль в животе",
+    "description": "",
+    "icon": "abdominal.png",
+    "default_amount": 1,
+    "period_type": "year",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "burger",
+    "title": "Бургер",
+    "description": "Поел бургер",
+    "icon": "burger.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "church",
+    "title": "Церковь",
+    "description": "Сходил в храм",
+    "icon": "church.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "cinema",
+    "title": "Кинотеатр",
+    "description": "Сходил в кинотеатр на фильм Веном",
+    "icon": "cinema.png",
+    "default_amount": 1,
+    "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "cough",
+    "title": "Кашель",
+    "description": "",
+    "icon": "cough.png",
+    "default_amount": 1,
+    "period_type": "year",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "email",
+    "title": "Электронная почта",
+    "description": "Проверил почту",
+    "icon": "email.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "abdominal",
+    "title": "Пресс",
+    "description": "Покачал пресс 40 раз 2 подхода",
+    "icon": "free-icon-abdominal-exercise-76849.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "alcoholic_drinking",
+    "title": "Квасил",
+    "description": "",
+    "icon": "free-icon-alcoholic-drinking-8804412.png",
+    "default_amount": 1,
+    "period_type": "year",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "beer",
+    "title": "Пиво",
+    "description": "Пил пиво",
+    "icon": "free-icon-beer-931898.png",
+    "default_amount": 1,
+    "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "bicycle",
+    "title": "Велосипед",
+    "description": "Катался на велосипеде",
+    "icon": "free-icon-bicycle-4938291.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "debt",
+    "title": "Взял в долг",
+    "description": "Взял в долг 5000 у Степы",
+    "icon": "free-icon-debt-6536379.png",
+    "default_amount": 1,
+    "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "give_debt",
+    "title": "Дал в долг",
+    "description": "Дал в долг 7000 Степе",
+    "icon": "free-icon-debt-11662753.png",
+    "default_amount": 1,
+    "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "dental_treatment",
+    "title": "Лечил зубы",
+    "description": "",
+    "icon": "free-icon-dental-treatment-15917579.png",
+    "default_amount": 1,
+    "period_type": "year",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "drinking",
+    "title": "Напился",
+    "description": "",
+    "icon": "free-icon-drinking-9930390.png",
+    "default_amount": 1,
+    "period_type": "year",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "frankincense",
+    "title": "Ладан",
+    "description": "Поджигал ладан",
+    "icon": "free-icon-frankincense-3608954.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "happy_birthday",
+    "title": "День рождения",
+    "description": "Сходил на день рождения к Степе",
+    "icon": "free-icon-happy-birthday-5562284.png",
+    "default_amount": 1,
+    "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "diffuser",
+    "title": "Диффузор",
+    "description": "Открыл и поставил в зал новый диффузор",
+    "icon": "free-icon-home-12821782.png",
+    "default_amount": 1,
+    "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "journey",
+    "title": "Поездка",
+    "description": "Съездил в Москву",
+    "icon": "free-icon-journey-2113198.png",
+    "default_amount": 1,
+    "period_type": "year",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "hike",
+    "title": "Прогулка",
+    "description": "",
+    "icon": "free-icon-iteration-15939144.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "money_back",
+    "title": "Получил деньги",
+    "description": "",
+    "icon": "free-icon-money-back-guarantee-7558547.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "pizza",
+    "title": "Пицца",
+    "description": "Поел пиццу",
+    "icon": "free-icon-pizza-7698132.png",
+    "default_amount": 1,
+    "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "sick",
+    "title": "Заболел",
+    "description": "",
+    "icon": "free-icon-sick-2798867.png",
+    "default_amount": 1,
+    "period_type": "year",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "repair_bicycle",
+    "title": "Ремонт велосипеда",
+    "description": "Смазал подшипники",
+    "icon": "free-icon-repair-2953108.png",
+    "default_amount": 1,
+    "period_type": "year",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "subscription",
+    "title": "Подписка",
+    "description": "Платная подписка на ...",
+    "icon": "free-icon-subscription-business-model-11264770.png",
+    "default_amount": 1,
+    "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "swimming",
+    "title": "Бассейн",
+    "description": "Сходил в бассейн",
+    "icon": "free-icon-swimming-pool-12635919.png",
+    "default_amount": 1,
+    "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "tablet",
+    "title": "Планшет",
+    "description": "Установил приложение ... ",
+    "icon": "free-icon-tablet-7361538.png",
+    "default_amount": 1,
+    "period_type": "month",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "tablet_charging",
+    "title": "Зарядил планшет",
+    "description": "Зарядил планшет на 100%",
+    "icon": "free-icon-tablet-charging.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "training",
+    "title": "Подтягивание",
+    "description": "Подтянулся 20 раз 2 подхода",
+    "icon": "free-icon-training-538970.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "headache",
+    "title": "Головная боль",
+    "description": "",
+    "icon": "headache.png",
+    "default_amount": 1,
+    "period_type": "day",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "mail",
+    "title": "Почта",
+    "description": "Проверил почту",
+    "icon": "mail.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "mobile",
+    "title": "Смартфон",
+    "description": "Установил приложение ...",
+    "icon": "mobile.png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "sauna",
+    "title": "Сауна",
+    "description": "Сходил в сауну посидел 20 минут при температуре 60",
+    "icon": "sauna (2).png",
+    "default_amount": 1,
+    "period_type": "week",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "sneezing",
+    "title": "Насморк",
+    "description": "",
+    "icon": "sneezing.png",
+    "default_amount": 1,
+    "period_type": "year",
+    "schedule_type": "fixed",
+    "priority": 1
+  },
+  {
+    "code": "words",
+    "title": "Учить слова",
+    "description": "Выучил 16 новых слов или повторил 32 слова",
+    "icon": "words.png",
+    "default_amount": 1,
+    "period_type": "day",
     "schedule_type": "fixed",
     "priority": 1
   }

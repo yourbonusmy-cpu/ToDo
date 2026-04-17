@@ -8,6 +8,80 @@
 {% block content %}
 <div class="calendar-page d-flex flex-column">
   <!-- HEADER -->
+    <div class="filters-bar mb-2">
+
+      <!-- Фильтр задач -->
+      <!-- Фильтр задач -->
+  <div class="dropdown filters-dropdown">
+    <button
+      class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center"
+      type="button"
+      data-bs-toggle="dropdown"
+    >
+      <i class="bi bi-list-task me-1"></i>
+      <span id="tasks-dropdown-label">Задачи</span>
+    </button>
+
+    <ul class="dropdown-menu p-3 filters-menu">
+      <li class="mb-2">
+        <input
+          type="text"
+          id="tasks-search-input"
+          class="form-control form-control-sm d-none"
+          placeholder="Поиск задачи..."
+        />
+      </li>
+        <li><hr class="dropdown-divider" /></li>
+
+        <li>
+          <button
+            type="button"
+            id="reset-tasks-filter"
+            class="btn btn-sm btn-outline-secondary w-100"
+          >
+            Сбросить задачи
+          </button>
+        </li>
+      <div id="tasks-list">
+        {% for task in system_tasks %}
+        <li class="task-item">
+          <div class="form-check form-switch d-flex align-items-center mb-2">
+            <input
+              class="form-check-input me-2 task-toggle"
+              type="checkbox"
+              value="{{ task.id }}"
+              id="task-{{ task.id }}"
+            />
+
+            {% if task.icon %}
+            <img src="{{ task.icon.url }}" class="me-2 task-icon" />
+            {% else %}
+            <i class="bi bi-check-circle me-2 text-primary"></i>
+            {% endif %}
+
+            <label class="form-check-label m-0" for="task-{{ task.id }}">
+              {{ task.title }}
+            </label>
+          </div>
+        </li>
+        {% endfor %}
+      </div>
+    </ul>
+  </div>
+
+      <!-- Поиск -->
+      <div class="filters-search">
+        <i class="bi bi-search"></i>
+        <input
+          type="text"
+          id="search-input"
+          class="form-control"
+          placeholder="Поиск задач..."
+        />
+      </div>
+
+    </div>
+
   <div class="d-flex justify-content-between align-items-center mb-2">
     <button class="btn btn-light border btn-sm" id="prevBtn">
       <i class="bi bi-chevron-left"></i>
