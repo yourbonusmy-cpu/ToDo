@@ -174,26 +174,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // UNIVERSAL TOGGLE PASSWORD
   // -------------------------------
   document.querySelectorAll(".toggle-password").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const wrapper = btn.closest(".input-group, .position-relative");
-      if (!wrapper) return;
+      btn.addEventListener("click", () => {
+        const wrapper = btn.closest(".position-relative");
+        if (!wrapper) return;
 
-      const input = wrapper.querySelector(
-        "input[type='password'], input[type='text']",
-      );
-      const icon = btn.querySelector("i");
+        const input = wrapper.querySelector("input");
+        if (!input) return;
 
-      if (!input || !icon) return;
-
-      if (input.type === "password") {
-        input.type = "text";
-        icon.classList.remove("bi-eye");
-        icon.classList.add("bi-eye-slash");
-      } else {
-        input.type = "password";
-        icon.classList.remove("bi-eye-slash");
-        icon.classList.add("bi-eye");
-      }
+        if (input.type === "password") {
+          input.type = "text";
+          btn.classList.remove("bi-eye");
+          btn.classList.add("bi-eye-slash");
+        } else {
+          input.type = "password";
+          btn.classList.remove("bi-eye-slash");
+          btn.classList.add("bi-eye");
+        }
+      });
     });
-  });
 });

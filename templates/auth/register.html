@@ -1,11 +1,9 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
 
+{% block content %}
 <h2>Регистрация</h2>
-
 <form method="post">
   {% csrf_token %} {{ form.username }} {{ form.password }}
-
   <button class="btn btn-primary">Зарегистрироваться</button>
 </form>
-
 {% endblock %}
