@@ -1,0 +1,71 @@
+{% load static clock_filters %}
+<div class="task-block card mb-3 p-0 d-flex flex-row" data-block-id="{{ block.id }}">
+
+    <!-- LEFT: вертикальное название -->
+    <div class="block-title-vertical">
+        <a href="{% url 'block_detail' block.id %}" class="block-title-link">
+            <span>{{ block.title }}</span>
+        </a>
+    </div>
+
+    <!-- CENTER: задачи -->
+    <div class="block-tasks flex-grow-1 d-flex gap-3 p-3">
+        {% for bt in block.tasks.all %}
+            <button type="button"
+                    class="btn position-relative task-icon-btn {% if bt.is_hidden %}task-hidden{% endif %}"
+                    data-bs-toggle="popover"
+                    data-bs-html="true"
+                    data-bs-content="
+                        <strong>{{ bt.title }}</strong><br>
+                        {% if bt.is_encrypted %}
+                            <em>Зашифровано</em><br>
+                        {% else %}
+                            {{ bt.description|default:"—" }}<br>
+                        {% endif %}
+                        Кол-во: {{ bt.amount }}<br>
+                        Время: {{ bt.time }}
+                    ">
+                    {% if bt.icon %}
+                        <img src="{{ MEDIA_URL|default:'/media/' }}{{ bt.icon }}" width="64" height="64" class="rounded">
+                    {% else %}
+                        <div class="placeholder-icon"></div>
+                    {% endif %}
+                    <!-- CLOCK OVERLAY -->
+
+                    {% with idx=bt.time|clock_icon_index %}
+                    <div class="clock-overlay">
+
+                        <!-- SVG часы -->
+                        <img src="{% static 'img/clocks_1_12/clock-' %}{{ idx }}.svg"
+                             class="clock-icon">
+
+
+                    </div>
+                    {% endwith %}
+            </button>
+        {% endfor %}
+    </div>
+
+    <!-- RIGHT: кнопки -->
+    <div class="block-actions d-flex flex-column p-2">
+
+        <div class="d-flex flex-column gap-2">
+            <button class="btn btn-sm btn-outline-secondary btn-block-hide">
+                <i class="bi bi-eye-slash"></i>
+            </button>
+
+            <a href="{% url 'block_edit' block.id %}" class="btn btn-sm btn-primary">
+                <i class="bi bi-pencil"></i>
+            </a>
+
+            <button class="btn btn-sm btn-outline-danger btn-block-delete"
+                    data-block-id="{{ block.id }}"
+                    data-block-title="{{ block.title }}">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+
+    </div>
+
+
+</div>
