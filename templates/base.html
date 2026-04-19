@@ -134,6 +134,9 @@
       window.MEDIA_URL = "{{ MEDIA_URL }}";
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      window.PIN_ENABLED = {{ user_pin.is_pin_enabled|yesno:"true,false" }};
+    </script>
     <script src="{% static 'js/core.js' %}"></script>
 
     {% block page_js %}{% endblock %}

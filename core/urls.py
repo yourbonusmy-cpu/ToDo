@@ -53,6 +53,10 @@ from core.views.profile import (
     change_password_view,
     delete_account_view,
     toggle_pin_view,
+    change_pin_view,
+    verify_pin,
+    set_pin,
+    disable_pin,
 )
 
 from django.shortcuts import render
@@ -110,6 +114,10 @@ urlpatterns += [
     path("profile/change-password/", change_password_view, name="change_password"),
     path("profile/delete/", delete_account_view, name="delete_account"),
     path("profile/toggle-pin/", toggle_pin_view, name="toggle_pin"),
+    path("profile/change-pin/", change_pin_view, name="change_pin"),
+    path("profile/verify-pin/", verify_pin, name="verify_pin"),
+    path("profile/set-pin/", set_pin, name="set_pin"),
+    path("profile/disable-pin/", disable_pin, name="disable_pin"),
 ]
 
 urlpatterns += [

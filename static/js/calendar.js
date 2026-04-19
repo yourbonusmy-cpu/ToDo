@@ -91,6 +91,7 @@ async function renderCalendar() {
 
   // 🔥 активируем tooltip после рендера
   initTooltips(grid);
+  applyFiltersToCalendar();
 }
 
 // ================= CREATE DAY =================

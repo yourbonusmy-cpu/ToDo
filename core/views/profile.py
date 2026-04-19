@@ -1,9 +1,11 @@
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import logout
+from django.contrib.auth import logout, update_session_auth_hash
 from django.shortcuts import render
 from django.db.models import Count
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
+from django.views.decorators.http import require_POST
+
 from core.models import TaskTemplate, Block, GroupTemplate, UserPin, BlockTask
 
 User = get_user_model()
@@ -75,6 +77,68 @@ def toggle_pin_view(request):
         return JsonResponse({"success": True, "action": "enabled"})
 
 
+@login_required
+@require_POST
+def verify_pin(request):
+    pin = request.POST.get("pin")
+
+    user_pin = getattr(request.user, "userpin", None)
+    if not user_pin or not user_pin.is_pin_enabled:
+        return JsonResponse({"success": False})
+
+    if not user_pin.check_pin(pin):
+        return JsonResponse({"success": False})
+
+    return JsonResponse({"success": True})
+
+
+@login_required
+@require_POST
+def set_pin(request):
+    pin = request.POST.get("pin")
+
+    if not pin or len(pin) != 4 or not pin.isdigit():
+        return JsonResponse({"success": False, "error": "PIN должен быть 4 цифры"})
+
+    user_pin, _ = UserPin.objects.get_or_create(user=request.user)
+    user_pin.enable_pin(pin)
+
+    return JsonResponse({"success": True})
+
+
+@login_required
+@require_POST
+def disable_pin(request):
+    pin = request.POST.get("pin")
+
+    user_pin = getattr(request.user, "userpin", None)
+    if not user_pin or not user_pin.is_pin_enabled:
+        return JsonResponse({"success": False})
+
+    if not user_pin.check_pin(pin):
+        return JsonResponse({"success": False, "error": "Неверный PIN"})
+
+    user_pin.disable_pin()
+
+    return JsonResponse({"success": True})
+
+
+@login_required
+@require_POST
+def change_pin_view(request):
+    old_pin = request.POST.get("old_pin")
+    new_pin = request.POST.get("new_pin")
+
+    user_pin = request.user.userpin
+
+    if not user_pin.check_pin(old_pin):
+        return JsonResponse({"success": False, "error": "Неверный PIN"})
+
+    user_pin.enable_pin(new_pin)
+
+    return JsonResponse({"success": True})
+
+
 # -----------------------------
 # 🔐 смена пароля (AJAX)
 # -----------------------------
@@ -95,6 +159,7 @@ def change_password_view(request):
 
     request.user.set_password(new)
     request.user.save()
+    update_session_auth_hash(request, request.user)
 
     return JsonResponse({"success": True})
 

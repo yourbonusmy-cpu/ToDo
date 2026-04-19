@@ -142,6 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
       blocksContainer.insertAdjacentHTML("beforeend", data.html);
 
       initPopovers(blocksContainer);
+      enableHorizontalScroll(blocksContainer);
 
       page += 1;
       hasNext = data.has_next;
@@ -151,6 +152,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loading = false;
   }
+  function enableHorizontalScroll(root) {
+      root.querySelectorAll(".block-tasks").forEach(container => {
+
+        // чтобы не навесить 2 раза
+        if (container._wheelBound) return;
+        container._wheelBound = true;
+
+        container.addEventListener("wheel", (e) => {
+          if (container.scrollWidth > container.clientWidth) {
+            e.preventDefault();
+            container.scrollLeft += e.deltaY;
+          }
+        }, { passive: false });
+
+      });
+    }
 
   // -------------------------------
   // POPOVERS

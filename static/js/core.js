@@ -34,15 +34,17 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function lockNow() {
-    fetch("/lock-pin/", {
-      method: "POST",
-      headers: { "X-CSRFToken": getCSRF() },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) showPinScreen();
-      });
-  }
+      fetch("/lock-pin/", {
+        method: "POST",
+        headers: { "X-CSRFToken": getCSRF() },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && typeof window.openUnlockModal === "function") {
+              window.openUnlockModal();
+            }
+        });
+    }
 
   // кнопка lock
   document.querySelectorAll(".lock-btn").forEach((btn) => {

@@ -1,0 +1,9 @@
+/* фикс для кнопки глаза */
+.input-group .toggle-password {
+  cursor: pointer;
+  min-width: 42px;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0; /* ключевая строка */
+}
