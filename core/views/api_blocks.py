@@ -196,6 +196,59 @@ def create_block_old(request):
     return JsonResponse({"status": "ok", "block_id": block.id})
 
 
+from django.http import JsonResponse
+from django.core.paginator import Paginator
+
+
+def api_blocks_json(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+
+    q = request.GET.get("q")
+    task_ids = request.GET.getlist("tasks")
+
+    blocks = Block.objects.filter(owner=request.user, is_hidden=False)
+
+    if q:
+        blocks = blocks.filter(title__icontains=q)
+
+    if task_ids:
+        task_ids = list(map(int, task_ids))
+        blocks = blocks.annotate(
+            matched_tasks=Count(
+                "tasks", filter=Q(tasks__template__id__in=task_ids), distinct=True
+            )
+        ).filter(matched_tasks=len(task_ids))
+
+    blocks = blocks.prefetch_related("tasks").order_by("-created_at")
+
+    paginator = Paginator(blocks, 10)
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
+
+    data = []
+
+    for block in page_obj:
+        data.append(
+            {
+                "id": block.id,
+                "title": block.title,
+                "target_date": block.target_date,
+                "tasks": [
+                    {
+                        "id": t.id,
+                        "title": t.title,
+                        "icon": t.icon,
+                        "description": t.description,
+                    }
+                    for t in block.tasks.all()
+                ],
+            }
+        )
+
+    return JsonResponse({"blocks": data, "has_next": page_obj.has_next()})
+
+
 def api_blocks(request):
     q = request.GET.get("q")
     task_ids = request.GET.getlist("tasks")

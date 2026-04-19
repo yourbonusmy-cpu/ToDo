@@ -881,5 +881,20 @@ taskToggle.onclick = () => {
   setTaskIcon(closed);
 };
 
+document.addEventListener("keydown", (e) => {
+  // Ctrl+S (Windows/Linux) или Cmd+S (Mac)
+  const isSaveHotkey = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s";
+
+  if (!isSaveHotkey) return;
+
+  e.preventDefault(); // важно: отключает стандартное "сохранить страницу"
+
+  const saveBtn = document.getElementById("save-block-btn");
+
+  if (saveBtn) {
+    saveBtn.click(); // переиспользуем уже существующую логику
+  }
+});
+
 /* INIT */
 initPanels();

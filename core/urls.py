@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from core.models import TaskTemplate
 from core.views import api_blocks
@@ -8,6 +9,7 @@ from core.views.api_blocks import (
     get_block,
     update_block,
     hide_block,
+    api_blocks_json,
 )
 from core.views.api_stats import stats_weekdays_api
 from core.views.api_templates import api_templates
@@ -78,26 +80,15 @@ def calendar_page(request):
 
 
 urlpatterns = [
-    path("calendar/", calendar_page, name="calendar"),
-    path("api/calendar/", calendar_data, name="calendar_data"),
+    path("", home, name="home"),
     path("weather/", weather_view, name="weather"),
     path("api/weather/", weather_api, name="api_weather"),
     path("api/statistics/", stats_weekdays_api, name="stats_weekdays_api"),
     path("stats/weekdays/", stats_weekdays_page, name="stats_weekdays"),
     path("decrypt-task/", decrypt_task, name="decrypt_task"),
-    path("block/<int:block_id>/view/", block_detail, name="block_detail"),
-    path("api/block/<int:block_id>/delete/", delete_block, name="api_delete_block"),
-    path("api/block/<int:block_id>/hide/", hide_block, name="api_hide_block"),
-    path("api/block/<int:block_id>/", get_block, name="api_get_block"),
-    path("api/block/<int:block_id>/update/", update_block, name="api_update_block"),
-    path("block/create/", block_create, name="block_create"),
-    path("api/block/create/", create_block, name="api_create_block"),
-    path("block/<int:block_id>/edit/", block_create, name="block_edit"),
-    path("api/blocks/", api_blocks, name="api_blocks"),
-    path("login/", UserLoginView.as_view(), name="login"),
     path("register/", register, name="register"),
+    path("login/", UserLoginView.as_view(), name="login"),
     path("logout/", user_logout, name="logout"),
-    path("", home, name="home"),
     path("lock-pin/", lock_pin, name="lock_pin"),
     path("unlock-pin/", unlock_pin, name="unlock_pin"),
     path("pin-unlock/", pin_unlock_page, name="pin_unlock"),
@@ -108,6 +99,30 @@ urlpatterns = [
     ),
     path("download/xlsx/", download_blocks_xlsx, name="download_blocks_xlsx"),
 ]
+
+urlpatterns += [
+    path("api/login/", TokenObtainPairView.as_view()),
+]
+
+urlpatterns += [
+    path("calendar/", calendar_page, name="calendar"),
+    path("api/calendar/", calendar_data, name="calendar_data"),
+    path("calendar/", calendar_page, name="calendar"),
+    path("api/calendar/", calendar_data, name="calendar_data"),
+]
+urlpatterns += [
+    path("block/<int:block_id>/view/", block_detail, name="block_detail"),
+    path("api/block/<int:block_id>/delete/", delete_block, name="api_delete_block"),
+    path("api/block/<int:block_id>/hide/", hide_block, name="api_hide_block"),
+    path("api/block/<int:block_id>/", get_block, name="api_get_block"),
+    path("api/block/<int:block_id>/update/", update_block, name="api_update_block"),
+    path("block/create/", block_create, name="block_create"),
+    path("api/block/create/", create_block, name="api_create_block"),
+    path("block/<int:block_id>/edit/", block_create, name="block_edit"),
+    path("api/blocks/", api_blocks, name="api_blocks"),
+    path("api/blocks/json/", api_blocks_json, name="api_blocks_json"),
+]
+
 
 urlpatterns += [
     path("profile/", profile_view, name="profile"),

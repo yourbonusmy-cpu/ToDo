@@ -7,7 +7,6 @@ from .models import UserPin
 
 @receiver(post_save, sender=User)
 def create_user_pin(sender, instance, created, **kwargs):
-
     if created:
         UserPin.objects.create(
             user=instance, pin_hash=make_password("0000"), is_pin_enabled=False
