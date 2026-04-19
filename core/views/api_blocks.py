@@ -13,6 +13,7 @@ from rest_framework.decorators import (
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from config import settings
 from core.models import Block, BlockTask, TaskTemplate
 
 import json
@@ -237,6 +238,7 @@ def api_blocks_json(request):
     data = []
 
     for block in page_obj:
+
         data.append(
             {
                 "id": block.id,
@@ -246,7 +248,7 @@ def api_blocks_json(request):
                     {
                         "id": t.id,
                         "title": t.title,
-                        "icon": request.build_absolute_uri(t.icon) if t.icon else None,
+                        "icon": request.build_absolute_uri(settings.MEDIA_URL + t.icon),
                         "description": t.description,
                     }
                     for t in block.tasks.all()
