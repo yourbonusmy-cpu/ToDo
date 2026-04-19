@@ -5,6 +5,13 @@ from django.db.models import Prefetch
 
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from rest_framework.decorators import (
+    permission_classes,
+    authentication_classes,
+    api_view,
+)
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from core.models import Block, BlockTask, TaskTemplate
 
@@ -200,9 +207,10 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 
 
+@api_view(["GET"])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def api_blocks_json(request):
-    if not request.user.is_authenticated:
-        return JsonResponse({"error": "Unauthorized"}, status=401)
 
     q = request.GET.get("q")
     task_ids = request.GET.getlist("tasks")
@@ -238,7 +246,9 @@ def api_blocks_json(request):
                     {
                         "id": t.id,
                         "title": t.title,
-                        "icon": t.icon,
+                        "icon": (
+                            request.build_absolute_uri(t.icon.url) if t.icon else None
+                        ),
                         "description": t.description,
                     }
                     for t in block.tasks.all()
