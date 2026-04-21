@@ -274,3 +274,148 @@ def templates_page(request):
             "system_templates": system_templates,
         },
     )
+
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def api_template_delete(request, template_id):
+    template = get_object_or_404(TaskTemplate, id=template_id, owner=request.user)
+
+    system_id = template.system_template.id if template.system_template else None
+    affected_blocks = template.block_tasks.count()
+
+    template.delete()
+
+    return Response(
+        {
+            "status": "ok",
+            "system_id": system_id,
+            "unlinked_blocks": affected_blocks,
+        }
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def api_add_system_template(request, pk):
+    system_template = get_object_or_404(SystemTaskTemplate, pk=pk)
+
+    existing = TaskTemplate.objects.filter(
+        owner=request.user, system_template=system_template
+    ).first()
+
+    if existing:
+        return Response({"error": "exists"}, status=400)
+
+    template = TaskTemplate(
+        owner=request.user,
+        system_template=system_template,
+        title=system_template.title,
+        description=system_template.description,
+        default_amount=system_template.default_amount,
+        priority=system_template.priority,
+        period_type=system_template.period_type,
+        schedule_type=system_template.schedule_type,
+        fixed_weekday=system_template.fixed_weekday,
+        fixed_day_of_month=system_template.fixed_day_of_month,
+        fixed_month_of_year=system_template.fixed_month_of_year,
+    )
+
+    # копирование иконки — оставляем как есть
+    if system_template.icon:
+        icon_path = os.path.join(
+            settings.BASE_DIR,
+            "static",
+            "default_templates",
+            "icons",
+            system_template.icon,
+        )
+        with open(icon_path, "rb") as f:
+            file_name = os.path.basename(system_template.icon)
+            template.icon.save(file_name, ContentFile(f.read()), save=False)
+
+    template.save()
+
+    return Response(
+        {
+            "id": template.id,
+            "system_id": system_template.id,
+            "title": template.title,
+            "description": template.description,
+            "icon": template.icon.url if template.icon else None,
+            "amount": template.default_amount,
+            "priority": template.priority,
+            "period": template.period_type,
+            "schedule": template.schedule_type,
+            "created_at": template.created_at.strftime("%Y-%m-%d %H:%M"),
+            "updated_at": template.updated_at.strftime("%Y-%m-%d %H:%M"),
+        }
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def api_add_all_system_templates(request):
+
+    system_templates = SystemTaskTemplate.objects.all()
+
+    existing_system_ids = set(
+        TaskTemplate.objects.filter(
+            owner=request.user, system_template__isnull=False
+        ).values_list("system_template_id", flat=True)
+    )
+
+    added = []
+
+    for st in system_templates:
+        if st.id in existing_system_ids:
+            continue
+
+        template = TaskTemplate(
+            owner=request.user,
+            system_template=st,
+            title=st.title,
+            description=st.description,
+            default_amount=st.default_amount,
+            priority=st.priority,
+            period_type=st.period_type,
+            schedule_type=st.schedule_type,
+            fixed_weekday=st.fixed_weekday,
+            fixed_day_of_month=st.fixed_day_of_month,
+            fixed_month_of_year=st.fixed_month_of_year,
+        )
+
+        if st.icon:
+            icon_path = os.path.join(
+                settings.BASE_DIR,
+                "static",
+                "default_templates",
+                "icons",
+                st.icon,
+            )
+            with open(icon_path, "rb") as f:
+                file_name = os.path.basename(st.icon)
+                template.icon.save(file_name, ContentFile(f.read()), save=False)
+
+        template.save()
+
+        added.append(
+            {
+                "id": template.id,
+                "system_id": st.id,
+                "title": template.title,
+                "description": template.description,
+                "icon": template.icon.url if template.icon else None,
+                "amount": template.default_amount,
+                "priority": template.priority,
+                "period": template.period_type,
+                "schedule": template.schedule_type,
+            }
+        )
+
+    return Response({"added": added})

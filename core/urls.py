@@ -44,6 +44,9 @@ from core.views.task_templates import (
     templates_page,
     add_all_system_templates,
     increment_template_selected,
+    api_template_delete,
+    api_add_system_template,
+    api_add_all_system_templates,
 )
 
 from core.views.tasks import task_template_create
@@ -136,6 +139,9 @@ urlpatterns += [
 ]
 
 urlpatterns += [
+    path("api/templates/<int:template_id>/delete/", api_template_delete),
+    path("api/templates/system/<int:pk>/add/", api_add_system_template),
+    path("api/templates/system/add_all/", api_add_all_system_templates),
     path("api/templates/", api_templates, name="api_templates"),
     path("templates/", templates_page, name="templates"),
     path("task-template/create/", task_template_create, name="task_template_create"),

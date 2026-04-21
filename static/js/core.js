@@ -122,8 +122,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const data = await response.json();
 
     if (data.success) {
+      if (!data.access) {
+        console.error("JWT не пришёл с сервера");
+        return;
+      }
+      // 🔥 СОХРАНЯЕМ JWT
+      if (data.access && data.refresh) {
+        localStorage.setItem("access_token", data.access);
+        localStorage.setItem("refresh_token", data.refresh);
+      }
+
       const modal = document.getElementById("authModal");
       if (modal) bootstrap.Modal.getInstance(modal)?.hide();
+
       location.reload();
     } else {
       if (errorBox) showErrors(errorBox, data.errors);

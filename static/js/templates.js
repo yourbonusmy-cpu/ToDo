@@ -1,3 +1,4 @@
+// templates.js
 document.addEventListener("DOMContentLoaded", () => {
   const systemPanel = document.querySelector(".system-scroll");
   const templatesGrid = document.querySelector(".templates-grid");
@@ -13,9 +14,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let isLoading = false;
   let hasNext = true;
 
+  const token = localStorage.getItem("access_token");
+
   /* -------------------
-CSRF
-------------------- */
+    CSRF
+  ------------------- */
 
   function getCookie(name) {
     let cookieValue = null;
@@ -89,21 +92,39 @@ CSRF
 API LOAD
 ------------------- */
 
+   function apiFetch(url, options = {}) {
+      const token = localStorage.getItem("access_token");
+
+      return fetch(url, {
+        ...options,
+        headers: {
+          ...(options.headers || {}),
+          "Authorization": `Bearer ${token}`,
+        },
+      }).then(async (res) => {
+        if (res.status === 401) {
+          console.warn("JWT истёк или невалидный");
+
+          // 👉 тут можно сделать refresh позже
+          window.location.reload();
+          return;
+        }
+
+        return res.json();
+      });
+    }
+
   function loadTemplates({ reset = false } = {}) {
     if (isLoading || !hasNext) return;
 
     isLoading = true;
 
-    fetch(
-      `/api/templates/?q=${encodeURIComponent(currentQuery)}&page=${currentPage}`,
-      {
-        headers: {
-          "X-Requested-With": "XMLHttpRequest",
-        },
-      },
-    )
-      .then((r) => r.json())
+
+
+    apiFetch(`/api/templates/?q=${encodeURIComponent(currentQuery)}&page=${currentPage}`)
       .then((data) => {
+        if (!data) return;
+
         if (reset) {
           templatesGrid.innerHTML = "";
         }
@@ -116,8 +137,7 @@ API LOAD
       .finally(() => {
         isLoading = false;
       });
-  }
-
+    }
   /* -------------------
 CREATE TEMPLATE CARD
 ------------------- */
@@ -289,14 +309,9 @@ CLICK EVENTS
         activePopover = null;
       }
 
-      fetch(`/templates/system/${id}/add/`, {
-        method: "POST",
-        headers: {
-          "X-CSRFToken": csrftoken,
-          "X-Requested-With": "XMLHttpRequest",
-        },
-      })
-        .then((r) => r.json())
+      apiFetch(`/api/templates/system/${id}/add/`, {
+          method: "POST",
+        })
         .then((data) => {
           if (data.id) {
             createTemplateCard(data);
@@ -316,14 +331,9 @@ CLICK EVENTS
       const card = e.target.closest(".template-card");
       const id = card.dataset.id;
 
-      fetch(`/templates/${id}/delete/`, {
-        method: "POST",
-        headers: {
-          "X-CSRFToken": csrftoken,
-          "X-Requested-With": "XMLHttpRequest",
-        },
-      })
-        .then((r) => r.json())
+      apiFetch(`/api/templates/${id}/delete/`, {
+          method: "POST",
+        })
         .then((data) => {
           if (data.status === "ok") {
             if (data.system_id) {
@@ -362,14 +372,9 @@ ADD ALL
       activePopover = null;
     }
 
-    fetch("/templates/system/add_all/", {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": csrftoken,
-        "X-Requested-With": "XMLHttpRequest",
-      },
-    })
-      .then((r) => r.json())
+    apiFetch(`/api/templates/system/add_all/`, {
+          method: "POST",
+        })
       .then((data) => {
         if (data.added) {
           data.added.forEach((t) => {

@@ -23,10 +23,19 @@ def serialize_template(t: TaskTemplate):
     }
 
 
-@login_required
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.db.models import Q
+
+PAGE_SIZE = 50
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def api_templates(request):
 
-    q = request.GET.get("q", "").strip().lower()
+    q = request.GET.get("q", "").strip()
     page = int(request.GET.get("page", 1))
 
     qs = (
@@ -35,30 +44,17 @@ def api_templates(request):
         .order_by("-updated_at")
     )
 
-    # 🔹 фильтрация (Unicode-safe)
     if q:
-        filtered = []
+        qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
 
-        for t in qs:
-            title = (t.title or "").lower()
-            desc = (t.description or "").lower()
-
-            if q in title or q in desc:
-                filtered.append(t)
-
-        qs = filtered
-    else:
-        qs = list(qs)
-
-    # 🔹 пагинация
-    total = len(qs)
+    total = qs.count()
 
     start = (page - 1) * PAGE_SIZE
     end = start + PAGE_SIZE
 
     page_items = qs[start:end]
 
-    return JsonResponse(
+    return Response(
         {
             "results": [serialize_template(t) for t in page_items],
             "has_next": end < total,
