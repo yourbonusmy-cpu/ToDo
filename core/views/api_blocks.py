@@ -13,7 +13,6 @@ from rest_framework.decorators import (
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from config import settings
 from core.models import Block, BlockTask, TaskTemplate
 
 import json
@@ -23,10 +22,10 @@ from django.utils import timezone
 from core.crypto import encrypt_text
 
 
-from django.core.paginator import Paginator
 from django.db.models import Count, Q
-from django.http import JsonResponse
 from django.template.loader import render_to_string
+
+from core.utils.icons import resolve_icon
 
 
 @require_POST
@@ -248,7 +247,7 @@ def api_blocks_json(request):
                     {
                         "id": t.id,
                         "title": t.title,
-                        "icon": request.build_absolute_uri(settings.MEDIA_URL + t.icon),
+                        "icon": resolve_icon(t, request),
                         "description": t.description,
                     }
                     for t in block.tasks.all()

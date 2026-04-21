@@ -12,6 +12,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from ..models import TaskTemplate, SystemTaskTemplate
 from ..forms import TaskTemplateForm
+from ..utils.icons import resolve_icon
 
 
 @login_required
@@ -443,7 +444,7 @@ def api_system_task_templates(request):
             "code": t.code,
             "title": t.title,
             "description": t.description,
-            "icon": t.icon,
+            "icon": resolve_icon(t, request),
             "default_amount": t.default_amount,
             "period_type": t.period_type,
             "schedule_type": t.schedule_type,

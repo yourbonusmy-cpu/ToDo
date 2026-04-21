@@ -129,8 +129,12 @@ API LOAD
           templatesGrid.innerHTML = "";
         }
 
-        data.results.forEach((t) => createTemplateCard(t));
+data.results.forEach((t) => {
+  console.log("TEMPLATE:", t);
+  console.log("ICON:", t.icon);
 
+  createTemplateCard(t);
+});
         hasNext = data.has_next;
         currentPage++;
       })
@@ -143,6 +147,7 @@ CREATE TEMPLATE CARD
 ------------------- */
 
   function createTemplateCard(t) {
+
     const card = document.createElement("div");
 
     card.className = "template-card card shadow-sm";

@@ -2,16 +2,21 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 
 from core.models import TaskTemplate
+from core.utils.icons import resolve_icon
 
 PAGE_SIZE = 50
 
 
-def serialize_template(t: TaskTemplate):
+def serialize_template(t: TaskTemplate, request):
+    icon = None
+
+    if t.icon and hasattr(t.icon, "url"):
+        icon = t.icon.url
     return {
         "id": t.id,
         "title": t.title,
         "description": t.description,
-        "icon": t.icon.url if t.icon else None,
+        "icon": request.build_absolute_uri(icon) if icon else None,
         "amount": t.default_amount,
         "priority": t.priority,
         "period": t.period_type,
@@ -56,7 +61,7 @@ def api_templates(request):
 
     return Response(
         {
-            "results": [serialize_template(t) for t in page_items],
+            "results": [serialize_template(t, request) for t in page_items],
             "has_next": end < total,
             "page": page,
         }
