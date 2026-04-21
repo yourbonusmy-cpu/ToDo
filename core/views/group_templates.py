@@ -3,24 +3,16 @@ import json
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from rest_framework.decorators import permission_classes, api_view
+from rest_framework.permissions import IsAuthenticated
 
 from ..models import GroupTemplate, TaskTemplate
 
 
 @login_required
 def group_templates_list(request):
-
-    groups = (
-        GroupTemplate.objects.filter(owner=request.user)
-        .prefetch_related("tasks")
-        .order_by("-updated_at")
-    )
-
-    return render(
-        request,
-        "core/group_templates.html",
-        {"groups": groups},
-    )
+    return render(request, "core/group_templates.html")
 
 
 @login_required
@@ -92,15 +84,10 @@ def group_template_create_or_edit(request, group_id=None):
     )
 
 
-@login_required
-def group_template_delete(request, group_id):
-
-    group = get_object_or_404(
-        GroupTemplate,
-        id=group_id,
-        owner=request.user,
-    )
-
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def api_group_template_delete(request, group_id):
+    group = get_object_or_404(GroupTemplate, id=group_id, owner=request.user)
     group.delete()
 
     return JsonResponse({"success": True})
@@ -127,3 +114,61 @@ def api_group_detail(request, group_id):
     ]
 
     return JsonResponse({"tasks": tasks})
+
+
+from django.http import JsonResponse
+from ..models import GroupTemplate
+
+PAGE_SIZE = 50
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def api_group_templates(request):
+    page = int(request.GET.get("page", 1))
+
+    qs = (
+        GroupTemplate.objects.filter(owner=request.user)
+        .prefetch_related("tasks")
+        .order_by("-updated_at")
+    )
+
+    total = qs.count()
+
+    start = (page - 1) * PAGE_SIZE
+    end = start + PAGE_SIZE
+
+    groups = qs[start:end]
+
+    data = []
+
+    for g in groups:
+        data.append(
+            {
+                "id": g.id,
+                "title": g.title,
+                "description": g.description,
+                "created_at": g.created_at.strftime("%d.%m.%Y %H:%M"),
+                "updated_at": g.updated_at.strftime("%d.%m.%Y %H:%M"),
+                "tasks": [
+                    {
+                        "id": t.id,
+                        "title": t.title,
+                        "description": t.description,
+                        "amount": t.default_amount,
+                        "period": t.period_type,
+                        "schedule": t.schedule_type,
+                        "icon": t.icon.url if t.icon else None,
+                    }
+                    for t in g.tasks.all()
+                ],
+            }
+        )
+
+    return JsonResponse(
+        {
+            "results": data,
+            "has_next": end < total,
+            "page": page,
+        }
+    )

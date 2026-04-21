@@ -16,74 +16,7 @@
     </a>
   </div>
 
-  <div class="group-grid row g-3">
-    {% for g in groups %}
-
-    <div class="group-card col-md-4" data-id="{{ g.id }}">
-      <div class="card shadow-sm">
-        <div class="card-body d-flex flex-column">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="fw-semibold">{{ g.title }}</div>
-
-            <div class="group-actions d-flex gap-2">
-              <button
-                class="btn btn-sm btn-outline-secondary edit-group"
-                data-id="{{ g.id }}"
-                title="Редактировать"
-              >
-                ✏
-              </button>
-
-              <button
-                class="btn btn-sm btn-outline-danger delete-group"
-                data-id="{{ g.id }}"
-                title="Удалить"
-              >
-                🗑
-              </button>
-            </div>
-          </div>
-
-          {% if g.description %}
-          <div class="group-description text-muted small mb-2">
-            {{ g.description }}
-          </div>
-          {% endif %}
-
-          <div class="group-task-icons d-flex flex-wrap gap-2 mb-2">
-            {% for t in g.tasks.all %}
-
-            <div
-              class="task-icon tooltip-task"
-              data-title="{{ t.title }}"
-              data-description="{{ t.description|escape }}"
-              data-amount="{{ t.default_amount }}"
-              data-period="{{ t.period_type }}"
-              data-schedule="{{ t.schedule_type }}"
-              data-icon="{% if t.icon %}{{ t.icon.url }}{% endif %}"
-            >
-              {% if t.icon %}
-              <img src="{{ t.icon.url }}" width="32" height="32" />
-              {% else %}
-              <div class="placeholder-icon"></div>
-              {% endif %}
-            </div>
-
-            {% endfor %}
-          </div>
-
-          <div
-            class="group-dates d-flex justify-content-between mt-auto small text-muted"
-          >
-            <span>{{ g.updated_at|date:"d.m.Y H:i" }}</span>
-            <span>{{ g.created_at|date:"d.m.Y H:i" }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {% endfor %}
-  </div>
+  <div class="group-grid row g-3"></div>
 </div>
 
 <!-- TOOLTIP -->

@@ -23,9 +23,10 @@ from core.views.blocks import (
 )
 from core.views.group_templates import (
     group_template_create_or_edit,
-    group_template_delete,
     group_templates_list,
     api_group_detail,
+    api_group_templates,
+    api_group_template_delete,
 )
 from core.views.home import (
     home,
@@ -47,6 +48,7 @@ from core.views.task_templates import (
     api_template_delete,
     api_add_system_template,
     api_add_all_system_templates,
+    api_system_task_templates,
 )
 
 from core.views.tasks import task_template_create
@@ -139,6 +141,11 @@ urlpatterns += [
 ]
 
 urlpatterns += [
+    path(
+        "api/system-task-templates/",
+        api_system_task_templates,
+        name="api_system_task_templates",
+    ),
     path("api/templates/<int:template_id>/delete/", api_template_delete),
     path("api/templates/system/<int:pk>/add/", api_add_system_template),
     path("api/templates/system/add_all/", api_add_all_system_templates),
@@ -176,6 +183,12 @@ urlpatterns += [
 
 
 urlpatterns += [
+    path("api/group-templates/", api_group_templates, name="api_group_templates"),
+    path(
+        "api/group-templates/<int:group_id>/delete/",
+        api_group_template_delete,
+        name="api_group_template_delete",
+    ),
     path(
         "group-templates/",
         group_templates_list,
@@ -190,11 +203,6 @@ urlpatterns += [
         "group-templates/<int:group_id>/edit/",
         group_template_create_or_edit,
         name="group_template_edit",
-    ),
-    path(
-        "group-templates/<int:group_id>/delete/",
-        group_template_delete,
-        name="group_template_delete",
     ),
     path(
         "api/groups/<int:group_id>/",

@@ -8,6 +8,7 @@ from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from ..models import TaskTemplate, SystemTaskTemplate
 from ..forms import TaskTemplateForm
@@ -276,7 +277,11 @@ def templates_page(request):
     )
 
 
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    authentication_classes,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -419,3 +424,35 @@ def api_add_all_system_templates(request):
         )
 
     return Response({"added": added})
+
+
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+
+from core.models import SystemTaskTemplate
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def api_system_task_templates(request):
+    templates = SystemTaskTemplate.objects.filter(is_hidden=False)
+
+    data = [
+        {
+            "id": t.id,
+            "code": t.code,
+            "title": t.title,
+            "description": t.description,
+            "icon": t.icon,
+            "default_amount": t.default_amount,
+            "period_type": t.period_type,
+            "schedule_type": t.schedule_type,
+            "fixed_weekday": t.fixed_weekday,
+            "fixed_day_of_month": t.fixed_day_of_month,
+            "fixed_month_of_year": t.fixed_month_of_year,
+            "priority": t.priority,
+        }
+        for t in templates
+    ]
+
+    return JsonResponse({"results": data})
