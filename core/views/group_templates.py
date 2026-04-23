@@ -7,6 +7,7 @@ from django.views.decorators.http import require_POST
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 
+from config import settings
 from ..models import GroupTemplate, TaskTemplate
 
 
@@ -160,7 +161,7 @@ def api_group_templates(request):
                         "schedule": t.schedule_type,
                         "icon": (
                             request.build_absolute_uri(t.icon.url)
-                            if t.icon.url
+                            if t.icon and t.icon.name
                             else None
                         ),
                     }
