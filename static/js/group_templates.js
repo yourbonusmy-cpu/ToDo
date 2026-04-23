@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((data) => {
         if (!data) return;
 
-        data.results.forEach(createGroupCard);
+        data.groups.forEach(createGroupCard);
 
         hasNext = data.has_next;
         page++;

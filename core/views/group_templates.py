@@ -158,7 +158,11 @@ def api_group_templates(request):
                         "amount": t.default_amount,
                         "period": t.period_type,
                         "schedule": t.schedule_type,
-                        "icon": request.build_absolute_uri(t.icon) if t.icon else None,
+                        "icon": (
+                            request.build_absolute_uri(t.icon.url)
+                            if t.icon.url
+                            else None
+                        ),
                     }
                     for t in g.tasks.all()
                 ],
