@@ -3,6 +3,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.views import LoginView
 from django.views import View
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 from core.forms import RegisterForm
 
@@ -74,3 +76,10 @@ def register(request):
 def user_logout(request):
     logout(request)
     return redirect("/")
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def api_user_logout(request):
+    logout(request)
+    return JsonResponse({"success": True, "message": "Logged out successfully"})

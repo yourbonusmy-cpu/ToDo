@@ -14,7 +14,7 @@ from core.views.api_blocks import (
 from core.views.api_stats import stats_weekdays_api
 from core.views.api_templates import api_templates
 from core.views.api_weather import weather_api
-from core.views.auth import UserLoginView, register, user_logout
+from core.views.auth import UserLoginView, register, user_logout, api_user_logout
 from core.views.blocks import (
     delete_block,
     decrypt_task,
@@ -94,6 +94,7 @@ urlpatterns = [
     path("register/", register, name="register"),
     path("login/", UserLoginView.as_view(), name="login"),
     path("logout/", user_logout, name="logout"),
+    path("api/logout/", api_user_logout, name="api_user_logout"),
     path("lock-pin/", lock_pin, name="lock_pin"),
     path("unlock-pin/", unlock_pin, name="unlock_pin"),
     path("pin-unlock/", pin_unlock_page, name="pin_unlock"),
