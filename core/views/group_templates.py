@@ -166,6 +166,8 @@ def api_group_templates(request):
                 ],
             }
         )
+    print("GROUP:", g.id)
+    print("TASK COUNT:", g.tasks.count())
 
     return JsonResponse(
         {
