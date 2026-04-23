@@ -247,7 +247,7 @@ def api_blocks_json(request):
                     {
                         "id": t.id,
                         "title": t.title,
-                        "icon": resolve_icon(t, request),
+                        "icon": request.build_absolute_uri(t.icon) if t.icon else None,
                         "description": t.description,
                     }
                     for t in block.tasks.all()

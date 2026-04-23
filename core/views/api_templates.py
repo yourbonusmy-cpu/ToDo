@@ -12,6 +12,7 @@ def serialize_template(t: TaskTemplate, request):
 
     if t.icon and hasattr(t.icon, "url"):
         icon = t.icon.url
+
     return {
         "id": t.id,
         "title": t.title,
