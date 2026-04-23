@@ -156,12 +156,9 @@ def api_group_templates(request):
                         "id": t.id,
                         "title": t.title,
                         "description": t.description,
-                        "amount": t.default_amount,
-                        "period": t.period_type,
-                        "schedule": t.schedule_type,
                         "icon": (
                             request.build_absolute_uri(t.icon.url)
-                            if t.icon and t.icon.name
+                            if t.icon and hasattr(t.icon, "url")
                             else None
                         ),
                     }
