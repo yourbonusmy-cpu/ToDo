@@ -158,7 +158,7 @@ def api_group_templates(request):
                         "description": t.description,
                         "icon": (
                             request.build_absolute_uri(t.icon.url)
-                            if t.icon and hasattr(t.icon, "url")
+                            if t.icon and t.icon.name
                             else None
                         ),
                     }
