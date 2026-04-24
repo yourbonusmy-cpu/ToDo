@@ -11,3 +11,80 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* FILTER DROPDOWN */
+.filters-dropdown {
+  flex: 0 0 auto;
+  max-width: 220px;
+}
+
+.filters-menu {
+  min-width: 240px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+/* TASK LIST */
+#tasks-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-item {
+  list-style: none;
+}
+
+/* TASK ITEM */
+.dropdown-menu .form-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.dropdown-menu .form-check-label {
+  flex: 1;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Иконка задачи */
+.task-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* DROPDOWN BUTTON */
+.dropdown-toggle span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-toggle i {
+  font-size: 1rem;
+}
+
+/* SEARCH INPUT */
+#tasks-search-input {
+  transition: all 0.2s ease;
+}
+
+/* HOVER EFFECT */
+.filters-dropdown .btn:hover {
+  transform: translateY(-1px);
+  transition: 0.15s ease;
+}
+
+@media (max-width: 768px) {
+  .filters-dropdown {
+    max-width: 100%;
+  }
+
+  .filters-menu {
+    width: 100%;
+  }
+}

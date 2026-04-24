@@ -22,10 +22,9 @@ WEEKDAYS = {
 @login_required
 def stats_weekdays_api(request):
     """
-    Возвращает статистику по дням недели:
-    - сколько раз шаблон встречается в конкретный день
+    Статистика по дням недели:
     - фильтр по минимальному количеству
-    - фильтр "убрать ежедневные"
+    - исключение выбранных задач
     """
 
     # ---------------------------
@@ -36,19 +35,23 @@ def stats_weekdays_api(request):
     except ValueError:
         min_count = 3
 
-    exclude_daily = request.GET.get("exclude_daily") == "1"
+    exclude_tasks = request.GET.getlist("exclude_tasks")
 
     # ---------------------------
     # QUERY
     # ---------------------------
+    qs = BlockTask.objects.filter(
+        block__owner=request.user,
+        block__target_date__isnull=False,
+        is_hidden=False,
+        template__isnull=False,
+    )
+
+    if exclude_tasks:
+        qs = qs.exclude(template__id__in=exclude_tasks)
+
     qs = (
-        BlockTask.objects.filter(
-            block__owner=request.user,
-            block__target_date__isnull=False,
-            is_hidden=False,
-            template__isnull=False,  # важно
-        )
-        .annotate(weekday=ExtractWeekDay("block__target_date"))
+        qs.annotate(weekday=ExtractWeekDay("block__target_date"))
         .values(
             "weekday",
             "template__id",
@@ -56,16 +59,8 @@ def stats_weekdays_api(request):
             "template__icon",
         )
         .annotate(cnt=Count("id"))
-        .order_by()  # сбрасываем дефолтную сортировку
+        .order_by()
     )
-
-    # ---------------------------
-    # DAYS PER TEMPLATE
-    # ---------------------------
-    template_days = defaultdict(set)
-
-    for row in qs:
-        template_days[row["template__id"]].add(row["weekday"])
 
     # ---------------------------
     # BUILD RESULT
@@ -73,24 +68,15 @@ def stats_weekdays_api(request):
     result = {k: [] for k in WEEKDAYS.keys()}
 
     for row in qs:
-        template_id = row["template__id"]
-        weekday = row["weekday"]
-        count = row["cnt"]
-
-        # фильтр по количеству
-        if count < min_count:
+        if row["cnt"] < min_count:
             continue
 
-        # фильтр "ежедневные"
-        if exclude_daily and len(template_days[template_id]) >= 5:
-            continue
-
-        result[weekday].append(
+        result[row["weekday"]].append(
             {
-                "template_id": template_id,
+                "template_id": row["template__id"],
                 "title": row["template__title"],
                 "icon": str(row["template__icon"]) if row["template__icon"] else "",
-                "count": count,
+                "count": row["cnt"],
             }
         )
 

@@ -76,10 +76,3 @@ def register(request):
 def user_logout(request):
     logout(request)
     return redirect("/")
-
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def api_user_logout(request):
-    logout(request)
-    return JsonResponse({"success": True, "message": "Logged out successfully"})

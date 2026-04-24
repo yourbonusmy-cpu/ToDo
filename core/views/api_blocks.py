@@ -10,6 +10,7 @@ from rest_framework.decorators import (
     authentication_classes,
     api_view,
 )
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
@@ -26,6 +27,8 @@ from core.crypto import encrypt_text
 from django.db.models import Count, Q
 from django.template.loader import render_to_string
 
+from core.pagination import BlockCursorPagination
+from core.serializers import BlockSerializer
 from core.utils.icons import resolve_icon
 
 
@@ -208,55 +211,69 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 
 
-@api_view(["GET"])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
-def api_blocks_json(request):
+from django.db.models import Q, Count
+from rest_framework.generics import ListAPIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
+import datetime
 
-    q = request.GET.get("q")
-    task_ids = request.GET.getlist("tasks")
 
-    blocks = Block.objects.filter(owner=request.user, is_hidden=False)
+class BlockListView(ListAPIView):
+    serializer_class = BlockSerializer
+    pagination_class = BlockCursorPagination
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
-    if q:
-        blocks = blocks.filter(title__icontains=q)
+    def get_queryset(self):
+        request = self.request
 
-    if task_ids:
-        task_ids = list(map(int, task_ids))
-        blocks = blocks.annotate(
-            matched_tasks=Count(
-                "tasks", filter=Q(tasks__template__id__in=task_ids), distinct=True
-            )
-        ).filter(matched_tasks=len(task_ids))
+        q = request.GET.get("q")
+        task_ids = request.GET.getlist("tasks")
+        weekdays = request.GET.getlist("weekdays")  # 👈 NEW
 
-    blocks = blocks.prefetch_related("tasks").order_by("-created_at")
+        queryset = Block.objects.filter(owner=request.user, is_hidden=False)
 
-    paginator = Paginator(blocks, 10)
-    page_number = request.GET.get("page", 1)
-    page_obj = paginator.get_page(page_number)
+        # -------------------
+        # SEARCH
+        # -------------------
+        if q:
+            queryset = queryset.filter(title__icontains=q)
 
-    data = []
+        # -------------------
+        # TASK FILTER
+        # -------------------
+        if task_ids:
+            try:
+                task_ids = list(map(int, task_ids))
+            except ValueError:
+                return Block.objects.none()
 
-    for block in page_obj:
+            queryset = queryset.annotate(
+                matched_tasks=Count(
+                    "tasks", filter=Q(tasks__template__id__in=task_ids), distinct=True
+                )
+            ).filter(matched_tasks=len(task_ids))
 
-        data.append(
-            {
-                "id": block.id,
-                "title": block.title,
-                "target_date": block.target_date,
-                "tasks": [
-                    {
-                        "id": t.id,
-                        "title": t.title,
-                        "icon": request.build_absolute_uri(settings.MEDIA_URL + t.icon),
-                        "description": t.description,
-                    }
-                    for t in block.tasks.all()
-                ],
-            }
+        # -------------------
+        # WEEKDAY FILTER (NEW)
+        # -------------------
+        if weekdays:
+            try:
+                weekdays = list(map(int, weekdays))
+            except ValueError:
+                return Block.objects.none()
+
+            q_filter = Q()
+
+            for day in weekdays:
+                q_filter |= Q(target_date__week_day=((day + 2) % 7) + 1)
+                # Django: Sunday=1 ... Saturday=7
+
+            queryset = queryset.filter(q_filter)
+
+        return queryset.prefetch_related("tasks__template").order_by(
+            "-created_at", "-id"
         )
-
-    return JsonResponse({"blocks": data, "has_next": page_obj.has_next()})
 
 
 def api_blocks(request):

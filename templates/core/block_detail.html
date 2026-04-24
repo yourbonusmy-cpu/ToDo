@@ -1,7 +1,12 @@
-{% extends "base.html" %} {% load static %} {% block title %}Блок: {{
-m_block.title }}{% endblock %} {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/block_detail.css' %}" />
-{% endblock %} {% block content %}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Блок: {{ m_block.title }}{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/block_detail.css' %}" />
+{% endblock %}
+
+{% block content %}
 <div class="container my-4">
   <!-- HEADER -->
   <div class="card shadow-sm mb-4">

@@ -1,12 +1,15 @@
-{% extends "base.html" %} 
-{% load static %} 
+{% extends "base.html" %}
+{% load static %}
+
 {% block extra_css %}
-  <link rel="stylesheet" href="{% static 'css/stats_weekdays.css' %}" />
-{% endblock %} 
-{% block title %}Статистика по дням{% endblock %} 
+<link rel="stylesheet" href="{% static 'css/stats_weekdays.css' %}" />
+{% endblock %}
+
+{% block title %}Статистика по дням{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
+
   <!-- HEADER -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="m-0">Статистика по дням недели</h4>
@@ -15,6 +18,7 @@
   <!-- FILTERS -->
   <div class="card p-3 mb-4">
     <div class="row g-3 align-items-end">
+
       <!-- MIN COUNT -->
       <div class="col-auto">
         <label class="form-label">Мин. повторений</label>
@@ -27,27 +31,81 @@
         />
       </div>
 
-      <!-- EXCLUDE DAILY -->
+      <!-- TASK FILTER -->
       <div class="col-auto">
-        <div class="form-check mt-4">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            id="exclude-daily"
-            checked
-          />
-          <label class="form-check-label"> Убрать ежедневные </label>
+        <label class="form-label d-block">Фильтр задач</label>
+
+        <div class="dropdown filters-dropdown">
+          <button
+            class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center"
+            type="button"
+            data-bs-toggle="dropdown"
+          >
+            <i class="bi bi-list-task me-1"></i>
+            <span id="tasks-dropdown-label">Исключить задачи</span>
+          </button>
+
+          <ul class="dropdown-menu p-3 filters-menu">
+            <li class="mb-2">
+                <input
+                  type="text"
+                  id="tasks-search-input"
+                  class="form-control form-control-sm"
+                  placeholder="Поиск задачи..."
+                />
+            </li>
+            <li>
+              <button
+                type="button"
+                id="reset-tasks-filter"
+                class="btn btn-sm btn-outline-secondary w-100 mb-2"
+              >
+                Сбросить
+              </button>
+            </li>
+
+            <li><hr class="dropdown-divider" /></li>
+
+            <div id="tasks-list">
+              {% for task in system_tasks %}
+              <li class="task-item">
+                <div class="form-check form-switch d-flex align-items-center mb-2">
+
+                  <input
+                    class="form-check-input me-2 task-toggle"
+                    type="checkbox"
+                    value="{{ task.id }}"
+                    id="task-{{ task.id }}"
+                  />
+
+                  {% if task.icon %}
+                  <img src="{{ task.icon.url }}" class="me-2 task-icon" />
+                  {% else %}
+                  <i class="bi bi-check-circle me-2 text-primary"></i>
+                  {% endif %}
+
+                  <label class="form-check-label m-0" for="task-{{ task.id }}">
+                    {{ task.title }}
+                  </label>
+
+                </div>
+              </li>
+              {% endfor %}
+            </div>
+
+          </ul>
         </div>
       </div>
+
     </div>
   </div>
 
   <!-- DATA -->
-  <div id="stats-container" class="d-flex flex-column gap-3">
-    <!-- JS вставляет сюда -->
-  </div>
-</div>
+  <div id="stats-container" class="d-flex flex-column gap-3"></div>
 
-{% endblock %} {% block page_js %}
-    <script src="{% static 'js/stats_weekdays.js' %}"></script>
+</div>
+{% endblock %}
+
+{% block page_js %}
+<script src="{% static 'js/stats_weekdays.js' %}"></script>
 {% endblock %}
