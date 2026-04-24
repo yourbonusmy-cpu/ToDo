@@ -754,11 +754,8 @@ def create_new_block(title, tasks_list, user):
 @require_POST
 @login_required
 def delete_block(request, block_id):
-
     block = get_object_or_404(Block, id=block_id, owner=request.user)
-
     password = request.POST.get("password")
-
     if not password:
         return JsonResponse(
             {"status": "error", "message": "Password required"}, status=400
