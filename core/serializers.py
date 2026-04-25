@@ -111,6 +111,8 @@ class GroupTaskSerializer(serializers.ModelSerializer):
             "fixed_day_of_month",
             "fixed_month_of_year",
             "priority",
+            "created_at",
+            "updated_at",
         ]
 
     def get_icon(self, obj):
