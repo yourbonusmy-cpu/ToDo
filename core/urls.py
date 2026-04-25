@@ -12,7 +12,7 @@ from core.views.api_blocks import (
     BlockListView,
 )
 from core.views.api_stats import stats_weekdays_api
-from core.views.api_templates import api_templates
+from core.views.api_templates import api_templates, TaskTemplateListView
 from core.views.api_weather import weather_api
 from core.views.auth import UserLoginView, register, user_logout
 from core.views.blocks import (
@@ -27,6 +27,7 @@ from core.views.group_templates import (
     api_group_detail,
     api_group_templates,
     api_group_template_delete,
+    GroupTemplateListView,
 )
 from core.views.home import (
     home,
@@ -151,6 +152,7 @@ urlpatterns += [
     path("api/templates/system/<int:pk>/add/", api_add_system_template),
     path("api/templates/system/add_all/", api_add_all_system_templates),
     path("api/templates/", api_templates, name="api_templates"),
+    path("api/templates_new/", TaskTemplateListView.as_view()),
     path("templates/", templates_page, name="templates"),
     path("task-template/create/", task_template_create, name="task_template_create"),
     path(
@@ -184,6 +186,7 @@ urlpatterns += [
 
 
 urlpatterns += [
+    path("api/groups/", GroupTemplateListView.as_view()),
     path("api/group-templates/", api_group_templates, name="api_group_templates"),
     path(
         "api/group-templates/<int:group_id>/delete/",

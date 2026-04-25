@@ -9,6 +9,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from config import settings
 from ..models import GroupTemplate, TaskTemplate
+from ..pagination import GroupCursorPagination
+from ..serializers import GroupTemplateSerializer
 
 
 @login_required
@@ -176,3 +178,20 @@ def api_group_templates(request):
             "page": page,
         }
     )
+
+
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import IsAuthenticated
+
+
+class GroupTemplateListView(ListAPIView):
+    serializer_class = GroupTemplateSerializer
+    pagination_class = GroupCursorPagination
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return (
+            GroupTemplate.objects.filter(owner=self.request.user)
+            .prefetch_related("tasks")
+            .order_by("-updated_at")
+        )

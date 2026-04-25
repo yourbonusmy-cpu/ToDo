@@ -3,10 +3,10 @@
 from rest_framework import serializers
 
 from config import settings
-from core.models import Block, BlockTask
+from core.models import Block, BlockTask, TaskTemplate, GroupTemplate
 
 
-class TaskSerializer(serializers.ModelSerializer):
+class BlockTaskSerializer(serializers.ModelSerializer):
     icon = serializers.SerializerMethodField()
 
     class Meta:
@@ -40,7 +40,7 @@ class TaskSerializer(serializers.ModelSerializer):
 
 
 class BlockSerializer(serializers.ModelSerializer):
-    tasks = TaskSerializer(many=True)
+    block_tasks = BlockTaskSerializer(many=True)
 
     class Meta:
         model = Block
@@ -92,3 +92,58 @@ class BlockSerializer(serializers.ModelSerializer):
             BlockTask.objects.bulk_create(new_tasks)
 
         return instance
+
+
+class GroupTaskSerializer(serializers.ModelSerializer):
+    icon = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TaskTemplate
+        read_only_fields = ["id", "created_at", "updated_at"]
+        exclude = ["owner"]
+
+    def get_icon(self, obj):
+        request = self.context.get("request")
+
+        if obj.icon and obj.icon.name:
+            return request.build_absolute_uri(obj.icon.url)
+
+        return None
+
+
+class GroupTemplateSerializer(serializers.ModelSerializer):
+    tasks = GroupTaskSerializer(many=True)
+
+    class Meta:
+        model = GroupTemplate
+        read_only_fields = ["id", "created_at", "updated_at"]
+        exclude = ["owner"]
+
+
+class TaskTemplateSerializer(serializers.ModelSerializer):
+    icon = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TaskTemplate
+        fields = [
+            "id",
+            "title",
+            "description",
+            "icon",
+            "default_amount",
+            "period_type",
+            "schedule_type",
+            "fixed_weekday",
+            "fixed_day_of_month",
+            "fixed_month_of_year",
+            "created_at",
+            "updated_at",
+        ]
+
+    def get_icon(self, obj):
+        request = self.context.get("request")
+
+        if obj.icon and obj.icon.name:
+            return request.build_absolute_uri(obj.icon.url)
+
+        return None

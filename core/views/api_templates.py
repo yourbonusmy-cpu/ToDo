@@ -2,6 +2,8 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 
 from core.models import TaskTemplate
+from core.pagination import TemplateCursorPagination
+from core.serializers import TaskTemplateSerializer
 from core.utils.icons import resolve_icon
 
 PAGE_SIZE = 50
@@ -67,3 +69,29 @@ def api_templates(request):
             "page": page,
         }
     )
+
+
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import IsAuthenticated
+from django.db.models import Q
+
+
+class TaskTemplateListView(ListAPIView):
+    serializer_class = TaskTemplateSerializer
+    pagination_class = TemplateCursorPagination
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        request = self.request
+        q = request.GET.get("q", "").strip()
+
+        qs = (
+            TaskTemplate.objects.filter(owner=request.user, is_hidden=False)
+            .select_related("system_template")
+            .order_by("-updated_at")
+        )
+
+        if q:
+            qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
+
+        return qs
