@@ -40,7 +40,7 @@ class BlockTaskSerializer(serializers.ModelSerializer):
 
 
 class BlockSerializer(serializers.ModelSerializer):
-    block_tasks = BlockTaskSerializer(many=True)
+    tasks = BlockTaskSerializer(many=True)
 
     class Meta:
         model = Block
