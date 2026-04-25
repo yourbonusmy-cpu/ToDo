@@ -2,15 +2,18 @@ import json
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 
-from config import settings
 from ..models import GroupTemplate, TaskTemplate
 from ..pagination import GroupCursorPagination
 from ..serializers import GroupTemplateSerializer
+
+from rest_framework.generics import ListAPIView
+from django.http import JsonResponse
+from ..models import GroupTemplate
+
+PAGE_SIZE = 50
 
 
 @login_required
@@ -119,12 +122,6 @@ def api_group_detail(request, group_id):
     return JsonResponse({"tasks": tasks})
 
 
-from django.http import JsonResponse
-from ..models import GroupTemplate
-
-PAGE_SIZE = 50
-
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def api_group_templates(request):
@@ -178,10 +175,6 @@ def api_group_templates(request):
             "page": page,
         }
     )
-
-
-from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
 
 
 class GroupTemplateListView(ListAPIView):

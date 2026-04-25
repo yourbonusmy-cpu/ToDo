@@ -99,8 +99,19 @@ class GroupTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TaskTemplate
-        read_only_fields = ["id", "created_at", "updated_at"]
-        exclude = ["owner"]
+        fields = [  # лучше явно указывать, чем exclude
+            "id",
+            "title",
+            "description",
+            "icon",
+            "default_amount",
+            "period_type",
+            "schedule_type",
+            "fixed_weekday",
+            "fixed_day_of_month",
+            "fixed_month_of_year",
+            "priority",
+        ]
 
     def get_icon(self, obj):
         request = self.context.get("request")
@@ -112,12 +123,20 @@ class GroupTaskSerializer(serializers.ModelSerializer):
 
 
 class GroupTemplateSerializer(serializers.ModelSerializer):
-    tasks = GroupTaskSerializer(many=True)
+    tasks = GroupTaskSerializer(many=True, read_only=True, source="tasks")
 
     class Meta:
         model = GroupTemplate
+        fields = [
+            "id",
+            "title",
+            "description",
+            "selected_count",
+            "tasks",
+            "created_at",
+            "updated_at",
+        ]
         read_only_fields = ["id", "created_at", "updated_at"]
-        exclude = ["owner"]
 
 
 class TaskTemplateSerializer(serializers.ModelSerializer):
