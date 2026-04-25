@@ -183,8 +183,13 @@ class GroupTemplateListView(ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return (
+        qs = (
             GroupTemplate.objects.filter(owner=self.request.user)
             .prefetch_related("tasks")
-            .order_by("-updated_at")
+            .order_by("-updated_at", "-id")
         )
+
+        print(
+            f"User: {self.request.user.id} | Groups count: {qs.count()}"
+        )  # ← смотри в логи сервера
+        return qs
