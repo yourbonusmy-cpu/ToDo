@@ -13,7 +13,7 @@ class GroupCursorPagination(CursorPagination):
     page_size = 15
     page_size_query_param = "page_size"  # 👈 ключ
     max_page_size = 50  # 👈 защита от перегрузки
-    ordering = "-updated_at"
+    ordering = ("-updated_at", "-id")
 
 
 class TemplateCursorPagination(CursorPagination):

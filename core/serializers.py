@@ -123,6 +123,7 @@ class GroupTaskSerializer(serializers.ModelSerializer):
 
 
 class GroupTemplateSerializer(serializers.ModelSerializer):
+    tasks = GroupTaskSerializer(many=True, read_only=True, source="tasks")
 
     class Meta:
         model = GroupTemplate
@@ -131,6 +132,7 @@ class GroupTemplateSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "selected_count",
+            "tasks",
             "created_at",
             "updated_at",
         ]
