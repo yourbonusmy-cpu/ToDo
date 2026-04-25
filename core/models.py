@@ -211,6 +211,12 @@ class GroupTemplate(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["owner", "-updated_at", "-id"]),  # композитный индекс
+            models.Index(fields=["owner"]),
+        ]
+
 
 class Block(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)

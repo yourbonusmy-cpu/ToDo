@@ -115,10 +115,8 @@ class GroupTaskSerializer(serializers.ModelSerializer):
 
     def get_icon(self, obj):
         request = self.context.get("request")
-
-        if obj.icon and obj.icon.name:
+        if request and obj.icon and getattr(obj.icon, "name", None):
             return request.build_absolute_uri(obj.icon.url)
-
         return None
 
 
