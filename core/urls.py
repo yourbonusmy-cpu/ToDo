@@ -186,7 +186,7 @@ urlpatterns += [
 
 
 urlpatterns += [
-    path("api/groups/", GroupTemplateListView.as_view()),
+    path("api/groups_new/", GroupTemplateListView.as_view()),
     path("api/group-templates/", api_group_templates, name="api_group_templates"),
     path(
         "api/group-templates/<int:group_id>/delete/",
