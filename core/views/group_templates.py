@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from ..models import GroupTemplate, TaskTemplate
 from ..pagination import GroupCursorPagination
-from ..serializers import GroupTemplateSerializer
+from ..serializers_ import GroupTemplateSerializer
 
 from rest_framework.generics import ListAPIView
 from django.http import JsonResponse
@@ -165,8 +165,6 @@ def api_group_templates(request):
                 ],
             }
         )
-    print("GROUP:", g.id)
-    print("TASK COUNT:", g.tasks.count())
 
     return JsonResponse(
         {

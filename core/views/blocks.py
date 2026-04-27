@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 
 from django.conf import settings
+from django.db import transaction
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -16,6 +17,7 @@ from core.models import (
     PeriodType,
     ScheduleType,
     BlockWeather,
+    DeletedObject,
 )
 
 import json
@@ -277,9 +279,26 @@ def block_create(request, block_id=None):
                 incoming_ids.add(bt.id)
 
             # delete removed tasks
-            BlockTask.objects.filter(
-                id__in=set(existing_tasks.keys()) - incoming_ids
-            ).delete()
+            # BlockTask.objects.filter(
+            #     id__in=set(existing_tasks.keys()) - incoming_ids
+            # ).delete()
+            removed_ids = set(existing_tasks.keys()) - incoming_ids
+
+            removed_tasks = BlockTask.objects.filter(id__in=removed_ids)
+
+            DeletedObject.objects.bulk_create(
+                [
+                    DeletedObject(
+                        obj_uuid=t.uuid,
+                        object_type=DeletedObject.ObjectType.BLOCKTASK,
+                        user=request.user,
+                        device_id=getattr(request, "device_id", None),
+                    )
+                    for t in removed_tasks
+                ]
+            )
+
+            removed_tasks.delete()
 
         # ==========================
         # CREATE BLOCK
@@ -755,6 +774,7 @@ def create_new_block(title, tasks_list, user):
 @login_required
 def delete_block(request, block_id):
     block = get_object_or_404(Block, id=block_id, owner=request.user)
+
     password = request.POST.get("password")
     if not password:
         return JsonResponse(
@@ -766,7 +786,31 @@ def delete_block(request, block_id):
             {"status": "error", "message": "Wrong password"}, status=403
         )
 
-    block.delete()
+    device_id = getattr(request, "device_id", None)
+
+    with transaction.atomic():
+        DeletedObject.objects.create(
+            obj_uuid=block.uuid,
+            object_type=DeletedObject.ObjectType.BLOCK,
+            user=request.user,
+            device_id=device_id,
+        )
+
+        tasks = BlockTask.objects.filter(block=block)
+
+        DeletedObject.objects.bulk_create(
+            [
+                DeletedObject(
+                    obj_uuid=t.uuid,
+                    object_type=DeletedObject.ObjectType.BLOCKTASK,
+                    user=request.user,
+                    device_id=device_id,
+                )
+                for t in tasks
+            ]
+        )
+
+        block.delete()
 
     return JsonResponse({"status": "ok"})
 

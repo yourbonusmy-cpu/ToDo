@@ -1,4 +1,6 @@
 import os
+import uuid
+
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.db import models
@@ -92,7 +94,7 @@ class UserPin(models.Model):
 class SystemTaskTemplate(models.Model):
 
     code = models.CharField(max_length=64, unique=True)
-
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
     title = models.CharField(max_length=128)
     description = models.TextField(blank=True)
     is_hidden = models.BooleanField(default=False)
@@ -127,6 +129,7 @@ class SystemTaskTemplate(models.Model):
 
 class TaskTemplate(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
     system_template = models.ForeignKey(
         SystemTaskTemplate, null=True, blank=True, on_delete=models.SET_NULL
     )
@@ -200,7 +203,7 @@ class TaskTemplate(models.Model):
 
 class GroupTemplate(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
-
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
     title = models.CharField(max_length=128)
     description = models.TextField(blank=True)
 
@@ -220,6 +223,7 @@ class GroupTemplate(models.Model):
 
 class Block(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
     title = models.CharField(max_length=128)
     priority = models.PositiveSmallIntegerField(default=0)
     is_hidden = models.BooleanField(default=False)
@@ -229,10 +233,15 @@ class Block(models.Model):
 
     class Meta:
         ordering = ["-priority", "created_at"]
+        indexes = [
+            models.Index(fields=["owner", "updated_at"]),
+            models.Index(fields=["owner", "uuid"]),
+        ]
 
 
 class BlockTask(models.Model):
     block = models.ForeignKey(Block, on_delete=models.CASCADE, related_name="tasks")
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
     template = models.ForeignKey(
         TaskTemplate,
         on_delete=models.SET_NULL,
@@ -241,13 +250,13 @@ class BlockTask(models.Model):
         related_name="block_tasks",
     )
     title = models.CharField(max_length=128)
-    icon = models.CharField(max_length=255, blank=True)
-    is_hidden = models.BooleanField(default=False)
-    is_encrypted = models.BooleanField(default=False)
     description = models.TextField(blank=True)
+    icon = models.CharField(max_length=255, blank=True)
     position = models.PositiveIntegerField()
     amount = models.PositiveIntegerField(default=1)
     time = models.FloatField(default=1)
+    is_hidden = models.BooleanField(default=False)
+    is_encrypted = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -256,6 +265,7 @@ class BlockTask(models.Model):
         ordering = ["position"]
         indexes = [
             models.Index(fields=["block", "position"]),
+            models.Index(fields=["uuid"]),
         ]
 
 
@@ -263,9 +273,61 @@ class BlockWeather(models.Model):
     block = models.OneToOneField(
         Block, on_delete=models.CASCADE, related_name="weather"
     )
-
     city = models.CharField(max_length=64)
+    data = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    data = models.JSONField()  # ← ВСЕ 4 периода сюда
+
+class Device(models.Model):
+    class Platform(models.TextChoices):
+        ANDROID = "android", "Android"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    device_uuid = models.UUIDField(unique=True, db_index=True)
+
+    platform = models.CharField(max_length=16, choices=Platform.choices)
+
+    name = models.CharField(max_length=128, blank=True)
+
+    last_sync_at = models.DateTimeField(null=True, blank=True)
+    last_seen_at = models.DateTimeField(auto_now=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["user", "last_sync_at"]),
+        ]
+
+
+class DeletedObject(models.Model):
+
+    class ObjectType(models.TextChoices):
+        BLOCK = "block", "Block"
+        BLOCKTASK = "blocktask", "BlockTask"
+
+    # ID объекта на клиенте (главный ключ синка)
+    obj_uuid = models.UUIDField(db_index=True)
+
+    # тип сущности
+    object_type = models.CharField(
+        max_length=16, choices=ObjectType.choices, db_index=True
+    )
+
+    # когда удалили
+    deleted_at = models.DateTimeField(auto_now_add=True)
+
+    # кто удалил (важно для multi-device consistency)
+    user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+
+    # устройство (опционально, но полезно)
+    device_uuid = models.UUIDField(null=True, blank=True, db_index=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["user", "deleted_at"]),
+            models.Index(fields=["obj_uuid", "object_type"]),
+        ]

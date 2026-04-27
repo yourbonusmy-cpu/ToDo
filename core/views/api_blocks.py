@@ -28,7 +28,7 @@ from django.db.models import Count, Q
 from django.template.loader import render_to_string
 
 from core.pagination import BlockCursorPagination
-from core.serializers import BlockSerializer
+from core.serializers_ import BlockSerializer
 from core.utils.icons import resolve_icon
 
 

@@ -1,11 +1,8 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView
 
 from core.models import TaskTemplate
-from core.views import api_blocks
 from core.views.api_blocks import (
     create_block,
-    load_blocks,
     get_block,
     update_block,
     hide_block,
@@ -14,11 +11,15 @@ from core.views.api_blocks import (
 from core.views.api_stats import stats_weekdays_api
 from core.views.api_templates import api_templates, TaskTemplateListView
 from core.views.api_weather import weather_api
-from core.views.auth import UserLoginView, register, user_logout
+from core.views.auth import (
+    UserLoginView,
+    register,
+    user_logout,
+    CustomTokenObtainPairView,
+)
 from core.views.blocks import (
     delete_block,
     decrypt_task,
-    block_builder_stop,
     block_create,
 )
 from core.views.group_templates import (
@@ -107,7 +108,7 @@ urlpatterns = [
 ]
 
 urlpatterns += [
-    path("api/login/", TokenObtainPairView.as_view()),
+    path("api/login/", CustomTokenObtainPairView.as_view()),
 ]
 
 urlpatterns += [

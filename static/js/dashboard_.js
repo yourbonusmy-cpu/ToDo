@@ -322,6 +322,61 @@ if (scrollTrigger) {
   observer.observe(scrollTrigger);
 }
 
+function getCookie(name) {
+  return document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(name + "="))
+    ?.split("=")[1];
+}
+
+// -------------------------------
+// DELETE CONFIRM (ОТСУТСТВОВАЛО)
+// -------------------------------
+document.getElementById("confirm-delete-block")?.addEventListener("click", async () => {
+
+    const password = passwordInput.value.trim();
+    const errorEl = document.getElementById("delete-block-error");
+
+    if (!password) {
+      errorEl.textContent = "Введите пароль";
+      errorEl.style.display = "block";
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("password", password);
+
+    const res = await fetch(
+      `/api/block/${currentDeleteBlockId}/delete/`,
+      {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCookie("csrftoken"),
+          Authorization: `Bearer ${localStorage.getItem("access_token") || ""}`,
+        },
+        body: formData,
+      }
+    );
+
+    const data = await res.json().catch(() => null);
+
+    if (data?.status === "ok") {
+      // удаляем блок из DOM
+      document
+        .querySelector(`[data-block-id="${currentDeleteBlockId}"]`)
+        ?.remove();
+
+      bootstrap.Modal.getInstance(
+        document.getElementById("deleteBlockModal")
+      )?.hide();
+
+    } else {
+      errorEl.textContent = data?.message || "Ошибка удаления";
+      errorEl.style.display = "block";
+    }
+  });
+
+
 // -------------------------------
 // INIT
 // -------------------------------

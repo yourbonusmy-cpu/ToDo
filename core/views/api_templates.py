@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 
 from core.models import TaskTemplate
 from core.pagination import TemplateCursorPagination
-from core.serializers import TaskTemplateSerializer
+from core.serializers_ import TaskTemplateSerializer
 from core.utils.icons import resolve_icon
 
 PAGE_SIZE = 50

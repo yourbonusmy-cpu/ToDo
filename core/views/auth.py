@@ -1,22 +1,44 @@
-from django.contrib.auth.forms import AuthenticationForm
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.views import LoginView
-from django.views import View
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import redirect
+from django.contrib.auth import logout
 
 from core.forms import RegisterForm
 
-from django.http import JsonResponse
-from django.contrib.auth import login
-
-
 from django.views import View
 from django.http import JsonResponse
 from django.contrib.auth import login
 from django.contrib.auth.forms import AuthenticationForm
+
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
+from django.utils import timezone
+from core.models import Device
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+
+    def post(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.user  # ✔ правильно
+
+        response = super().post(request, *args, **kwargs)
+
+        device_id = request.data.get("device_id")
+        platform = request.data.get("platform")
+
+        if device_id and platform == "android":
+            Device.objects.update_or_create(
+                device_id=device_id,
+                defaults={
+                    "user": user,
+                    "platform": "android",
+                    "last_seen_at": timezone.now(),
+                },
+            )
+
+        return response
 
 
 class UserLoginView(View):
@@ -45,9 +67,6 @@ class UserLoginView(View):
             errors[field] = [str(m) for m in msgs]
 
         return JsonResponse({"success": False, "errors": errors})
-
-
-from rest_framework_simplejwt.tokens import RefreshToken
 
 
 def register(request):
