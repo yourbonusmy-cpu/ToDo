@@ -25,12 +25,12 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
         response = super().post(request, *args, **kwargs)
 
-        device_id = request.data.get("device_id")
+        device_uuid = request.data.get("device_uuid")
         platform = request.data.get("platform")
 
-        if device_id and platform == "android":
+        if device_uuid and platform == "android":
             Device.objects.update_or_create(
-                device_id=device_id,
+                device_uuid=device_uuid,
                 defaults={
                     "user": user,
                     "platform": "android",

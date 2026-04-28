@@ -10,12 +10,14 @@ document.addEventListener("DOMContentLoaded", () => {
     removeBtn.classList.remove("hidden");
   });
 
-  removeBtn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    fileInput.value = "";
-    image.src = "{% static 'img/plus-square-dotted.svg' %}";
-    removeBtn.classList.add("hidden");
-  });
+    const defaultIcon = image.dataset.defaultIcon;
+
+    removeBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      fileInput.value = "";
+      image.src = defaultIcon;
+      removeBtn.classList.add("hidden");
+    });
 
   const month = document.getElementById("id_fixed_month_of_year");
   const day = document.getElementById("id_fixed_day_of_month");
