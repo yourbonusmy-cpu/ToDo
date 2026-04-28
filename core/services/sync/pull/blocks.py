@@ -15,6 +15,5 @@ def get_blocks(user, last_sync):
             "is_hidden",
             "target_date",
             "updated_at",
-            "created_at",
         )
     )

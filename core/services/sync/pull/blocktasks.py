@@ -1,7 +1,7 @@
 from core.models import BlockTask
 
 
-def get_block_tasks(user, last_sync):
+def get_blocktasks(user, last_sync):
     qs = BlockTask.objects.filter(block__owner=user)
 
     if last_sync:
@@ -21,6 +21,5 @@ def get_block_tasks(user, last_sync):
             "is_encrypted",
             "icon",
             "updated_at",
-            "created_at",
         )
     )
