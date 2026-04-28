@@ -5,16 +5,6 @@ from django.db.models import Prefetch
 
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from rest_framework.decorators import (
-    permission_classes,
-    authentication_classes,
-    api_view,
-)
-from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication
-
-from config import settings
 from core.models import Block, BlockTask, TaskTemplate
 
 import json

@@ -13,7 +13,6 @@ class BlockTaskSerializer(serializers.ModelSerializer):
         model = BlockTask
         fields = [
             "id",
-            "uuid",
             "title",
             "description",
             "icon",
