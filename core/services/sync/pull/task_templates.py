@@ -2,6 +2,9 @@ from core.models import TaskTemplate
 from core.utils.icons import resolve_icon
 
 
+from django.conf import settings
+
+
 def get_task_templates(request, last_sync):
     qs = TaskTemplate.objects.filter(owner=request.user)
 
@@ -30,4 +33,8 @@ def get_task_templates(request, last_sync):
 
     for item in data:
         if item["icon"]:
-            item["icon"] = resolve_icon(item["icon"], request)
+            item["icon"] = request.build_absolute_uri(
+                f"{settings.MEDIA_URL}{item['icon']}"
+            )
+
+    return data
