@@ -8,13 +8,13 @@ from .deleted import get_deleted
 from .task_templates import get_task_templates
 
 
-def build_pull_response(request, last_sync):
+def build_pull_response(user, last_sync, request):
     return {
         "server_time": now(),
-        "blocks": get_blocks(request, last_sync),
-        "block_tasks": get_block_tasks(request, last_sync),
-        "task_templates": get_task_templates(request, last_sync),
-        "group_templates": get_group_templates(request, last_sync),
-        "system_templates": get_system_templates(request, last_sync),
-        "deleted": get_deleted(request, last_sync),
+        "blocks": get_blocks(user, last_sync),
+        "block_tasks": get_block_tasks(user, last_sync, request),
+        "task_templates": get_task_templates(user, last_sync),
+        "group_templates": get_group_templates(user, last_sync),
+        "system_templates": get_system_templates(last_sync),
+        "deleted": get_deleted(user, last_sync),
     }
