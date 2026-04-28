@@ -7,11 +7,12 @@ def get_task_templates(user, last_sync):
     if last_sync:
         qs = qs.filter(updated_at__gt=last_sync)
 
-    return list(
+    data = list(
         qs.values(
             "uuid",
             "system_template__uuid",
             "title",
+            "icon",
             "description",
             "is_hidden",
             "default_amount",
@@ -25,3 +26,11 @@ def get_task_templates(user, last_sync):
             "created_at",
         )
     )
+
+    for item in data:
+        if item["icon"]:
+            item["icon"] = (
+                item["icon"].replace("media/", "")
+                if isinstance(item["icon"], str)
+                else str(item["icon"])
+            )

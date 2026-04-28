@@ -7,7 +7,7 @@ def get_block_tasks(user, last_sync):
     if last_sync:
         qs = qs.filter(updated_at__gt=last_sync)
 
-    return list(
+    data = list(
         qs.values(
             "uuid",
             "block__uuid",
@@ -24,3 +24,9 @@ def get_block_tasks(user, last_sync):
             "created_at",
         )
     )
+
+    for item in data:
+        if item["icon"]:
+            item["icon"] = f"media/{item['icon']}"
+
+    return data

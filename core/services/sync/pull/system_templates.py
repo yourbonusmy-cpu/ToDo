@@ -7,7 +7,7 @@ def get_system_templates(last_sync):
     if last_sync:
         qs = qs.filter(updated_at__gt=last_sync)
 
-    return list(
+    data = list(
         qs.values(
             "uuid",
             "code",
@@ -26,3 +26,9 @@ def get_system_templates(last_sync):
             "created_at",
         )
     )
+
+    for item in data:
+        if item["icon"]:
+            item["icon"] = f"media/{item['icon']}"
+
+    return data
