@@ -1,8 +1,9 @@
 from core.models import BlockTask
+from core.utils.icons import build_icon_url
 
 
-def get_block_tasks(user, last_sync):
-    qs = BlockTask.objects.filter(block__owner=user)
+def get_block_tasks(request, last_sync):
+    qs = BlockTask.objects.filter(block__owner=request.user)
 
     if last_sync:
         qs = qs.filter(updated_at__gt=last_sync)
@@ -27,6 +28,6 @@ def get_block_tasks(user, last_sync):
 
     for item in data:
         if item["icon"]:
-            item["icon"] = f"media/{item['icon']}"
+            item["icon"] = build_icon_url(f"media/{item['icon']}", request)
 
     return data

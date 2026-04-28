@@ -1,7 +1,9 @@
+from config import settings
 from core.models import SystemTaskTemplate
+from core.utils.icons import build_icon_url
 
 
-def get_system_templates(last_sync):
+def get_system_templates(requests, last_sync):
     qs = SystemTaskTemplate.objects.all()
 
     if last_sync:
@@ -29,6 +31,6 @@ def get_system_templates(last_sync):
 
     for item in data:
         if item["icon"]:
-            item["icon"] = f"media/{item['icon']}"
+            item["icon"] = build_icon_url(f"media/{item['icon']}", requests)
 
     return data

@@ -32,3 +32,12 @@ def resolve_icon(obj, request):
         return request.build_absolute_uri(static(path))
 
     return ""
+
+
+from django.conf import settings
+
+
+def build_icon_url(path, request):
+    if not path:
+        return None
+    return request.build_absolute_uri(f"{settings.MEDIA_URL}{path}")

@@ -1,8 +1,8 @@
 from core.models import GroupTemplate
 
 
-def get_group_templates(user, last_sync):
-    qs = GroupTemplate.objects.filter(owner=user)
+def get_group_templates(request, last_sync):
+    qs = GroupTemplate.objects.filter(owner=request.user)
 
     if last_sync:
         qs = qs.filter(updated_at__gt=last_sync)

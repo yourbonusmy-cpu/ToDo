@@ -1,8 +1,9 @@
 from core.models import TaskTemplate
+from core.utils.icons import resolve_icon
 
 
-def get_task_templates(user, last_sync):
-    qs = TaskTemplate.objects.filter(owner=user)
+def get_task_templates(request, last_sync):
+    qs = TaskTemplate.objects.filter(owner=request.user)
 
     if last_sync:
         qs = qs.filter(updated_at__gt=last_sync)
@@ -29,8 +30,4 @@ def get_task_templates(user, last_sync):
 
     for item in data:
         if item["icon"]:
-            item["icon"] = (
-                item["icon"].replace("media/", "")
-                if isinstance(item["icon"], str)
-                else str(item["icon"])
-            )
+            item["icon"] = resolve_icon(item["icon"], request)
