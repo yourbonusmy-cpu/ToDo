@@ -1,7 +1,7 @@
 from core.models import TaskTemplate
 
 
-def get_templates(user, last_sync):
+def get_task_templates(user, last_sync):
     qs = TaskTemplate.objects.filter(owner=user)
 
     if last_sync:
@@ -22,5 +22,6 @@ def get_templates(user, last_sync):
             "fixed_month_of_year",
             "priority",
             "updated_at",
+            "created_at",
         )
     )

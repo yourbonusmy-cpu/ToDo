@@ -1,7 +1,7 @@
 from core.models import GroupTemplate
 
 
-def get_groups(user, last_sync):
+def get_group_templates(user, last_sync):
     qs = GroupTemplate.objects.filter(owner=user)
 
     if last_sync:
@@ -14,6 +14,7 @@ def get_groups(user, last_sync):
             "description": g.description,
             "task_uuids": list(g.tasks.values_list("uuid", flat=True)),
             "updated_at": g.updated_at,
+            "created_at": g.created_at,
         }
         for g in qs
     ]

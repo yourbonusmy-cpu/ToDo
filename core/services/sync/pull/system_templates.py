@@ -23,5 +23,6 @@ def get_system_templates(last_sync):
             "fixed_month_of_year",
             "priority",
             "updated_at",
+            "created_at",
         )
     )
