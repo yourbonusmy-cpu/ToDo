@@ -31,10 +31,10 @@ def get_task_templates(request, last_sync):
         )
     )
 
-    for item in data:
-        if item["icon"]:
-            item["icon"] = request.build_absolute_uri(
-                f"{settings.MEDIA_URL}{item['icon']}"
-            )
+    # for item in data:
+    #     if item["icon"]:
+    #         item["icon"] = request.build_absolute_uri(
+    #             f"{settings.MEDIA_URL}{item['icon']}"
+    #         )
 
     return data

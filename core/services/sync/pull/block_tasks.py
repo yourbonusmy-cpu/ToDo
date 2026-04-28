@@ -26,8 +26,8 @@ def get_block_tasks(request, last_sync):
         )
     )
 
-    for item in data:
-        if item["icon"]:
-            item["icon"] = request.build_absolute_uri(f"media/{item['icon']}")
+    # for item in data:
+    #     if item["icon"]:
+    #         item["icon"] = request.build_absolute_uri(f"media/{item['icon']}")
 
     return data

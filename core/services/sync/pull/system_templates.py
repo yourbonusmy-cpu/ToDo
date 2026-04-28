@@ -29,8 +29,8 @@ def get_system_templates(requests, last_sync):
         )
     )
 
-    for item in data:
-        if item["icon"]:
-            item["icon"] = build_icon_url(f"media/{item['icon']}", requests)
+    # for item in data:
+    #     if item["icon"]:
+    #         item["icon"] = build_icon_url(f"media/{item['icon']}", requests)
 
     return data
