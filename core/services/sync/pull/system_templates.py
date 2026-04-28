@@ -1,3 +1,4 @@
+from config import settings
 from core.models import SystemTaskTemplate
 
 
@@ -7,7 +8,7 @@ def get_system_templates(last_sync):
     if last_sync:
         qs = qs.filter(updated_at__gt=last_sync)
 
-    return list(
+    data = list(
         qs.values(
             "uuid",
             "code",
@@ -25,3 +26,5 @@ def get_system_templates(last_sync):
             "updated_at",
         )
     )
+
+    return data
