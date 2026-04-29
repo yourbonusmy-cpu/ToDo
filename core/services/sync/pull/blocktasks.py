@@ -24,6 +24,7 @@ def get_blocktasks(request, last_sync):
             "is_encrypted",
             "icon",
             "updated_at",
+            "created_at",
         )
     )
 
