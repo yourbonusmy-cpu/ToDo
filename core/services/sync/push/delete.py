@@ -14,7 +14,7 @@ OBJECT_MAP = {
 }
 
 
-def apply_deletions(user, device_id, deleted_list):
+def apply_deletions(user, device_uuid, deleted_list):
     if not deleted_list:
         return
 
@@ -37,7 +37,7 @@ def apply_deletions(user, device_id, deleted_list):
                 obj_uuid=uuid,
                 object_type=obj_type,
                 user=user,
-                device_id=device_id,
+                device_uuid=device_uuid,
             )
         )
 

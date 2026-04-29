@@ -292,7 +292,7 @@ def block_create(request, block_id=None):
                         obj_uuid=t.uuid,
                         object_type=DeletedObject.ObjectType.BLOCKTASK,
                         user=request.user,
-                        device_id=getattr(request, "device_id", None),
+                        device_uuid=getattr(request, "device_uuid", None),
                     )
                     for t in removed_tasks
                 ]
@@ -786,14 +786,14 @@ def delete_block(request, block_id):
             {"status": "error", "message": "Wrong password"}, status=403
         )
 
-    device_id = getattr(request, "device_id", None)
+    device_uuid = getattr(request, "device_uuid", None)
 
     with transaction.atomic():
         DeletedObject.objects.create(
             obj_uuid=block.uuid,
             object_type=DeletedObject.ObjectType.BLOCK,
             user=request.user,
-            device_id=device_id,
+            device_uuid=device_uuid,
         )
 
         tasks = BlockTask.objects.filter(block=block)
@@ -804,7 +804,7 @@ def delete_block(request, block_id):
                     obj_uuid=t.uuid,
                     object_type=DeletedObject.ObjectType.BLOCKTASK,
                     user=request.user,
-                    device_id=device_id,
+                    device_uuid=device_uuid,
                 )
                 for t in tasks
             ]

@@ -8,12 +8,12 @@ from .blocktasks import sync_blocktasks
 
 
 def handle_push(user, payload):
-    device_id = payload.get("device_id")
+    device_uuid = payload.get("device_uuid")
 
     with transaction.atomic():
 
         # 1. DELETE FIRST
-        apply_deletions(user, device_id, payload.get("deleted", []))
+        apply_deletions(user, device_uuid, payload.get("deleted", []))
 
         # 2. MASTER DATA
         sync_templates(user, payload.get("templates", []))
