@@ -1,18 +1,20 @@
+from config import settings
 from core.models import TaskTemplate
 
 
-def get_templates(user, last_sync):
-    qs = TaskTemplate.objects.filter(owner=user)
+def get_templates(request, last_sync):
+    qs = TaskTemplate.objects.filter(owner=request.user)
 
     if last_sync:
         qs = qs.filter(updated_at__gt=last_sync)
 
-    return list(
+    data = list(
         qs.values(
             "uuid",
             "system_template__uuid",
             "title",
             "description",
+            "icon",
             "is_hidden",
             "default_amount",
             "period_type",
@@ -24,3 +26,13 @@ def get_templates(user, last_sync):
             "updated_at",
         )
     )
+
+    for item in data:
+        if item["icon"]:
+            item["icon"] = request.build_absolute_uri(
+                settings.MEDIA_URL + item["icon"].lstrip("/")
+            )
+        else:
+            item["icon"] = None
+
+    return data

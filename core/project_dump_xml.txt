@@ -1,0 +1,1263 @@
+у меня есть реализация sync на сервере, нужно написать
+реализацию синк для андродида API → Retrofit → Repository → Room → DataStore (meta/cache) → ViewModel → UI
+
+===== ./services/sync/common/time.py =====
+from django.utils.dateparse import parse_datetime
+from django.utils.timezone import is_aware, make_aware
+
+
+def safe_parse_dt(value):
+    if not value:
+        return None
+
+    dt = parse_datetime(value)
+    if not dt:
+        return None
+
+    if not is_aware(dt):
+        dt = make_aware(dt)
+
+    return dt
+
+
+def is_newer(server_dt, client_dt):
+    if not client_dt:
+        return True
+    return server_dt < client_dt
+
+===== ./services/sync/common/mapping.py =====
+def get(data, key, default=None):
+    if not isinstance(data, dict):
+        return default
+    return data.get(key, default)
+
+
+def map_block(data):
+    return {
+        "uuid": get(data, "uuid"),
+        "title": get(data, "title", ""),
+        "priority": get(data, "priority", 0),
+        "updated_at": get(data, "updated_at"),
+    }
+
+
+def map_task(data):
+    return {
+        "uuid": get(data, "uuid"),
+        "block_uuid": get(data, "block_uuid"),
+        "title": get(data, "title", ""),
+        "position": get(data, "position", 0),
+        "updated_at": get(data, "updated_at"),
+    }
+
+===== ./services/sync/common/uuid.py =====
+import uuid
+
+
+def safe_uuid(value):
+    try:
+        return uuid.UUID(str(value))
+    except Exception:
+        return None
+
+
+def as_uuid_map(queryset):
+    """
+    превращает queryset в {uuid: obj}
+    """
+    return {obj.uuid: obj for obj in queryset}
+
+===== ./services/sync/common/__init__.py =====
+
+===== ./services/sync/common/conflict.py =====
+def resolve_update(server_obj, client_data, client_dt, server_dt):
+    """
+    единая точка конфликта update
+    """
+
+    if not client_dt:
+        return False  # игнор
+
+    if server_dt >= client_dt:
+        return False  # server wins
+
+    return True  # client wins
+
+===== ./services/sync/push.py =====
+
+
+===== ./services/sync/delete.py =====
+from django.db import transaction
+
+from core.models import (
+    Block,
+    BlockTask,
+    TaskTemplate,
+    GroupTemplate,
+    SystemTaskTemplate,
+    DeletedObject,
+)
+
+OBJECT_MAP = {
+    "block": Block,
+    "blocktask": BlockTask,
+    "template": TaskTemplate,
+    "group": GroupTemplate,
+    "system_template": SystemTaskTemplate,
+}
+
+
+def apply_deletions(user, device_id, deleted_list):
+    """
+    deleted_list format:
+    [
+        {"uuid": "...", "type": "block"},
+        {"uuid": "...", "type": "blocktask"},
+    ]
+    """
+
+    if not deleted_list:
+        return
+
+    # batch check already applied deletions
+    incoming_keys = set((i["uuid"], i["type"]) for i in deleted_list)
+
+    existing = set(
+        DeletedObject.objects.filter(
+            user=user,
+            obj_uuid__in=[i["uuid"] for i in deleted_list],
+        ).values_list("obj_uuid", "object_type")
+    )
+
+    to_create = []
+    to_delete_queries = {
+        "block": [],
+        "blocktask": [],
+        "template": [],
+        "group": [],
+        "system_template": [],
+    }
+
+    for item in deleted_list:
+        uuid = item["uuid"]
+        obj_type = item["type"]
+
+        # idempotency (важно для multi-device sync)
+        if (uuid, obj_type) in existing:
+            continue
+
+        to_create.append(
+            DeletedObject(
+                obj_uuid=uuid,
+                object_type=obj_type,
+                user=user,
+                device_id=device_id,
+            )
+        )
+
+        model = OBJECT_MAP.get(obj_type)
+        if model:
+            to_delete_queries[obj_type].append(uuid)
+
+    # -------------------------
+    # BULK INSERT TOMBSTONES
+    # -------------------------
+    if to_create:
+        DeletedObject.objects.bulk_create(to_create, ignore_conflicts=True)
+
+    # -------------------------
+    # HARD DELETE (LOCAL STATE)
+    # -------------------------
+    if to_delete_queries["block"]:
+        Block.objects.filter(owner=user, uuid__in=to_delete_queries["block"]).delete()
+
+    if to_delete_queries["blocktask"]:
+        BlockTask.objects.filter(uuid__in=to_delete_queries["blocktask"]).delete()
+
+    if to_delete_queries["template"]:
+        TaskTemplate.objects.filter(
+            owner=user, uuid__in=to_delete_queries["template"]
+        ).delete()
+
+    if to_delete_queries["group"]:
+        GroupTemplate.objects.filter(
+            owner=user, uuid__in=to_delete_queries["group"]
+        ).delete()
+
+    if to_delete_queries["system_template"]:
+        SystemTaskTemplate.objects.filter(
+            uuid__in=to_delete_queries["system_template"]
+        ).delete()
+
+===== ./services/sync/__init__.py =====
+
+===== ./services/sync/push/dispatcher.py =====
+from django.db import transaction
+
+from .delete import apply_deletions
+from .templates import sync_templates
+from .groups import sync_groups
+from .blocks import sync_blocks
+from .blocktasks import sync_blocktasks
+
+
+def handle_push(user, payload):
+    device_id = payload.get("device_id")
+
+    with transaction.atomic():
+
+        # 1. DELETE FIRST
+        apply_deletions(user, device_id, payload.get("deleted", []))
+
+        # 2. MASTER DATA
+        sync_templates(user, payload.get("templates", []))
+        sync_groups(user, payload.get("groups", []))
+
+        # 3. DOMAIN DATA
+        sync_blocks(user, payload.get("blocks", []))
+        sync_blocktasks(user, payload.get("tasks", []))
+
+===== ./services/sync/push/blocktasks.py =====
+from core.models import Block, BlockTask
+
+
+def sync_blocktasks(user, items):
+    blocks_map = {b.uuid: b for b in Block.objects.filter(owner=user)}
+
+    existing = {t.uuid: t for t in BlockTask.objects.filter(block__owner=user)}
+
+    for data in items:
+        uuid = data["uuid"]
+        block_uuid = data["block_uuid"]
+
+        block = blocks_map.get(block_uuid)
+        if not block:
+            continue
+
+        obj = existing.get(uuid)
+
+        if obj:
+            obj.title = data.get("title", obj.title)
+            obj.description = data.get("description", obj.description)
+            obj.position = data.get("position", obj.position)
+            obj.amount = data.get("amount", obj.amount)
+            obj.time = data.get("time", obj.time)
+            obj.is_hidden = data.get("is_hidden", obj.is_hidden)
+            obj.save()
+
+        else:
+            BlockTask.objects.create(
+                uuid=uuid,
+                block=block,
+                title=data.get("title", ""),
+                position=data.get("position", 0),
+            )
+
+===== ./services/sync/push/groups.py =====
+from core.models import GroupTemplate, TaskTemplate
+
+
+def sync_groups(user, items):
+    templates_map = {t.uuid: t for t in TaskTemplate.objects.filter(owner=user)}
+
+    existing = {g.uuid: g for g in GroupTemplate.objects.filter(owner=user)}
+
+    for data in items:
+        uuid = data["uuid"]
+
+        obj = existing.get(uuid)
+
+        if obj:
+            obj.title = data.get("title", obj.title)
+            obj.description = data.get("description", obj.description)
+            obj.save()
+
+        else:
+            obj = GroupTemplate.objects.create(
+                owner=user,
+                uuid=uuid,
+                title=data.get("title", ""),
+            )
+
+        # M2M sync
+        task_uuids = data.get("task_uuids", [])
+
+        obj.tasks.set([templates_map[u] for u in task_uuids if u in templates_map])
+
+===== ./services/sync/push/blocks.py =====
+from core.models import Block
+from core.services.sync.common.conflict import resolve_update
+from core.services.sync.common.time import safe_parse_dt
+from core.services.sync.common.uuid import as_uuid_map
+
+
+def sync_blocks(user, items):
+    existing = as_uuid_map(Block.objects.filter(owner=user))
+
+    for data in items:
+        uuid = data["uuid"]
+        client_time = safe_parse_dt(data.get("updated_at"))
+
+        obj = existing.get(uuid)
+
+        if obj:
+            if not resolve_update(obj, data, client_time, obj.updated_at):
+                continue
+
+            obj.title = data.get("title", obj.title)
+            obj.priority = data.get("priority", obj.priority)
+            obj.is_hidden = data.get("is_hidden", obj.is_hidden)
+            obj.target_date = data.get("target_date", obj.target_date)
+            obj.save()
+
+        else:
+            Block.objects.create(
+                owner=user,
+                uuid=uuid,
+                title=data.get("title", ""),
+                priority=data.get("priority", 0),
+            )
+
+===== ./services/sync/push/delete.py =====
+from core.models import (
+    Block,
+    BlockTask,
+    TaskTemplate,
+    GroupTemplate,
+    DeletedObject,
+)
+
+OBJECT_MAP = {
+    "block": Block,
+    "blocktask": BlockTask,
+    "template": TaskTemplate,
+    "group": GroupTemplate,
+}
+
+
+def apply_deletions(user, device_id, deleted_list):
+    if not deleted_list:
+        return
+
+    to_create = []
+
+    for item in deleted_list:
+        uuid = item["uuid"]
+        obj_type = item["type"]
+
+        # idempotency (защита от повторного push)
+        exists = DeletedObject.objects.filter(
+            obj_uuid=uuid, object_type=obj_type, user=user
+        ).exists()
+
+        if exists:
+            continue
+
+        to_create.append(
+            DeletedObject(
+                obj_uuid=uuid,
+                object_type=obj_type,
+                user=user,
+                device_id=device_id,
+            )
+        )
+
+        model = OBJECT_MAP.get(obj_type)
+
+        if model is Block:
+            Block.objects.filter(owner=user, uuid=uuid).delete()
+
+        elif model is BlockTask:
+            BlockTask.objects.filter(uuid=uuid).delete()
+
+        elif model is TaskTemplate:
+            TaskTemplate.objects.filter(owner=user, uuid=uuid).delete()
+
+        elif model is GroupTemplate:
+            GroupTemplate.objects.filter(owner=user, uuid=uuid).delete()
+
+    if to_create:
+        DeletedObject.objects.bulk_create(to_create, ignore_conflicts=True)
+
+===== ./services/sync/push/__init__.py =====
+
+===== ./services/sync/push/templates.py =====
+from core.models import TaskTemplate
+
+
+def sync_templates(user, items):
+    existing = {t.uuid: t for t in TaskTemplate.objects.filter(owner=user)}
+
+    for data in items:
+        uuid = data["uuid"]
+
+        obj = existing.get(uuid)
+
+        if obj:
+            obj.title = data.get("title", obj.title)
+            obj.description = data.get("description", obj.description)
+            obj.priority = data.get("priority", obj.priority)
+            obj.is_hidden = data.get("is_hidden", obj.is_hidden)
+            obj.save()
+
+        else:
+            TaskTemplate.objects.create(
+                owner=user,
+                uuid=uuid,
+                title=data.get("title", ""),
+            )
+
+===== ./services/sync/pull/deleted.py =====
+from core.models import DeletedObject
+
+
+def get_deleted(user, last_sync):
+    qs = DeletedObject.objects.filter(user=user)
+
+    if last_sync:
+        qs = qs.filter(deleted_at__gt=last_sync)
+
+    return list(
+        qs.values(
+            "obj_uuid",
+            "object_type",
+            "deleted_at",
+        )
+    )
+
+===== ./services/sync/pull/builder.py =====
+from django.utils.timezone import now
+
+from .blocks import get_blocks
+from .blocktasks import get_blocktasks
+from .templates import get_templates
+from .groups import get_groups
+from .system_templates import get_system_templates
+from .deleted import get_deleted
+
+
+def build_pull_response(user, last_sync):
+    return {
+        "server_time": now(),
+        "blocks": get_blocks(user, last_sync),
+        "tasks": get_blocktasks(user, last_sync),
+        "templates": get_templates(user, last_sync),
+        "groups": get_groups(user, last_sync),
+        "system_templates": get_system_templates(last_sync),
+        "deleted": get_deleted(user, last_sync),
+    }
+
+===== ./services/sync/pull/blocktasks.py =====
+from core.models import BlockTask
+
+
+def get_blocktasks(user, last_sync):
+    qs = BlockTask.objects.filter(block__owner=user)
+
+    if last_sync:
+        qs = qs.filter(updated_at__gt=last_sync)
+
+    return list(
+        qs.values(
+            "uuid",
+            "block__uuid",
+            "template__uuid",
+            "title",
+            "description",
+            "amount",
+            "time",
+            "position",
+            "is_hidden",
+            "is_encrypted",
+            "icon",
+            "updated_at",
+        )
+    )
+
+===== ./services/sync/pull/system_templates.py =====
+from core.models import SystemTaskTemplate
+
+
+def get_system_templates(last_sync):
+    qs = SystemTaskTemplate.objects.all()
+
+    if last_sync:
+        qs = qs.filter(updated_at__gt=last_sync)
+
+    return list(
+        qs.values(
+            "uuid",
+            "code",
+            "title",
+            "description",
+            "is_hidden",
+            "icon",
+            "default_amount",
+            "period_type",
+            "schedule_type",
+            "fixed_weekday",
+            "fixed_day_of_month",
+            "fixed_month_of_year",
+            "priority",
+            "updated_at",
+        )
+    )
+
+===== ./services/sync/pull/groups.py =====
+from core.models import GroupTemplate
+
+
+def get_groups(user, last_sync):
+    qs = GroupTemplate.objects.filter(owner=user)
+
+    if last_sync:
+        qs = qs.filter(updated_at__gt=last_sync)
+
+    return [
+        {
+            "uuid": g.uuid,
+            "title": g.title,
+            "description": g.description,
+            "task_uuids": list(g.tasks.values_list("uuid", flat=True)),
+            "updated_at": g.updated_at,
+        }
+        for g in qs
+    ]
+
+===== ./services/sync/pull/blocks.py =====
+from core.models import Block
+
+
+def get_blocks(user, last_sync):
+    qs = Block.objects.filter(owner=user)
+
+    if last_sync:
+        qs = qs.filter(updated_at__gt=last_sync)
+
+    return list(
+        qs.values(
+            "uuid",
+            "title",
+            "priority",
+            "is_hidden",
+            "target_date",
+            "updated_at",
+        )
+    )
+
+===== ./services/sync/pull/__init__.py =====
+
+===== ./services/sync/pull/templates.py =====
+from core.models import TaskTemplate
+
+
+def get_templates(user, last_sync):
+    qs = TaskTemplate.objects.filter(owner=user)
+
+    if last_sync:
+        qs = qs.filter(updated_at__gt=last_sync)
+
+    return list(
+        qs.values(
+            "uuid",
+            "system_template__uuid",
+            "title",
+            "description",
+            "is_hidden",
+            "default_amount",
+            "period_type",
+            "schedule_type",
+            "fixed_weekday",
+            "fixed_day_of_month",
+            "fixed_month_of_year",
+            "priority",
+            "updated_at",
+        )
+    )
+
+===== ./services/__init__.py =====
+
+===== ./tests.py =====
+from django.test import TestCase
+
+# Create your tests here.
+
+===== ./admin.py =====
+from django.contrib import admin
+
+from core.models import TaskTemplate
+
+
+# Register your models here.
+@admin.register(TaskTemplate)
+class TaskTemplateAdmin(admin.ModelAdmin):
+    list_display = (
+        "title",
+        "period_type",
+        "schedule_type",
+        "priority",
+        "created_at",
+    )
+===== ./api/routers.py =====
+from rest_framework.routers import DefaultRouter
+
+from core.api.viewsets.sync import SyncViewSet
+from core.api.viewsets.blocks import BlockViewSet
+from core.api.viewsets.block_task import BlockTaskViewSet
+from core.api.viewsets.task_templates import TaskTemplateViewSet
+from core.api.viewsets.system_templates import SystemTaskTemplateViewSet
+from core.api.viewsets.group_templates import GroupTemplateViewSet
+from core.api.viewsets.devices import DeviceViewSet
+
+router = DefaultRouter()
+
+router.register("sync", SyncViewSet, basename="sync")
+router.register("blocks", BlockViewSet, basename="blocks")
+router.register("block-tasks", BlockTaskViewSet, basename="block-tasks")
+router.register("task-templates", TaskTemplateViewSet, basename="task-templates")
+router.register(
+    "system-templates", SystemTaskTemplateViewSet, basename="system-templates"
+)
+router.register("group-templates", GroupTemplateViewSet, basename="group-templates")
+router.register("devices", DeviceViewSet, basename="devices")
+
+urlpatterns = router.urls
+
+===== ./api/viewsets/permissions.py =====
+from rest_framework.permissions import BasePermission
+
+
+class IsOwner(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return getattr(obj, "owner", None) == request.user
+
+===== ./api/viewsets/block_task.py =====
+from core.api.viewsets.base import BaseViewSet
+from core.models import BlockTask
+from core.serializers import BlockTaskSerializer
+
+
+class BlockTaskViewSet(BaseViewSet):
+    queryset = BlockTask.objects.all()
+    serializer_class = BlockTaskSerializer
+    lookup_field = "uuid"
+
+===== ./api/viewsets/devices.py =====
+from core.api.viewsets.base import BaseViewSet
+from core.models import Device
+from core.serializers import DeviceSerializer
+
+
+class DeviceViewSet(BaseViewSet):
+    queryset = Device.objects.all()
+    serializer_class = DeviceSerializer
+
+===== ./api/viewsets/system_templates.py =====
+from rest_framework import viewsets
+
+from core.models import SystemTaskTemplate
+from core.serializers import SystemTaskTemplateSerializer
+
+
+class SystemTaskTemplateViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = SystemTaskTemplate.objects.filter(is_hidden=False)
+    serializer_class = SystemTaskTemplateSerializer
+    lookup_field = "uuid"
+
+===== ./api/viewsets/blocks.py =====
+from rest_framework.viewsets import ModelViewSet
+
+from core.api.viewsets.base import BaseViewSet
+from core.models import Block
+from core.serializers import BlockSerializer
+
+
+class BlockViewSet(BaseViewSet):
+    queryset = Block.objects.all()
+    serializer_class = BlockSerializer
+    lookup_field = "uuid"
+
+===== ./api/viewsets/group_templates.py =====
+from core.api.viewsets.base import BaseViewSet
+from core.models import GroupTemplate
+from core.serializers import GroupTemplateSerializer
+
+
+class GroupTemplateViewSet(BaseViewSet):
+    queryset = GroupTemplate.objects.all()
+    serializer_class = GroupTemplateSerializer
+    lookup_field = "uuid"
+
+===== ./api/viewsets/base.py =====
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+
+
+class BaseViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return self.queryset.filter(block__owner=self.request.user)
+
+===== ./api/viewsets/__init__.py =====
+from .sync import SyncViewSet
+from .blocks import BlockViewSet
+from .block_task import BlockTaskViewSet
+from .task_templates import TaskTemplateViewSet
+from .system_templates import SystemTaskTemplateViewSet
+from .group_templates import GroupTemplateViewSet
+from .devices import DeviceViewSet
+
+===== ./api/viewsets/sync.py =====
+from rest_framework.viewsets import ViewSet
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from core.services.sync.push.dispatcher import handle_push
+from core.services.sync.pull.builder import build_pull_response
+from core.services.sync.common.time import safe_parse_dt
+
+
+class SyncViewSet(ViewSet):
+
+    @action(detail=False, methods=["post"])
+    def push(self, request):
+        handle_push(request.user, request.data)
+        return Response({"status": "ok"})
+
+    @action(detail=False, methods=["post"])
+    def pull(self, request):
+        last_sync = safe_parse_dt(request.data.get("last_sync"))
+
+        data = build_pull_response(request.user, last_sync)
+
+        return Response(data)
+
+===== ./api/viewsets/task_templates.py =====
+from core.api.viewsets.base import BaseViewSet
+from core.models import TaskTemplate
+from core.serializers import TaskTemplateSyncSerializer
+
+
+class TaskTemplateViewSet(BaseViewSet):
+    queryset = TaskTemplate.objects.all()
+    serializer_class = TaskTemplateSyncSerializer
+    lookup_field = "uuid"
+
+===== ./api/__init__.py =====
+
+===== ./serializers.py =====
+from rest_framework import serializers
+from core.models import Device
+from core.models import (
+    Block,
+    BlockTask,
+    TaskTemplate,
+    GroupTemplate,
+    DeletedObject,
+    SystemTaskTemplate,
+)
+
+
+class BlockSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Block
+        fields = [
+            "uuid",
+            "title",
+            "priority",
+            "is_hidden",
+            "created_at",
+            "updated_at",
+            "target_date",
+        ]
+
+
+class BlockTaskSerializer(serializers.ModelSerializer):
+    block_uuid = serializers.UUIDField(source="block.uuid")
+    template_uuid = serializers.UUIDField(source="template.uuid", allow_null=True)
+
+    class Meta:
+        model = BlockTask
+        fields = [
+            "uuid",
+            "block_uuid",
+            "template_uuid",
+            "title",
+            "description",
+            "icon",
+            "position",
+            "amount",
+            "time",
+            "is_hidden",
+            "is_encrypted",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class SystemTaskTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SystemTaskTemplate
+        exclude = ["id"]
+
+
+class TaskTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskTemplate
+        exclude = ["id", "owner"]
+
+
+class GroupTemplateSerializer(serializers.ModelSerializer):
+    task_uuids = serializers.PrimaryKeyRelatedField(
+        many=True, source="tasks", read_only=True
+    )
+
+    class Meta:
+        model = GroupTemplate
+        exclude = ["id", "owner"]
+
+
+class DeletedObjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeletedObject
+        fields = ["obj_uuid", "object_type", "deleted_at"]
+
+
+class DeviceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Device
+        fields = [
+            "device_id",
+            "platform",
+            "name",
+            "last_sync_at",
+            "last_seen_at",
+            "created_at",
+            "is_active",
+        ]
+        read_only_fields = [
+            "last_seen_at",
+            "created_at",
+            "last_sync_at",
+        ]
+
+
+class TaskTemplateSyncSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskTemplate
+        fields = [
+            "uuid",
+            "title",
+            "description",
+            "icon",
+            "period_type",
+            "schedule_type",
+            "fixed_weekday",
+            "fixed_day_of_month",
+            "fixed_month_of_year",
+            "priority",
+            "updated_at",
+        ]
+
+===== ./__init__.py =====
+
+===== ./models.py =====
+import os
+import uuid
+
+from django.core.exceptions import ValidationError
+from django.contrib.auth import get_user_model
+from django.db import models
+from django.contrib.auth.hashers import make_password, check_password
+
+User = get_user_model()
+
+
+class WeekdayChoices(models.IntegerChoices):
+    MON = 0, "Понедельник"
+    TUE = 1, "Вторник"
+    WED = 2, "Среда"
+    THU = 3, "Четверг"
+    FRI = 4, "Пятница"
+    SAT = 5, "Суббота"
+    SUN = 6, "Воскресенье"
+
+
+class MonthChoices(models.IntegerChoices):
+    JAN = 1, "Январь"
+    FEB = 2, "Февраль"
+    MAR = 3, "Март"
+    APR = 4, "Апрель"
+    MAY = 5, "Май"
+    JUN = 6, "Июнь"
+    JUL = 7, "Июль"
+    AUG = 8, "Август"
+    SEP = 9, "Сентябрь"
+    OCT = 10, "Октябрь"
+    NOV = 11, "Ноябрь"
+    DEC = 12, "Декабрь"
+
+
+class PeriodType(models.TextChoices):
+    NONE = "none", "Нет"
+    DAY = "day", "День"
+    WEEK = "week", "Неделя"
+    MONTH = "month", "Месяц"
+    YEAR = "year", "Год"
+
+
+class ScheduleType(models.TextChoices):
+    NONE = "none", "Нет"
+    FLOATING = "floating", "В течение периода"
+    FIXED = "fixed", "Не раньше даты"
+
+
+def task_icon_upload_path(instance, filename):
+    # instance.owner.username → имя пользователя
+    # filename → оригинальное имя файла
+    return os.path.join("image", instance.owner.username, "task_icons", filename)
+
+
+class UserPin(models.Model):
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    pin_hash = models.CharField(max_length=128, blank=True, null=True)
+
+    is_pin_enabled = models.BooleanField(default=False)
+
+    def enable_pin(self, raw_pin: str | None = None):
+        """
+        Включить PIN.
+        Если PIN не передан — установить 0000.
+        """
+
+        if raw_pin is None:
+            raw_pin = "0000"
+
+        self.pin_hash = make_password(raw_pin)
+        self.is_pin_enabled = True
+        self.save()
+
+    def disable_pin(self):
+        """
+        Отключить PIN.
+        PIN остаётся в базе.
+        """
+        self.is_pin_enabled = False
+        self.save()
+
+    def check_pin(self, raw_pin: str) -> bool:
+
+        if not self.is_pin_enabled or not self.pin_hash:
+            return False
+
+        return check_password(raw_pin, self.pin_hash)
+
+
+class SystemTaskTemplate(models.Model):
+
+    code = models.CharField(max_length=64, unique=True)
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
+    title = models.CharField(max_length=128)
+    description = models.TextField(blank=True)
+    is_hidden = models.BooleanField(default=False)
+
+    icon = models.CharField(max_length=255, blank=True)
+
+    default_amount = models.PositiveIntegerField(default=1)
+
+    period_type = models.CharField(
+        max_length=16, choices=PeriodType.choices, default=PeriodType.NONE
+    )
+
+    schedule_type = models.CharField(
+        max_length=16, choices=ScheduleType.choices, default=ScheduleType.NONE
+    )
+
+    fixed_weekday = models.PositiveSmallIntegerField(
+        choices=WeekdayChoices.choices, null=True, blank=True
+    )
+
+    fixed_day_of_month = models.PositiveSmallIntegerField(null=True, blank=True)
+
+    fixed_month_of_year = models.PositiveSmallIntegerField(
+        choices=MonthChoices.choices, null=True, blank=True
+    )
+
+    priority = models.PositiveSmallIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class TaskTemplate(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
+    system_template = models.ForeignKey(
+        SystemTaskTemplate, null=True, blank=True, on_delete=models.SET_NULL
+    )
+    is_hidden = models.BooleanField(default=False)
+    title = models.CharField(max_length=128)
+    description = models.TextField(blank=True)
+    icon = models.ImageField(
+        upload_to=task_icon_upload_path, blank=True, null=True  # динамический путь
+    )
+
+    default_amount = models.PositiveIntegerField(default=1)
+
+    period_type = models.CharField(
+        max_length=16, choices=PeriodType.choices, default=PeriodType.NONE
+    )
+    schedule_type = models.CharField(
+        max_length=16, choices=ScheduleType.choices, default=ScheduleType.NONE
+    )
+
+    # для задач по дням недели
+    fixed_weekday = models.PositiveSmallIntegerField(
+        choices=WeekdayChoices.choices, null=True, blank=True
+    )
+
+    # для задач по числу месяца
+    fixed_day_of_month = models.PositiveSmallIntegerField(null=True, blank=True)
+
+    # для задач раз в год
+    fixed_month_of_year = models.PositiveSmallIntegerField(
+        choices=MonthChoices.choices, null=True, blank=True
+    )
+
+    next_available_at = models.DateTimeField(null=True, blank=True)
+    # когда шаблон последний раз использовали
+    last_used_at = models.DateTimeField(null=True, blank=True)
+
+    selected_count = models.PositiveIntegerField(default=0)
+    priority = models.PositiveSmallIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+
+        if self.schedule_type == ScheduleType.FIXED:
+
+            if self.period_type == PeriodType.WEEK and not self.fixed_weekday:
+                raise ValidationError("Нужно указать день недели")
+
+            if self.period_type == PeriodType.MONTH and not self.fixed_day_of_month:
+                raise ValidationError("Нужно указать день месяца")
+
+            if self.period_type == PeriodType.YEAR and (
+                not self.fixed_day_of_month or not self.fixed_month_of_year
+            ):
+                raise ValidationError("Нужно указать дату")
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["owner", "next_available_at"]),
+            models.Index(fields=["owner", "priority"]),
+            models.Index(fields=["owner", "selected_count"]),
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["owner", "system_template"], name="unique_user_system_template"
+            )
+        ]
+
+
+class GroupTemplate(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
+    title = models.CharField(max_length=128)
+    description = models.TextField(blank=True)
+
+    tasks = models.ManyToManyField(TaskTemplate, related_name="group_templates")
+
+    selected_count = models.PositiveIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["owner", "-updated_at", "-id"]),  # композитный индекс
+            models.Index(fields=["owner"]),
+        ]
+
+
+class Block(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
+    title = models.CharField(max_length=128)
+    priority = models.PositiveSmallIntegerField(default=0)
+    is_hidden = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    target_date = models.DateField(null=True, blank=True, db_index=True)
+
+    class Meta:
+        ordering = ["-priority", "created_at"]
+        indexes = [
+            models.Index(fields=["owner", "updated_at"]),
+            models.Index(fields=["owner", "uuid"]),
+        ]
+
+
+class BlockTask(models.Model):
+    block = models.ForeignKey(Block, on_delete=models.CASCADE, related_name="tasks")
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
+    template = models.ForeignKey(
+        TaskTemplate,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="block_tasks",
+    )
+    title = models.CharField(max_length=128)
+    description = models.TextField(blank=True)
+    icon = models.CharField(max_length=255, blank=True)
+    position = models.PositiveIntegerField()
+    amount = models.PositiveIntegerField(default=1)
+    time = models.FloatField(default=1)
+    is_hidden = models.BooleanField(default=False)
+    is_encrypted = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["position"]
+        indexes = [
+            models.Index(fields=["block", "position"]),
+            models.Index(fields=["uuid"]),
+        ]
+
+
+class BlockWeather(models.Model):
+    block = models.OneToOneField(
+        Block, on_delete=models.CASCADE, related_name="weather"
+    )
+    city = models.CharField(max_length=64)
+    data = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class Device(models.Model):
+    class Platform(models.TextChoices):
+        ANDROID = "android", "Android"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    device_uuid = models.UUIDField(unique=True, db_index=True)
+
+    platform = models.CharField(max_length=16, choices=Platform.choices)
+
+    name = models.CharField(max_length=128, blank=True)
+
+    last_sync_at = models.DateTimeField(null=True, blank=True)
+    last_seen_at = models.DateTimeField(auto_now=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["user", "last_sync_at"]),
+        ]
+
+
+class DeletedObject(models.Model):
+
+    class ObjectType(models.TextChoices):
+        BLOCK = "block", "Block"
+        BLOCKTASK = "blocktask", "BlockTask"
+
+    # ID объекта на клиенте (главный ключ синка)
+    obj_uuid = models.UUIDField(db_index=True)
+
+    # тип сущности
+    object_type = models.CharField(
+        max_length=16, choices=ObjectType.choices, db_index=True
+    )
+
+    # когда удалили
+    deleted_at = models.DateTimeField(auto_now_add=True)
+
+    # кто удалил (важно для multi-device consistency)
+    user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+
+    # устройство (опционально, но полезно)
+    device_uuid = models.UUIDField(null=True, blank=True, db_index=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["user", "deleted_at"]),
+            models.Index(fields=["obj_uuid", "object_type"]),
+        ]
+
+===== ./authentication.py =====
+# app/authentication.py
+
+from rest_framework.authentication import BaseAuthentication
+from django.utils import timezone
+from .models import Device
+
+
+class DeviceAuthentication(BaseAuthentication):
+
+    def authenticate(self, request):
+        device_id = request.headers.get("X-Device-Id")
+        platform = request.headers.get("X-Platform")
+
+        # игнорируем браузер и прочих клиентов
+        if not device_id or platform != "android":
+            return None
+
+        # важно: пользователь должен уже быть установлен предыдущим классом (JWT)
+        user = getattr(request, "user", None)
+        if not user or not user.is_authenticated:
+            return None
+
+        # upsert устройства
+        device, _ = Device.objects.update_or_create(
+            device_id=device_id,
+            defaults={
+                "user": user,
+                "platform": "android",
+                "is_active": True,
+                "last_seen_at": timezone.now(),
+            },
+        )
+
+        # можно сохранить на request для дальнейшего использования
+        request.device = device
+
+        # не подменяем пользователя
+        return None
+
+===== ./pagination.py =====
+# pagination.py
+from rest_framework.pagination import CursorPagination
+
+
+class BlockCursorPagination(CursorPagination):
+    page_size = 15
+    page_size_query_param = "page_size"  # 👈 ключ
+    max_page_size = 50  # 👈 защита от перегрузки
+    ordering = ("-created_at", "-id")  # важно!
+
+
+class GroupCursorPagination(CursorPagination):
+    page_size = 15
+    page_size_query_param = "page_size"  # 👈 ключ
+    max_page_size = 50  # 👈 защита от перегрузки
+    ordering = ("-updated_at", "-id")
+
+
+class TemplateCursorPagination(CursorPagination):
+    page_size = 30
+    page_size_query_param = "page_size"
+    max_page_size = 100
+    ordering = "-updated_at"

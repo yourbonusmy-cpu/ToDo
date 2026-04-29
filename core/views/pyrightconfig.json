@@ -1,0 +1,6 @@
+{
+  "typeCheckingMode": "basic",
+  "reportMissingImports": true,
+  "reportGeneralTypeIssues": true,
+  "django": true
+}

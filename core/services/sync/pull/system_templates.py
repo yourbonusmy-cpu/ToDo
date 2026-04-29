@@ -2,7 +2,7 @@ from config import settings
 from core.models import SystemTaskTemplate
 
 
-def get_system_templates(last_sync):
+def get_system_templates(request, last_sync):
     qs = SystemTaskTemplate.objects.all()
 
     if last_sync:
@@ -26,5 +26,14 @@ def get_system_templates(last_sync):
             "updated_at",
         )
     )
+
+    for item in data:
+        icon_name = item.get("icon")
+
+        if icon_name and icon_name.strip():
+            icon_path = f"static/default_templates/icons/{icon_name.lstrip('/')}"
+            item["icon"] = request.build_absolute_uri(f"/{icon_path}")
+        else:
+            item["icon"] = None
 
     return data

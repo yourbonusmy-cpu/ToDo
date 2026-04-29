@@ -1,8 +1,8 @@
 from core.models import Block
 
 
-def get_blocks(user, last_sync):
-    qs = Block.objects.filter(owner=user)
+def get_blocks(request, last_sync):
+    qs = Block.objects.filter(owner=request.user)
 
     if last_sync:
         qs = qs.filter(updated_at__gt=last_sync)
