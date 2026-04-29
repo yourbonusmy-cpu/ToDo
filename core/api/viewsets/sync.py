@@ -18,6 +18,6 @@ class SyncViewSet(ViewSet):
     def pull(self, request):
         last_sync = safe_parse_dt(request.data.get("last_sync"))
 
-        data = build_pull_response(request.user, last_sync, request)
+        data = build_pull_response(request, last_sync)
 
         return Response(data)

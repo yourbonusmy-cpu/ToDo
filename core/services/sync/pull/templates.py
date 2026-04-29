@@ -1,11 +1,8 @@
+from config import settings
 from core.models import TaskTemplate
-from core.utils.icons import resolve_icon
 
 
-from django.conf import settings
-
-
-def get_task_templates(request, last_sync):
+def get_templates(request, last_sync):
     qs = TaskTemplate.objects.filter(owner=request.user)
 
     if last_sync:
@@ -16,8 +13,8 @@ def get_task_templates(request, last_sync):
             "uuid",
             "system_template__uuid",
             "title",
-            "icon",
             "description",
+            "icon",
             "is_hidden",
             "default_amount",
             "period_type",
@@ -27,14 +24,15 @@ def get_task_templates(request, last_sync):
             "fixed_month_of_year",
             "priority",
             "updated_at",
-            "created_at",
         )
     )
 
-    # for item in data:
-    #     if item["icon"]:
-    #         item["icon"] = request.build_absolute_uri(
-    #             f"{settings.MEDIA_URL}{item['icon']}"
-    #         )
+    for item in data:
+        if item["icon"]:
+            item["icon"] = request.build_absolute_uri(
+                settings.MEDIA_URL + item["icon"].lstrip("/")
+            )
+        else:
+            item["icon"] = None
 
     return data
