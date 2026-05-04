@@ -1,5 +1,7 @@
 from django.shortcuts import redirect
 from django.contrib.auth import logout
+from django.utils import timezone
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from core.forms import RegisterForm
 
@@ -9,6 +11,35 @@ from django.contrib.auth import login
 from django.contrib.auth.forms import AuthenticationForm
 
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from core.models import Device
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+
+    def post(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.user  # ✔ правильно
+
+        response = super().post(request, *args, **kwargs)
+
+        device_uuid = request.data.get("device_uuid")
+        platform = request.data.get("platform")
+
+        if device_uuid and platform == "android":
+            Device.objects.update_or_create(
+                device_uuid=device_uuid,
+                defaults={
+                    "user": user,
+                    "platform": "android",
+                    "last_seen_at": timezone.now(),
+                },
+            )
+
+        return response
 
 
 class UserLoginView(View):

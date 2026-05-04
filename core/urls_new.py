@@ -1,6 +1,11 @@
 from django.urls import path
 
-from core.views_new.auth import user_logout, UserLoginView, register
+from core.views_new.auth import (
+    user_logout,
+    UserLoginView,
+    register,
+    CustomTokenObtainPairView,
+)
 from core.views_new.calendar import calendar_data
 from core.views_new.blocks import (
     block_create,
@@ -123,6 +128,7 @@ urlpatterns += [
 
 # Auth
 urlpatterns += [
+    path("api/login/", CustomTokenObtainPairView.as_view()),
     path("login/", UserLoginView.as_view(), name="login"),
     path("register/", register, name="register"),
     path("logout/", user_logout, name="logout"),

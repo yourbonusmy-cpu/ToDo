@@ -94,9 +94,7 @@ urlpatterns += [
 ]
 
 # login
-urlpatterns += [
-    path("api/login/", CustomTokenObtainPairView.as_view()),
-]
+urlpatterns += []
 
 # block
 urlpatterns += [
