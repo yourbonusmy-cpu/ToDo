@@ -16,7 +16,7 @@ def get_system_templates(request, last_sync):
             "description",
             "is_hidden",
             "icon",
-            "default_amount",
+            "amount",
             "period_type",
             "schedule_type",
             "fixed_weekday",
