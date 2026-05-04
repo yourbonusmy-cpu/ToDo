@@ -74,7 +74,7 @@ function buildParams() {
   }
 
   document.querySelectorAll(".task-toggle:checked").forEach(cb => {
-    params.append("tasks", cb.value);
+    params.append("block_tasks", cb.value);
   });
 
   getWeekdays().forEach(day => {

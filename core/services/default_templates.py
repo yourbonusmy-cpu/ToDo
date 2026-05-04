@@ -12,7 +12,7 @@ def load_default_templates_for_user(user):
     if TaskTemplate.objects.filter(owner=user).exists():
         return
 
-    base_path = Path(settings.BASE_DIR) / "static" / "default_templates"
+    base_path = Path(settings.BASE_DIR) / "static" / "default_task_templates"
 
     json_file = base_path / "templates.json"
     icons_path = base_path / "icons"

@@ -2,7 +2,7 @@
 {% load static %} 
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{% static 'css/calendar.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/blocks/calendar.css' %}" />
 {% endblock %} 
 
 {% block content %}
@@ -109,8 +109,8 @@
 </div>
 
 <div id="popover" class="calendar-popover d-none"></div>
-{% include "core/partials/delete_modal.html" %} {% endblock %} 
+{% include "core/partials/delete_modal.html" %} {% endblock %}
 
 {% block page_js %}
-    <script src="{% static 'js/calendar.js' %}"></script>
+    <script src="{% static 'js/blocks/calendar.js' %}"></script>
 {% endblock %}

@@ -6,10 +6,7 @@ from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 
 from ..models import GroupTemplate, TaskTemplate
-from ..pagination import GroupCursorPagination
-from ..serializers_ import GroupTemplateSerializer
 
-from rest_framework.generics import ListAPIView
 from django.http import JsonResponse
 from ..models import GroupTemplate
 
@@ -17,8 +14,8 @@ PAGE_SIZE = 50
 
 
 @login_required
-def group_templates_list(request):
-    return render(request, "core/group_templates.html")
+def group_templates_page(request):
+    return render(request, "core/group_templates/group_templates.html")
 
 
 @login_required
@@ -90,38 +87,6 @@ def group_template_create_or_edit(request, group_id=None):
     )
 
 
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def api_group_template_delete(request, group_id):
-    group = get_object_or_404(GroupTemplate, id=group_id, owner=request.user)
-    group.delete()
-
-    return JsonResponse({"success": True})
-
-
-@login_required
-def api_group_detail(request, group_id):
-
-    group = get_object_or_404(
-        GroupTemplate.objects.prefetch_related("tasks"),
-        id=group_id,
-        owner=request.user,
-    )
-
-    tasks = [
-        {
-            "id": t.id,
-            "title": t.title,
-            "description": t.description,
-            "amount": t.default_amount,
-            "icon": t.icon.name if t.icon else "",
-        }
-        for t in group.tasks.all()
-    ]
-
-    return JsonResponse({"tasks": tasks})
-
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def api_group_templates(request):
@@ -145,14 +110,14 @@ def api_group_templates(request):
     for g in groups:
         data.append(
             {
-                "id": g.id,
+                "id": g.pk,
                 "title": g.title,
                 "description": g.description,
                 "created_at": g.created_at.strftime("%d.%m.%Y %H:%M"),
                 "updated_at": g.updated_at.strftime("%d.%m.%Y %H:%M"),
                 "tasks": [
                     {
-                        "id": t.id,
+                        "id": t.pk,
                         "title": t.title,
                         "description": t.description,
                         "icon": (
@@ -175,19 +140,10 @@ def api_group_templates(request):
     )
 
 
-class GroupTemplateListView(ListAPIView):
-    serializer_class = GroupTemplateSerializer
-    pagination_class = GroupCursorPagination
-    permission_classes = [IsAuthenticated]
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def api_group_template_delete(request, group_id):
+    group = get_object_or_404(GroupTemplate, id=group_id, owner=request.user)
+    group.delete()
 
-    def get_queryset(self):
-        qs = (
-            GroupTemplate.objects.filter(owner=self.request.user)
-            .prefetch_related("tasks")
-            .order_by("-updated_at", "-id")
-        )
-
-        print(
-            f"User: {self.request.user.id} | Groups count: {qs.count()}"
-        )  # ← смотри в логи сервера
-        return qs
+    return JsonResponse({"success": True})

@@ -28,7 +28,7 @@ const weatherSwitch = document.getElementById("weather-switch");
 const weatherContainer = document.getElementById("weather-container");
 
 const selected = [];
-const taskState = {};
+const block_taskState = {};
 
 weatherSwitch.addEventListener("change", () => {
   if (weatherSwitch.checked) {
@@ -261,7 +261,7 @@ visibilityEye.addEventListener("click", () => {
 
   if (!id) return;
 
-  const state = taskState[id];
+  const state = block_taskState[id];
 
   state.is_hidden = !state.is_hidden;
 
@@ -290,7 +290,7 @@ function updateTaskVisibility(id) {
 
   if (!el) return;
 
-  if (taskState[id].is_hidden) {
+  if (block_taskState[id].is_hidden) {
     el.classList.add("task-hidden");
   } else {
     el.classList.remove("task-hidden");
@@ -331,7 +331,7 @@ function addTask(taskData) {
 
     selectedContainer.appendChild(el);
 
-    taskState[id] = {
+    block_taskState[id] = {
       id: id,
       template_id: taskData.template_id || taskData.id,
       title: taskData.title,
@@ -360,7 +360,7 @@ REMOVE TASK
 -------------------------------------------------- */
 
 function removeTask(id) {
-  delete taskState[id];
+  delete block_taskState[id];
 
   const index = selected.indexOf(id);
 
@@ -379,7 +379,7 @@ SHOW DETAIL
 -------------------------------------------------- */
 
 function showTaskDetail(id) {
-  const state = taskState[id];
+  const state = block_taskState[id];
 
   if (!state) return;
 
@@ -415,19 +415,19 @@ INPUT HANDLERS
 detailAmount.addEventListener("input", () => {
   const id = taskDetailCard.dataset.currentTaskId;
 
-  if (id) taskState[id].amount = parseInt(detailAmount.value);
+  if (id) block_taskState[id].amount = parseInt(detailAmount.value);
 });
 
 detailTime.addEventListener("input", () => {
   const id = taskDetailCard.dataset.currentTaskId;
 
-  if (id) taskState[id].time = parseFloat(detailTime.value);
+  if (id) block_taskState[id].time = parseFloat(detailTime.value);
 });
 
 detailDescription.addEventListener("input", () => {
   const id = taskDetailCard.dataset.currentTaskId;
 
-  const state = taskState[id];
+  const state = block_taskState[id];
 
   state.description = detailDescription.value;
   state.description_changed = true;
@@ -440,7 +440,7 @@ passwordToggle.addEventListener("change", () => {
   const id = taskDetailCard.dataset.currentTaskId;
   if (!id) return;
 
-  const state = taskState[id];
+  const state = block_taskState[id];
 
   state.is_encrypted = passwordToggle.checked;
 
@@ -468,7 +468,7 @@ passwordInput.addEventListener("input", () => {
 
   if (!id) return;
 
-  taskState[id].password = passwordInput.value;
+  block_taskState[id].password = passwordInput.value;
 });
 
 /* --------------------------------------------------
@@ -498,7 +498,7 @@ DECRYPT
 decryptBtn.addEventListener("click", async () => {
   const id = taskDetailCard.dataset.currentTaskId;
 
-  const state = taskState[id];
+  const state = block_taskState[id];
 
   const password = passwordInput.value;
 
@@ -570,7 +570,7 @@ new Sortable(selectedContainer, {
   onEnd() {
     const ids = Array.from(selectedContainer.children)
       .map((el) => el.dataset.id)
-      .filter((id) => taskState[id]); // <-- фильтруем лишние
+      .filter((id) => block_taskState[id]); // <-- фильтруем лишние
     selected.length = 0;
     ids.forEach((id) => selected.push(id));
   },
@@ -585,7 +585,7 @@ document.getElementById("clear-block-btn").onclick = () => {
 
   selectedContainer.innerHTML = "";
 
-  for (let key in taskState) delete taskState[key];
+  for (let key in block_taskState) delete block_taskState[key];
 
   taskDetailCard.style.display = "none";
   toggleEmptyState();
@@ -602,7 +602,7 @@ document.getElementById("save-block-btn").onclick = async () => {
   }
 
   const tasksData = selected
-    .map((id) => taskState[id])
+    .map((id) => block_taskState[id])
     .filter(Boolean) // убираем undefined
     .map((state) => ({
       id: state.id?.toString().startsWith("new-") ? null : parseInt(state.id),
@@ -626,7 +626,7 @@ document.getElementById("save-block-btn").onclick = async () => {
   formData.append("target_date", blockDateInput.value);
   formData.append("with_weather", weatherSwitch.checked);
   formData.append("weather_city", "Москва"); // или select
-  formData.append("tasks", JSON.stringify(tasksData));
+  formData.append("block_tasks", JSON.stringify(tasksData));
   if (weatherSwitch.checked && currentWeatherData) {
     formData.append("weather_data", JSON.stringify(currentWeatherData));
   }
@@ -653,23 +653,23 @@ function loadBlock() {
 
   blockTitleInput.value = block_json.title;
 
-  block_json.tasks.forEach((task) => {
+  block_json.block_tasks.forEach((task) => {
     addTask(task);
 
     const id = task.id.toString();
-    taskState[id].amount = task.amount;
-    taskState[id].time = task.time;
+    block_taskState[id].amount = task.amount;
+    block_taskState[id].time = task.time;
 
-    taskState[id].is_encrypted = task.is_encrypted;
-    taskState[id].is_hidden = task.is_hidden;
-    taskState[id].template_id = task.template_id;
+    block_taskState[id].is_encrypted = task.is_encrypted;
+    block_taskState[id].is_hidden = task.is_hidden;
+    block_taskState[id].template_id = task.template_id;
 
     if (task.is_encrypted) {
-      taskState[id].description = task.description || "";
-      taskState[id].decrypted = false;
+      block_taskState[id].description = task.description || "";
+      block_taskState[id].decrypted = false;
     } else {
-      taskState[id].description = task.description || "";
-      taskState[id].decrypted = true;
+      block_taskState[id].description = task.description || "";
+      block_taskState[id].decrypted = true;
     }
     if (block_json.target_date && blockDateInput) {
       blockDateInput.value = block_json.target_date;
@@ -738,7 +738,7 @@ document.querySelectorAll(".group-icon").forEach((icon) => {
 
     const data = await res.json();
 
-    data.tasks.forEach((t) => {
+    data.block_tasks.forEach((t) => {
       t.template_id = t.id; // ⚡ фикс
       addTask(t);
     });
@@ -770,7 +770,7 @@ document.querySelectorAll(".group-icon").forEach((icon) => {
     if (res.ok) {
       const data = await res.json();
 
-      data.tasks.forEach((t) => {
+      data.block_tasks.forEach((t) => {
         if (t.icon) {
           const img = document.createElement("img");
           img.src = MEDIA_URL + t.icon;

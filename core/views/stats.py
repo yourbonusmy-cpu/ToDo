@@ -6,11 +6,11 @@ from core.models import TaskTemplate
 
 @login_required
 def stats_weekdays_page(request):
-    system_tasks = TaskTemplate.objects.filter(owner=request.user).order_by("title")
+    task_templates = TaskTemplate.objects.filter(owner=request.user).order_by("title")
     return render(
         request,
         "core/stats_weekdays.html",
         {
-            "system_tasks": system_tasks,
+            "system_tasks": task_templates,
         },
     )

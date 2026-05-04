@@ -128,9 +128,11 @@
 </div>
 
 {% include "includes/change_password_modal.html" %} 
-{% include "includes/delete_account_modal.html" %} 
-{% endblock %} 
+{% include "includes/delete_account_modal.html" %}
+
+{% endblock %}
+
 {% block page_js %}
-  <script src="{% static 'js/pin.js' %}"></script>
-  <script src="{% static 'js/profile_actions.js' %}"></script>
+  <script src="{% static 'js/profile/pin.js' %}"></script>
+  <script src="{% static 'js/profiles/profile_actions.js' %}"></script>
 {% endblock %}

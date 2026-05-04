@@ -105,11 +105,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loading = true;
 
-    apiFetch(`/api/group-templates/?page=${page}`)
+    apiFetch(`/api/group_templates/?page=${page}`)
       .then((data) => {
         if (!data) return;
 
-        data.groups.forEach(createGroupCard);
+        data.group_templates.forEach(createGroupCard);
 
         hasNext = data.has_next;
         page++;
@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!confirm("Удалить группу?")) return;
 
-      apiFetch(`/api/group-templates/${id}/delete/`, {
+      apiFetch(`/api/group_templates/${id}/delete/`, {
         method: "POST",
       }).then((data) => {
         if (data?.success) {
@@ -146,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (editBtn) {
       const id = editBtn.dataset.id;
-      window.location.href = `/group-templates/${id}/edit/`;
+      window.location.href = `/group_templates/${id}/edit/`;
     }
   });
 

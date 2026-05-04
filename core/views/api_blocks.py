@@ -1,25 +1,23 @@
 from datetime import timezone
-
 from django.shortcuts import get_object_or_404
 from django.db.models import Prefetch
-
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from core.models import Block, BlockTask, TaskTemplate
-
 import json
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
 from django.utils import timezone
 from core.crypto import encrypt_text
-
-
-from django.db.models import Count, Q
 from django.template.loader import render_to_string
-
 from core.pagination import BlockCursorPagination
 from core.serializers_ import BlockSerializer
-from core.utils.icons import resolve_icon
+from django.http import JsonResponse
+from django.core.paginator import Paginator
+from django.db.models import Q, Count
+from rest_framework.generics import ListAPIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 
 @require_POST
@@ -52,11 +50,8 @@ def hide_block(request, block_id):
 
 @login_required
 def get_block(request, block_id):
-
     block = get_object_or_404(Block, id=block_id, owner=request.user)
-
     tasks = block.tasks.select_related("template").order_by("position")
-
     data = {
         "id": block.id,
         "title": block.title,
@@ -72,7 +67,6 @@ def get_block(request, block_id):
             for bt in tasks
         ],
     }
-
     return JsonResponse(data)
 
 
@@ -197,17 +191,6 @@ def create_block_old(request):
     return JsonResponse({"status": "ok", "block_id": block.id})
 
 
-from django.http import JsonResponse
-from django.core.paginator import Paginator
-
-
-from django.db.models import Q, Count
-from rest_framework.generics import ListAPIView
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.permissions import IsAuthenticated
-import datetime
-
-
 class BlockListView(ListAPIView):
     serializer_class = BlockSerializer
     pagination_class = BlockCursorPagination
@@ -218,7 +201,7 @@ class BlockListView(ListAPIView):
         request = self.request
 
         q = request.GET.get("q")
-        task_ids = request.GET.getlist("tasks")
+        task_ids = request.GET.getlist("block_tasks")
         weekdays = request.GET.getlist("weekdays")  # 👈 NEW
 
         queryset = Block.objects.filter(owner=request.user, is_hidden=False)
@@ -239,10 +222,12 @@ class BlockListView(ListAPIView):
                 return Block.objects.none()
 
             queryset = queryset.annotate(
-                matched_tasks=Count(
-                    "tasks", filter=Q(tasks__template__id__in=task_ids), distinct=True
+                matched_block_tasks=Count(
+                    "block_tasks",
+                    filter=Q(block_tasks__template__id__in=task_ids),
+                    distinct=True,
                 )
-            ).filter(matched_tasks=len(task_ids))
+            ).filter(matched_block_tasks=len(task_ids))
 
         # -------------------
         # WEEKDAY FILTER (NEW)
@@ -256,12 +241,12 @@ class BlockListView(ListAPIView):
             q_filter = Q()
 
             for day in weekdays:
-                q_filter |= Q(target_date__week_day=((day + 2) % 7) + 1)
+                q_filter |= Q(target_date__week_day=((day + 2) % 7))
                 # Django: Sunday=1 ... Saturday=7
 
             queryset = queryset.filter(q_filter)
 
-        return queryset.prefetch_related("tasks__template").order_by(
+        return queryset.prefetch_related("block_tasks__template").order_by(
             "-created_at", "-id"
         )
 

@@ -28,7 +28,7 @@ def home(request):
         Block.objects.filter(owner=request.user, is_hidden=False)
         .prefetch_related(
             Prefetch(
-                "tasks",
+                "block_tasks",
                 queryset=BlockTask.objects.order_by("position"),
             )
         )
@@ -44,7 +44,7 @@ def home(request):
 
     return render(
         request,
-        "core/dashboard.html",
+        "core/blocks/dashboard.html",
         {
             "page_obj": page_obj,
             "blocks": page_obj.object_list,

@@ -210,16 +210,6 @@
     "priority": 1
   },
   {
-    "code": "poop_task",
-    "title": "Сходить в туалет",
-    "description": "Сходил по большому",
-    "icon": "free-icon-poop-1642952.png",
-    "default_amount": 1,
-    "period_type": "day",
-    "schedule_type": "fixed",
-    "priority": 1
-  },
-  {
     "code": "programming",
     "title": "Программирование",
     "description": "Разработал новый функционал",

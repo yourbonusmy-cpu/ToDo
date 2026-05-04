@@ -28,7 +28,7 @@ def home(request):
         Block.objects.filter(owner=request.user, is_hidden=False)
         .prefetch_related(
             Prefetch(
-                "tasks",
+                "block_tasks",
                 queryset=BlockTask.objects.order_by("position"),
             )
         )
@@ -44,7 +44,7 @@ def home(request):
 
     return render(
         request,
-        "core/dashboard.html",
+        "core/blocks/dashboard.html",
         {
             "page_obj": page_obj,
             "blocks": page_obj.object_list,
@@ -56,16 +56,16 @@ def home(request):
 @login_required
 def block_detail(request, block_id):
     block = get_object_or_404(Block, id=block_id, owner=request.user)
-    block_tasks = block.tasks.order_by("position")
+    block_tasks = block.block_tasks.order_by("position")
     return render(
         request,
-        "core/block_detail.html",
+        "core/blocks/block_detail.html",
         {"m_block": block, "block_tasks": block_tasks},
     )
 
 
 def download_blocks_xlsx(request):
-    blocks = Block.objects.filter(owner=request.user).prefetch_related("tasks")
+    blocks = Block.objects.filter(owner=request.user).prefetch_related("block_tasks")
 
     wb = Workbook()
     ws = wb.active
@@ -93,7 +93,7 @@ def download_blocks_xlsx(request):
             cell.alignment = Alignment(horizontal="center")
         row += 1
 
-        for task in block.tasks.all():
+        for task in block.block_tasks.all():
             # Название задачи
             ws.cell(row=row, column=1, value=task.title)
             ws.cell(row=row, column=3, value=task.description)
@@ -147,7 +147,7 @@ def download_blocks_xlsx(request):
 
 def download_blocks_json_zip(request):
 
-    blocks = Block.objects.filter(owner=request.user).prefetch_related("tasks")
+    blocks = Block.objects.filter(owner=request.user).prefetch_related("block_tasks")
 
     zip_buffer = BytesIO()
 
@@ -164,7 +164,7 @@ def download_blocks_json_zip(request):
                 "tasks": [],
             }
 
-            for task in block.tasks.all():
+            for task in block.block_tasks.all():
 
                 icon_archive_path = ""
 

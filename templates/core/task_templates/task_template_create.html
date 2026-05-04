@@ -6,7 +6,7 @@
 {% block body_data_page %}task-template-create{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/task_template_create.css' %}">
+<link rel="stylesheet" href="{% static 'css/task_templates/task_template_create.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -56,15 +56,23 @@
 
 						</div>
 
-						<div class="amount-container d-flex flex-column align-items-center w-75">
+						<div class="w-75">
 
-							<label class="form-label small fw-semibold text-center mb-1">
-								Количество
-							</label>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">
+                                    Количество
+                                </label>
+                                {{ form.amount|add_class:"form-control text-center" }}
+                            </div>
 
-							{{ form.default_amount|add_class:"form-control text-center" }}
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">
+                                    Час
+                                </label>
+                                {{ form.time|add_class:"form-control text-center" }}
+                            </div>
 
-						</div>
+                        </div>
 
 						<div class="priority-container d-flex flex-column align-items-center w-75">
 
@@ -215,7 +223,7 @@
 
 						<div class="d-flex justify-content-end gap-3 mt-4">
 
-							<a href="{% url 'templates' %}" class="btn btn-outline-secondary">
+							<a href="{% url 'task_templates' %}" class="btn btn-outline-secondary">
 								Отменить
 							</a>
 
@@ -243,5 +251,5 @@
 {% endblock %}
 
 {% block page_js %}
-    <script src="{% static 'js/task_template/create.js' %}"></script>
+    <script src="{% static 'js/task_templates/task_template_create.js' %}"></script>
 {% endblock %}

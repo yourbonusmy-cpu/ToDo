@@ -30,19 +30,12 @@ class BlockTaskSerializer(serializers.ModelSerializer):
         if not obj.icon:
             return None
 
-        # если уже строка (старые данные)
         if isinstance(obj.icon, str):
             return request.build_absolute_uri(settings.MEDIA_URL + obj.icon)
 
-        # если FileField
-        try:
-            return request.build_absolute_uri(obj.icon.url)
-        except Exception:
-            return None
-
 
 class BlockSerializer(serializers.ModelSerializer):
-    tasks = BlockTaskSerializer(many=True)
+    block_tasks = BlockTaskSerializer(many=True)
 
     class Meta:
         model = Block
@@ -50,7 +43,7 @@ class BlockSerializer(serializers.ModelSerializer):
         exclude = ["owner"]
 
     def update(self, instance, validated_data):
-        tasks_data = validated_data.pop("tasks", [])
+        block_tasks_data = validated_data.pop("block_tasks", [])
 
         # --- обновление блока ---
         instance.title = validated_data.get("title", instance.title)
@@ -59,18 +52,17 @@ class BlockSerializer(serializers.ModelSerializer):
         instance.save()
 
         # --- текущие задачи ---
-        existing_tasks = {str(t.id): t for t in instance.tasks.all()}
+        existing_block_tasks = {str(t.id): t for t in instance.block_tasks.all()}
         used_ids = set()
-        new_tasks = []
+        new_block_tasks = []
 
-        for position, task_data in enumerate(tasks_data):
-            task_id = str(task_data.get("id"))
+        for position, block_task_data in enumerate(block_tasks_data):
+            task_id = str(block_task_data.get("id"))
 
-            if task_id in existing_tasks:
-                # UPDATE
-                task = existing_tasks[task_id]
+            if task_id in existing_block_tasks:
+                task = existing_block_tasks[task_id]
 
-                for attr, value in task_data.items():
+                for attr, value in block_task_data.items():
                     setattr(task, attr, value)
 
                 task.position = position
@@ -79,19 +71,16 @@ class BlockSerializer(serializers.ModelSerializer):
                 used_ids.add(task_id)
 
             else:
-                # CREATE
-                new_tasks.append(
-                    BlockTask(block=instance, position=position, **task_data)
+                new_block_tasks.append(
+                    BlockTask(block=instance, position=position, **block_task_data)
                 )
 
-        # DELETE
-        for task_id, task in existing_tasks.items():
+        for task_id, task in existing_block_tasks.items():
             if task_id not in used_ids:
                 task.delete()
 
-        # BULK CREATE
-        if new_tasks:
-            BlockTask.objects.bulk_create(new_tasks)
+        if new_block_tasks:
+            BlockTask.objects.bulk_create(new_block_tasks)
 
         return instance
 

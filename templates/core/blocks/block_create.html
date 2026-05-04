@@ -3,7 +3,7 @@
 {% block title %} Создать блок {% endblock %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{% static 'css/block_create.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/blocks/block_create.css' %}" />
 {% endblock %} 
 
 {% block content %}
@@ -209,7 +209,7 @@ TASK PICKER
       </div>
 
       <div class="task-picker-list">
-        {% for t in templates %}
+        {% for t in task_templates %}
         <div
           class="task-icon"
           data-id="{{ t.id }}"
@@ -254,7 +254,7 @@ GROUP PICKER
 
 <div class="group-panel-wrapper">
     <div class="group-picker shadow" id="group-panel">
-      {% for g in groups %}
+      {% for g in group_templates %}
       <div
         class="group-icon"
         data-id="{{ g.id }}"
@@ -300,5 +300,5 @@ GROUP TOOLTIP
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-  <script src="{% static 'js/block_create.js' %}"></script>
+  <script src="{% static 'js/blocks/block_create.js' %}"></script>
 {% endblock %}

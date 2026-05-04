@@ -51,6 +51,7 @@ class ScheduleType(models.TextChoices):
 def task_icon_upload_path(instance, filename):
     # instance.owner.username → имя пользователя
     # filename → оригинальное имя файла
+    print("OWNER:", instance.owner)
     return os.path.join("image", instance.owner.username, "task_icons", filename)
 
 
@@ -101,7 +102,7 @@ class SystemTaskTemplate(models.Model):
 
     icon = models.CharField(max_length=255, blank=True)
 
-    default_amount = models.PositiveIntegerField(default=1)
+    amount = models.PositiveIntegerField(default=1)
 
     period_type = models.CharField(
         max_length=16, choices=PeriodType.choices, default=PeriodType.NONE
@@ -140,7 +141,8 @@ class TaskTemplate(models.Model):
         upload_to=task_icon_upload_path, blank=True, null=True  # динамический путь
     )
 
-    default_amount = models.PositiveIntegerField(default=1)
+    amount = models.PositiveIntegerField(default=1)
+    time = models.PositiveIntegerField(default=0, blank=True)
 
     period_type = models.CharField(
         max_length=16, choices=PeriodType.choices, default=PeriodType.NONE
@@ -207,7 +209,7 @@ class GroupTemplate(models.Model):
     title = models.CharField(max_length=128)
     description = models.TextField(blank=True)
 
-    tasks = models.ManyToManyField(TaskTemplate, related_name="group_templates")
+    tasks = models.ManyToManyField(TaskTemplate, related_name="task_templates")
 
     selected_count = models.PositiveIntegerField(default=0)
 
@@ -240,7 +242,9 @@ class Block(models.Model):
 
 
 class BlockTask(models.Model):
-    block = models.ForeignKey(Block, on_delete=models.CASCADE, related_name="tasks")
+    block = models.ForeignKey(
+        Block, on_delete=models.CASCADE, related_name="block_tasks"
+    )
     uuid = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
     template = models.ForeignKey(
         TaskTemplate,
@@ -254,7 +258,7 @@ class BlockTask(models.Model):
     icon = models.CharField(max_length=255, blank=True)
     position = models.PositiveIntegerField()
     amount = models.PositiveIntegerField(default=1)
-    time = models.FloatField(default=1)
+    time = models.PositiveSmallIntegerField(default=1)
     is_hidden = models.BooleanField(default=False)
     is_encrypted = models.BooleanField(default=False)
 

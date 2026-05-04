@@ -6,7 +6,7 @@ import {
 } from "./ui-render-utils.js";
 
 export function renderBlock(block) {
-  const tasksHtml = (block.tasks || []).map((t) => {
+  const tasksHtml = (block.block_tasks || []).map((t) => {
     const icon = resolveMedia(t.icon);
     const clock = clockIconIndex(t.time);
 

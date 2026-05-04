@@ -9,13 +9,20 @@ class TaskTemplateForm(forms.ModelForm):
 
     class Meta:
         model = TaskTemplate
-        exclude = [
-            "owner",
-            "selected_count",
-            "created_at",
-            "updated_at",
-            "last_used_at",
-            "next_available_at",
+        fields = [
+            "system_template",
+            "is_hidden",
+            "title",
+            "description",
+            "icon",  # 👈 ОБЯЗАТЕЛЬНО
+            "amount",
+            "time",
+            "period_type",
+            "schedule_type",
+            "fixed_weekday",
+            "fixed_day_of_month",
+            "fixed_month_of_year",
+            "priority",
         ]
 
         widgets = {
@@ -44,6 +51,15 @@ class TaskTemplateForm(forms.ModelForm):
                     "min": 1,
                     "max": 31,
                     "class": "form-control",
+                }
+            ),
+            "time": forms.NumberInput(
+                attrs={
+                    "min": 0,  # 👈 минимум 0
+                    "max": 24,  # 👈 максимум 24
+                    "step": 1,  # 👈 шаг (1 час)
+                    "class": "form-control text-center",
+                    "placeholder": "часы",
                 }
             ),
         }

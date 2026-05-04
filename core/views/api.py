@@ -25,7 +25,7 @@ def calendar_data(request):
         target_date__isnull=False,
         target_date__year=year,
         target_date__month=month,
-    ).prefetch_related("tasks")
+    ).prefetch_related("block_tasks")
 
     result = {}
 
@@ -38,7 +38,7 @@ def calendar_data(request):
                 "title": t.title,
                 "icon": t.icon,
             }
-            for t in block.tasks.filter(is_hidden=False)
+            for t in block.block_tasks.filter(is_hidden=False)
         ]
 
         if date not in result:

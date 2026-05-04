@@ -17,7 +17,7 @@ def handle_push(user, payload):
 
         # 2. MASTER DATA
         sync_templates(user, payload.get("templates", []))
-        sync_groups(user, payload.get("groups", []))
+        sync_groups(user, payload.get("group_templates", []))
 
         # 3. DOMAIN DATA
         sync_blocks(user, payload.get("blocks", []))

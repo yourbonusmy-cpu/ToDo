@@ -1,10 +1,11 @@
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-
 from core.models import TaskTemplate
 from core.pagination import TemplateCursorPagination
 from core.serializers_ import TaskTemplateSerializer
-from core.utils.icons import resolve_icon
+from rest_framework.generics import ListAPIView
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.db.models import Q
 
 PAGE_SIZE = 50
 
@@ -29,14 +30,6 @@ def serialize_template(t: TaskTemplate, request):
         "created_at": t.created_at.strftime("%d.%m.%Y %H:%M"),
         "updated_at": t.updated_at.strftime("%d.%m.%Y %H:%M"),
     }
-
-
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from django.db.models import Q
-
-PAGE_SIZE = 50
 
 
 @api_view(["GET"])
@@ -69,11 +62,6 @@ def api_templates(request):
             "page": page,
         }
     )
-
-
-from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
-from django.db.models import Q
 
 
 class TaskTemplateListView(ListAPIView):

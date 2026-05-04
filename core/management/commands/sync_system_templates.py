@@ -12,7 +12,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         # Путь к файлу templates.json
         templates_path = os.path.join(
-            settings.BASE_DIR, "static", "default_templates", "templates.json"
+            settings.BASE_DIR, "static", "default_task_templates", "templates.json"
         )
 
         if not os.path.exists(templates_path):

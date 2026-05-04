@@ -4,7 +4,7 @@
 {% block body_data_page %}task-templates{% endblock %} 
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{% static 'css/templates.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/task_templates/task_templates.css' %}" />
 {% endblock %} {% block content %}
 
 <div class="d-flex templates-page">
@@ -24,7 +24,7 @@
           data-schedule="{{ t.schedule_type }}"
         >
           <img
-            src="{% static 'default_templates/icons/' %}{{ t.icon }}"
+            src="{% static 'default_task_templates/icons/' %}{{ t.icon }}"
             class="system-icon"
           />
 
@@ -57,7 +57,7 @@
 
       <!-- справа -->
       <div class="ms-auto">
-        <a href="{% url 'template_create' %}" class="btn btn-primary">
+        <a href="{% url 'task_template_create' %}" class="btn btn-primary">
           Создать шаблон
         </a>
       </div>
@@ -74,5 +74,5 @@
 </button>
 
 {% endblock %} {% block page_js %}
-    <script src="{% static 'js/templates.js' %}"></script>
+    <script src="{% static 'js/task_templates/task_templates.js' %}"></script>
 {% endblock %}

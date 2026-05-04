@@ -89,8 +89,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* -------------------
-API LOAD
-------------------- */
+    API LOAD
+    ------------------- */
 
    function apiFetch(url, options = {}) {
       const token = localStorage.getItem("access_token");
@@ -116,12 +116,9 @@ API LOAD
 
   function loadTemplates({ reset = false } = {}) {
     if (isLoading || !hasNext) return;
-
     isLoading = true;
 
-
-
-    apiFetch(`/api/templates/?q=${encodeURIComponent(currentQuery)}&page=${currentPage}`)
+    apiFetch(`/api/task_templates/?q=${encodeURIComponent(currentQuery)}&page=${currentPage}`)
       .then((data) => {
         if (!data) return;
 
@@ -129,12 +126,12 @@ API LOAD
           templatesGrid.innerHTML = "";
         }
 
-data.results.forEach((t) => {
-  console.log("TEMPLATE:", t);
-  console.log("ICON:", t.icon);
+        data.results.forEach((t) => {
+          console.log("TEMPLATE:", t);
+          console.log("ICON:", t.icon);
 
-  createTemplateCard(t);
-});
+          createTemplateCard(t);
+        });
         hasNext = data.has_next;
         currentPage++;
       })
@@ -143,8 +140,8 @@ data.results.forEach((t) => {
       });
     }
   /* -------------------
-CREATE TEMPLATE CARD
-------------------- */
+    CREATE TEMPLATE CARD
+    ------------------- */
 
   function createTemplateCard(t) {
 
@@ -224,8 +221,8 @@ CREATE TEMPLATE CARD
   }
 
   /* -------------------
-POPOVER
-------------------- */
+    POPOVER
+    ------------------- */
 
   function attachPopover(wrapper) {
     wrapper.addEventListener("mouseenter", () => {
@@ -264,14 +261,14 @@ POPOVER
   }
 
   /* -------------------
-INIT POPOVERS
-------------------- */
+    INIT POPOVERS
+    ------------------- */
 
   document.querySelectorAll(".system-icon-wrapper").forEach(attachPopover);
 
   /* -------------------
-CREATE SYSTEM ICON
-------------------- */
+    CREATE SYSTEM ICON
+    ------------------- */
 
   function createSystemIcon(data) {
     const wrapper = document.createElement("div");
@@ -299,8 +296,8 @@ CREATE SYSTEM ICON
   }
 
   /* -------------------
-CLICK EVENTS
-------------------- */
+    CLICK EVENTS
+    ------------------- */
 
   document.addEventListener("click", (e) => {
     /* ADD SYSTEM TEMPLATE */
@@ -314,7 +311,7 @@ CLICK EVENTS
         activePopover = null;
       }
 
-      apiFetch(`/api/templates/system/${id}/add/`, {
+      apiFetch(`/api/system_task_templates/${id}/add/`, {
           method: "POST",
         })
         .then((data) => {
@@ -336,7 +333,7 @@ CLICK EVENTS
       const card = e.target.closest(".template-card");
       const id = card.dataset.id;
 
-      apiFetch(`/api/templates/${id}/delete/`, {
+      apiFetch(`/api/task_templates/${id}/delete/`, {
           method: "POST",
         })
         .then((data) => {
@@ -363,13 +360,13 @@ CLICK EVENTS
 
     if (e.target.closest(".edit-template")) {
       const card = e.target.closest(".template-card");
-      window.location.href = `/templates/${card.dataset.id}/edit/`;
+      window.location.href = `/task_templates/${card.dataset.id}/edit/`;
     }
   });
 
   /* -------------------
-ADD ALL
-------------------- */
+    ADD ALL
+    ------------------- */
 
   document.querySelector(".system-show-all")?.addEventListener("click", () => {
     if (activePopover) {
@@ -377,7 +374,7 @@ ADD ALL
       activePopover = null;
     }
 
-    apiFetch(`/api/templates/system/add_all/`, {
+    apiFetch(`/api/system_task_templates/add_all/`, {
           method: "POST",
         })
       .then((data) => {
@@ -398,8 +395,8 @@ ADD ALL
   });
 
   /* -------------------
-SEARCH (debounce)
-------------------- */
+    SEARCH (debounce)
+    ------------------- */
 
   let searchTimeout;
 
@@ -427,8 +424,8 @@ SEARCH (debounce)
   });
 
   /* -------------------
-INIT LOAD
-------------------- */
+    INIT LOAD
+    ------------------- */
 
   loadTemplates({ reset: true });
   initSystemPanel();

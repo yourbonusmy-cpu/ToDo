@@ -4,21 +4,27 @@ import os
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.db.models import F
-from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    authentication_classes,
+)
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from ..models import TaskTemplate, SystemTaskTemplate
 from ..forms import TaskTemplateForm
 from ..utils.icons import resolve_icon
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from core.models import SystemTaskTemplate
 
 
 @login_required
 @require_POST
 def increment_template_selected(request, template_id):
-    print(f"template_id: {template_id}")
     TaskTemplate.objects.filter(id=template_id, owner=request.user).update(
         selected_count=F("selected_count") + 1
     )
@@ -50,7 +56,9 @@ def task_template_create_view(request):
 @login_required
 def templates_list(request):
     user_templates = TaskTemplate.objects.filter(owner=request.user)
-    return render(request, "core/templates.html", {"user_templates": user_templates})
+    return render(
+        request, "core/task_templates.html", {"user_templates": user_templates}
+    )
 
 
 @login_required
@@ -74,7 +82,7 @@ def template_create_or_edit(request, template_id=None):
 
     return render(
         request,
-        "core/task_template_create.html",
+        "core/task_templates/task_template_create.html",
         {
             "form": form,
             "page_title": page_title,
@@ -159,7 +167,7 @@ def add_system_template_ajax(request, pk):
         icon_path = os.path.join(
             settings.BASE_DIR,
             "static",
-            "default_templates",
+            "default_task_templates",
             "icons",
             system_template.icon,
         )
@@ -227,7 +235,7 @@ def add_all_system_templates(request):
             icon_path = os.path.join(
                 settings.BASE_DIR,
                 "static",
-                "default_templates",
+                "default_task_templates",
                 "icons",
                 st.icon,
             )
@@ -270,21 +278,12 @@ def templates_page(request):
 
     return render(
         request,
-        "core/templates.html",
+        "core/task_templates.html",
         {
             "user_templates": user_templates,
             "system_templates": system_templates,
         },
     )
-
-
-from rest_framework.decorators import (
-    api_view,
-    permission_classes,
-    authentication_classes,
-)
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 
 
 @api_view(["POST"])
@@ -337,7 +336,7 @@ def api_add_system_template(request, pk):
         icon_path = os.path.join(
             settings.BASE_DIR,
             "static",
-            "default_templates",
+            "default_task_templates",
             "icons",
             system_template.icon,
         )
@@ -400,7 +399,7 @@ def api_add_all_system_templates(request):
             icon_path = os.path.join(
                 settings.BASE_DIR,
                 "static",
-                "default_templates",
+                "default_task_templates",
                 "icons",
                 st.icon,
             )
@@ -425,12 +424,6 @@ def api_add_all_system_templates(request):
         )
 
     return Response({"added": added})
-
-
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-
-from core.models import SystemTaskTemplate
 
 
 @api_view(["GET"])

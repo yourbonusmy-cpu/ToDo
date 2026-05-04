@@ -132,7 +132,7 @@ def block_create(request, block_id=None):
 
     if block_id:
         block = get_object_or_404(Block, id=block_id, owner=request.user)
-        tasks = block.tasks.order_by("position")
+        tasks = block.block_tasks.order_by("position")
 
         block_data = {
             "id": block.id,
@@ -222,7 +222,7 @@ def block_create(request, block_id=None):
                 BlockWeather.objects.filter(block=block).delete()
 
             # ---------- TASKS ----------
-            existing_tasks = {t.id: t for t in block.tasks.all()}
+            existing_tasks = {t.id: t for t in block.block_tasks.all()}
             incoming_ids = set()
 
             for idx, task_data in enumerate(tasks_list):
@@ -363,7 +363,7 @@ def block_create(request, block_id=None):
         "core/block_create.html",
         {
             "templates": sorted_templates,
-            "groups": groups,
+            "group_templates": groups,
             "block_json": json.dumps(block_data) if block_data else "null",
             "MEDIA_URL": settings.MEDIA_URL,
         },
@@ -420,7 +420,7 @@ def block_builder__1803(request, block_id=None):
     if block_id:
         block = get_object_or_404(Block, id=block_id, owner=request.user)
 
-        tasks = block.tasks.order_by("position")
+        tasks = block.block_tasks.order_by("position")
 
         block_data = {
             "id": block.id,
@@ -565,7 +565,7 @@ def block_builder__1803(request, block_id=None):
         "core/block_create.html",
         {
             "templates": sorted_templates,
-            "groups": groups,
+            "group_templates": groups,
             "block_json": json.dumps(block_data) if block_data else "null",
         },
     )
@@ -606,7 +606,7 @@ def block_builder_stop(request, block_id=None):
         "core/block_create.html",
         {
             "templates": sorted_templates,
-            "groups": groups,
+            "group_templates": groups,
             "block_json": json.dumps(block_data) if block_data else "null",
         },
     )
@@ -737,7 +737,7 @@ def block_builder_old_2(request, block_id=None):
         "core/block_builder.html",
         {
             "templates": templates,
-            "groups": groups,  # 🔹 ДОБАВИЛИ
+            "group_templates": groups,  # 🔹 ДОБАВИЛИ
             "block_json": json.dumps(block_data) if block_data else "null",
         },
     )

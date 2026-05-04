@@ -70,68 +70,45 @@ from core.views.profile import (
 
 from django.shortcuts import render
 
+from core.views_new.calendar import calendar_page
 
-def calendar_page(request):
-    if not request.user.is_authenticated:
-        return render(request, "core/landing.html")
-
-    system_tasks = TaskTemplate.objects.filter(owner=request.user).order_by("title")
-
-    return render(
-        request,
-        "core/calendar.html",
-        {
-            "system_tasks": system_tasks,
-        },
-    )
-
-
+# other
 urlpatterns = [
-    path("", home, name="home"),
-    path("weather/", weather_view, name="weather"),
     path("api/weather/", weather_api, name="api_weather"),
     path("api/statistics/", stats_weekdays_api, name="stats_weekdays_api"),
     path("stats/weekdays/", stats_weekdays_page, name="stats_weekdays"),
     path("decrypt-task/", decrypt_task, name="decrypt_task"),
-    path("register/", register, name="register"),
-    path("login/", UserLoginView.as_view(), name="login"),
-    path("logout/", user_logout, name="logout"),
     path("lock-pin/", lock_pin, name="lock_pin"),
     path("unlock-pin/", unlock_pin, name="unlock_pin"),
     path("pin-unlock/", pin_unlock_page, name="pin_unlock"),
-    path(
-        "download/json_zip/",
-        download_blocks_json_zip,
-        name="download_blocks_json_zip",
-    ),
-    path("download/xlsx/", download_blocks_xlsx, name="download_blocks_xlsx"),
 ]
 
+# groups
+urlpatterns += [
+    path("api/groups_new/", GroupTemplateListView.as_view()),
+    path(
+        "api/group_templates/<int:group_id>/",
+        api_group_detail,
+        name="api_group_detail",
+    ),
+]
+
+# login
 urlpatterns += [
     path("api/login/", CustomTokenObtainPairView.as_view()),
 ]
 
+# block
 urlpatterns += [
-    path("calendar/", calendar_page, name="calendar"),
-    path("api/calendar/", calendar_data, name="calendar_data"),
-    path("calendar/", calendar_page, name="calendar"),
-    path("api/calendar/", calendar_data, name="calendar_data"),
-]
-urlpatterns += [
-    path("block/<int:block_id>/view/", block_detail, name="block_detail"),
-    path("api/block/<int:block_id>/delete/", delete_block, name="api_delete_block"),
-    path("api/block/<int:block_id>/hide/", hide_block, name="api_hide_block"),
     path("api/block/<int:block_id>/", get_block, name="api_get_block"),
     path("api/block/<int:block_id>/update/", update_block, name="api_update_block"),
     path("block/create/", block_create, name="block_create"),
     path("api/block/create/", create_block, name="api_create_block"),
-    path("block/<int:block_id>/edit/", block_create, name="block_edit"),
     # path("api/blocks/", api_blocks, name="api_blocks"),
     # path("api/blocks/json/", api_blocks_json, name="api_blocks_json"),
-    path("api/blocks/", BlockListView.as_view(), name="api_blocks"),
 ]
 
-
+# profile
 urlpatterns += [
     path("profile/", profile_view, name="profile"),
     path("profile/change-password/", change_password_view, name="change_password"),
@@ -143,18 +120,14 @@ urlpatterns += [
     path("profile/disable-pin/", disable_pin, name="disable_pin"),
 ]
 
+# templates
 urlpatterns += [
     path(
         "api/system-task-templates/",
         api_system_task_templates,
         name="api_system_task_templates",
     ),
-    path("api/templates/<int:template_id>/delete/", api_template_delete),
-    path("api/templates/system/<int:pk>/add/", api_add_system_template),
-    path("api/templates/system/add_all/", api_add_all_system_templates),
     path("api/templates/", api_templates, name="api_templates"),
-    path("api/templates_new/", TaskTemplateListView.as_view()),
-    path("templates/", templates_page, name="templates"),
     path("task-template/create/", task_template_create, name="task_template_create"),
     path(
         "templates/system/add_all/",
@@ -174,7 +147,6 @@ urlpatterns += [
     path(
         "templates/<int:template_id>/delete/", template_delete, name="template_delete"
     ),
-    path("templates/create/", template_create, name="template_create"),
     path(
         "task-template/create/", task_template_create_view, name="task_template_create"
     ),
@@ -182,36 +154,5 @@ urlpatterns += [
         "api/templates/<int:template_id>/select/",
         increment_template_selected,
         name="template_select",
-    ),
-]
-
-
-urlpatterns += [
-    path("api/groups_new/", GroupTemplateListView.as_view()),
-    path("api/group-templates/", api_group_templates, name="api_group_templates"),
-    path(
-        "api/group-templates/<int:group_id>/delete/",
-        api_group_template_delete,
-        name="api_group_template_delete",
-    ),
-    path(
-        "group-templates/",
-        group_templates_list,
-        name="group_templates",
-    ),
-    path(
-        "group-templates/create/",
-        group_template_create_or_edit,
-        name="group_template_create",
-    ),
-    path(
-        "group-templates/<int:group_id>/edit/",
-        group_template_create_or_edit,
-        name="group_template_edit",
-    ),
-    path(
-        "api/groups/<int:group_id>/",
-        api_group_detail,
-        name="api_group_detail",
     ),
 ]
