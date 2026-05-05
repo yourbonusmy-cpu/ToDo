@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from core.models import Block, BlockTask
 
 
@@ -5,12 +7,13 @@ def sync_blocktasks(user, items):
     blocks_map = {b.uuid: b for b in Block.objects.filter(owner=user)}
 
     existing = {t.uuid: t for t in BlockTask.objects.filter(block__owner=user)}
-
+    print("blocks_map:", blocks_map)
     for data in items:
         uuid = data["uuid"]
-        block_uuid = data["block_uuid"]
-
+        block_uuid = UUID(data["block_uuid"])
+        print("block_uuid:", block_uuid)
         block = blocks_map.get(block_uuid)
+        print("block:", block)
         if not block:
             continue
 
