@@ -22,7 +22,11 @@ def sync_blocktasks(user, items):
             obj.position = data.get("position", obj.position)
             obj.amount = data.get("amount", obj.amount)
             obj.time = data.get("time", obj.time)
+            obj.icon = data.get("icon", obj.icon)
+            obj.template = data.get("template_uuid", obj.template)
             obj.is_hidden = data.get("is_hidden", obj.is_hidden)
+            obj.is_encrypted = data.get("is_encrypted", obj.is_encrypted)
+            obj.updated_at = data.get("updated_at", obj.updated_at)
             obj.save()
 
         else:
@@ -30,5 +34,12 @@ def sync_blocktasks(user, items):
                 uuid=uuid,
                 block=block,
                 title=data.get("title", ""),
+                description=data.get("description", ""),
                 position=data.get("position", 0),
+                amount=data.get("amount", 1),
+                time=data.get("time", 1),
+                icon=data.get("icon"),
+                template_id=data.get("template_uuid"),
+                is_hidden=data.get("is_hidden", False),
+                is_encrypted=data.get("is_encrypted", False),
             )
