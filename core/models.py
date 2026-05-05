@@ -103,6 +103,7 @@ class SystemTaskTemplate(models.Model):
     icon = models.CharField(max_length=255, blank=True)
 
     amount = models.PositiveIntegerField(default=1)
+    time = models.PositiveIntegerField(default=0, blank=True)
 
     period_type = models.CharField(
         max_length=16, choices=PeriodType.choices, default=PeriodType.NONE

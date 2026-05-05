@@ -102,6 +102,8 @@ class TaskTemplateSyncSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "icon",
+            "amount",
+            "time",
             "period_type",
             "schedule_type",
             "fixed_weekday",
