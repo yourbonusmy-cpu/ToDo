@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from core.models import Block
 from core.services.sync.common.conflict import resolve_update
 from core.services.sync.common.time import safe_parse_dt
@@ -8,7 +10,7 @@ def sync_blocks(user, items):
     existing = as_uuid_map(Block.objects.filter(owner=user))
 
     for data in items:
-        uuid = data["uuid"]
+        uuid = UUID(data["uuid"])
         client_time = safe_parse_dt(data.get("updated_at"))
 
         obj = existing.get(uuid)
