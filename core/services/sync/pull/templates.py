@@ -23,6 +23,7 @@ def get_templates(request, last_sync):
             "fixed_weekday",
             "fixed_day_of_month",
             "fixed_month_of_year",
+            "selected_count",
             "priority",
             "updated_at",
             "created_at",
