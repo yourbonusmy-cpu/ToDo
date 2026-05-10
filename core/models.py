@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -53,6 +54,18 @@ def task_icon_upload_path(instance, filename):
     # filename → оригинальное имя файла
     print("OWNER:", instance.owner)
     return os.path.join("image", instance.owner.username, "task_icons", filename)
+
+
+class UserProfile(models.Model):
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+
+    uuid = models.UUIDField(
+        default=uuid.uuid4, unique=True, editable=False, db_index=True
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class UserPin(models.Model):
@@ -230,8 +243,8 @@ class Block(models.Model):
     title = models.CharField(max_length=128)
     priority = models.PositiveSmallIntegerField(default=0)
     is_hidden = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
     target_date = models.DateField(null=True, blank=True, db_index=True)
 
     class Meta:
@@ -263,8 +276,8 @@ class BlockTask(models.Model):
     is_hidden = models.BooleanField(default=False)
     is_encrypted = models.BooleanField(default=False)
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         ordering = ["position"]
