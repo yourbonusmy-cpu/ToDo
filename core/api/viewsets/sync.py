@@ -11,7 +11,7 @@ class SyncViewSet(ViewSet):
 
     @action(detail=False, methods=["post"])
     def push(self, request):
-        handle_push(request.user, request.data)
+        handle_push(request.user, request.data, request)
         return Response({"status": "ok"})
 
     @action(detail=False, methods=["post"])

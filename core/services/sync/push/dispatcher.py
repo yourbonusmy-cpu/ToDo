@@ -7,7 +7,7 @@ from .blocks import sync_blocks
 from .blocktasks import sync_blocktasks
 
 
-def handle_push(user, payload):
+def handle_push(user, payload, request):
     device_uuid = payload.get("device_uuid")
 
     with transaction.atomic():
@@ -16,7 +16,7 @@ def handle_push(user, payload):
         apply_deletions(user, device_uuid, payload.get("deleted", []))
 
         # 2. MASTER DATA
-        sync_templates(user, payload.get("templates", []))
+        sync_templates(request, user, payload.get("templates", []))
         sync_groups(user, payload.get("group_templates", []))
 
         # 3. DOMAIN DATA
