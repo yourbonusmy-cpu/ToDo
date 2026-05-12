@@ -7,6 +7,22 @@ from core.services.sync.common.uuid import as_uuid_map
 
 
 def sync_templates(request, user, items, files):
+    print("USER:", user)
+
+    print("\nFILES:")
+    print(files)
+
+    for key, file in files.items():
+        print(
+            "FILE:",
+            key,
+            "| NAME:",
+            file.name,
+            "| SIZE:",
+            file.size,
+            "| CONTENT_TYPE:",
+            file.content_type,
+        )
 
     existing = as_uuid_map(TaskTemplate.objects.filter(owner=user))
 
@@ -121,5 +137,6 @@ def sync_templates(request, user, items, files):
                     "icon": request.build_absolute_uri(obj.icon.url),
                 }
             )
+            print("uploaded_icons:", uploaded_icons)
 
     return uploaded_icons

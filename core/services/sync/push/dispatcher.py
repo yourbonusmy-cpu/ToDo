@@ -1,7 +1,7 @@
 from django.db import transaction
 
 from .delete import apply_deletions
-from .templates import sync_templates
+from .templates_ import sync_templates
 from .groups import sync_groups
 from .blocks import sync_blocks
 from .blocktasks import sync_blocktasks
