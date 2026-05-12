@@ -1,3 +1,5 @@
+import json
+
 from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -9,10 +11,21 @@ from core.services.sync.common.time import safe_parse_dt
 
 class SyncViewSet(ViewSet):
 
+    # @action(detail=False, methods=["post"])
+    # def push(self, request):
+    #     handle_push(request.user, request.data, request)
+    #     return Response({"status": "ok"})
+
     @action(detail=False, methods=["post"])
     def push(self, request):
-        handle_push(request.user, request.data, request)
-        return Response({"status": "ok"})
+
+        payload_raw = request.data.get("payload")
+
+        payload = json.loads(payload_raw)
+
+        response = handle_push(request.user, payload, request)
+
+        return Response(response)
 
     @action(detail=False, methods=["post"])
     def pull(self, request):

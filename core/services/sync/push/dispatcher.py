@@ -17,7 +17,10 @@ def handle_push(user, payload, request):
 
         # 2. MASTER DATA
         sync_templates(
-            request, user, payload.get("templates", []), payload.get("files", {})
+            request,
+            user,
+            payload.get("templates", []),
+            request.FILES,
         )
         sync_groups(user, payload.get("group_templates", []))
 
