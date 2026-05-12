@@ -16,7 +16,9 @@ def handle_push(user, payload, request):
         apply_deletions(user, device_uuid, payload.get("deleted", []))
 
         # 2. MASTER DATA
-        sync_templates(request, user, payload.get("templates", []))
+        sync_templates(
+            request, user, payload.get("templates", []), payload.get("files", {})
+        )
         sync_groups(user, payload.get("group_templates", []))
 
         # 3. DOMAIN DATA
