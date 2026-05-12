@@ -119,11 +119,19 @@ class SystemTaskTemplate(models.Model):
     time = models.PositiveIntegerField(default=0, blank=True)
 
     period_type = models.CharField(
-        max_length=16, choices=PeriodType.choices, default=PeriodType.NONE
+        max_length=16,
+        null=True,
+        blank=True,
+        choices=PeriodType.choices,
+        default=PeriodType.NONE,
     )
 
     schedule_type = models.CharField(
-        max_length=16, choices=ScheduleType.choices, default=ScheduleType.NONE
+        max_length=16,
+        null=True,
+        blank=True,
+        choices=ScheduleType.choices,
+        default=ScheduleType.NONE,
     )
 
     fixed_weekday = models.PositiveSmallIntegerField(
@@ -159,10 +167,18 @@ class TaskTemplate(models.Model):
     time = models.PositiveIntegerField(default=0, blank=True)
 
     period_type = models.CharField(
-        max_length=16, choices=PeriodType.choices, default=PeriodType.NONE
+        max_length=16,
+        null=True,
+        blank=True,
+        choices=PeriodType.choices,
+        default=PeriodType.NONE,
     )
     schedule_type = models.CharField(
-        max_length=16, choices=ScheduleType.choices, default=ScheduleType.NONE
+        max_length=16,
+        null=True,
+        blank=True,
+        choices=ScheduleType.choices,
+        default=ScheduleType.NONE,
     )
 
     # для задач по дням недели
